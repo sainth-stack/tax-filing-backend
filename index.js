@@ -15,9 +15,9 @@ app.use(express.static(path.join(__dirname, "public")));
 
 
 // Routes
-const { companyRoutes,userRoutes } = require("./routes");
+const { companyRoutes,serviceroutes } = require("./routes");
 app.use('/api', companyRoutes);
-app.use('/api', userRoutes);
+app.use('/api', serviceroutes);
 
 
 
