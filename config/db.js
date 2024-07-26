@@ -1,5 +1,6 @@
-const mongoose = require("mongoose");
-const { DATABASE_URL } = require("./environment");
+import mongoose from "mongoose";
+import { DATABASE_URL } from "./environment.js";
+
 //const AuditTrailModel = require("../models/AuditTrail");
 
 //const saveChangedData = async (change) => {
@@ -21,23 +22,25 @@ const { DATABASE_URL } = require("./environment");
 //}
 
 const connectDB = () => {
-  console.log(DATABASE_URL)
+  console.log(DATABASE_URL);
   try {
-    mongoose.connect(DATABASE_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      // useCreateIndex: true,
-    }).then((res) => {
-      //const TaskModelChange = res.models.tasks2.watch();
-      //TaskModelChange.on("change", (change) => {
-      //  saveChangedData(change);
-      //});
-      console.log('MongoDB Database Connection Success!');
-      console.log(DATABASE_URL)
-    })
+    mongoose
+      .connect(DATABASE_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        // useCreateIndex: true,
+      })
+      .then((res) => {
+        //const TaskModelChange = res.models.tasks2.watch();
+        //TaskModelChange.on("change", (change) => {
+        //  saveChangedData(change);
+        //});
+        console.log("MongoDB Database Connection Success!");
+        console.log(DATABASE_URL);
+      });
   } catch (err) {
-    console.log('MongoDB Database Connection Failed!', err.message);
+    console.log("MongoDB Database Connection Failed!", err.message);
   }
 };
 
-module.exports = connectDB;
+export default connectDB;

@@ -1,19 +1,18 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import mongoose from "mongoose";
 
-const companySchema = new Schema({
+const companySchema = new mongoose.Schema({
   companyDetails: {
     companyName: String,
     constitution: String,
     clientStatus: String,
     authorisedPerson: String,
     phone: String,
-    mailId: String
+    mailId: String,
   },
   incomeTax: {
     incomeTaxNumber: String,
     pan: String,
-    incomeTaxPassword: String
+    incomeTaxPassword: String,
   },
   gst: {
     gstin: String,
@@ -21,71 +20,71 @@ const companySchema = new Schema({
     gstPassword: String,
     gstStatus: String,
     eWayBillUsername: String,
-    eWayBillPassword: String
+    eWayBillPassword: String,
   },
   esi: {
     esiNumber: String,
     esiUserId: String,
-    esiPassword: String
+    esiPassword: String,
   },
   providentFund: {
     pfNumber: String,
     pfUserId: String,
-    pfPassword: String
+    pfPassword: String,
   },
   professionalTax: {
     ptNumber: String,
     ptEcNumber: String,
     ptUsername: String,
-    ptPassword: String
+    ptPassword: String,
   },
   tds: {
     tan: String,
     tanPassword: String,
     tracesUsername: String,
-    tracesPassword: String
+    tracesPassword: String,
   },
   shopCommercialEstablishment: {
     seNumber: String,
     seUsername: String,
     sePassword: String,
-    seRenewalDate: String
+    seRenewalDate: String,
   },
   msme: {
-    msmeNumber: String
+    msmeNumber: String,
   },
   fssai: {
     fssaiNumber: String,
     fssaiUsername: String,
     fssaiPassword: String,
-    fssaiRenewalDate: String
+    fssaiRenewalDate: String,
   },
   factoryLicense: {
     flNumber: String,
     flUsername: String,
     flPassword: String,
-    flRenewalDate: String
+    flRenewalDate: String,
   },
   importExport: {
     iecNumber: String,
     dgftUsername: String,
     dgftPassword: String,
     icegateUsername: String,
-    icegatePassword: String
+    icegatePassword: String,
   },
   partnershipFirmFormC: {
-    formCNumber: String
+    formCNumber: String,
   },
   shramSuvidhaPortal: {
     lin: String,
     ssUsername: String,
-    ssPassword: String
+    ssPassword: String,
   },
   mca: {
     mcaCin: String,
     mcaUsername: String,
     mcaPassword: String,
-    bankOverdraftCashCreditRenewalDate: String
+    bankOverdraftCashCreditRenewalDate: String,
   },
   attachments: {
     pan: String,
@@ -102,8 +101,9 @@ const companySchema = new Schema({
     partnershipFirmFormC: String,
     shramSuvidha: String,
     mca: String,
-    cin: String
-  }
+    cin: String,
+  },
 });
 
-module.exports = mongoose.model('Company', companySchema);
+const companyModel = mongoose.model("Company", companySchema);
+export default companyModel;

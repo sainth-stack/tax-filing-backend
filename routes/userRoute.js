@@ -13,9 +13,9 @@ const {
   forgotpassword,
   resetpassword,
   logout,
-  loginMicorsoftUser
-} = require('../controllers/user.controller');
-const prefix = "/users"
+  loginMicorsoftUser,
+} = require("../controllers/userController");
+const prefix = "/users";
 //register a user
 router.post(`${prefix}/register`, registerUser);
 
@@ -25,7 +25,6 @@ router.post(`${prefix}/verifyOTP`, verifyOTP);
 //login a user
 router.post(`${prefix}/login`, loginUser);
 router.post(`${prefix}/malogin`, loginMicorsoftUser);
-
 
 //register or login with google and fb
 router.post(`${prefix}/signup`, signUpWithProvider);

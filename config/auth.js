@@ -1,12 +1,17 @@
-require('dotenv').config();
-const jwt = require('jsonwebtoken');
-const Admin = require('../models/user.model');
+import dotenv from "dotenv";
+dotenv.config();
+import jwt from "jsonwebtoken";
+
+import userModel from "../models/userModel";
 
 const signToken = (user) => {
   return jwt.sign(
     {
       _id: user._id,
-      name: user.personalInformation.firstName + " " + user.personalInformation.lastName,
+      name:
+        user.personalInformation.firstName +
+        " " +
+        user.personalInformation.lastName,
       email: user.contactInformation.email,
       mobileNumber: user.contactInformation.mobileNumber,
       image: user.personalInformation.image,
@@ -15,11 +20,11 @@ const signToken = (user) => {
       company: user.employmentInformation.legalEntity,
       profilePicture: user.personalInformation.profilePicture,
       lineManager: user.employmentInformation.lineManager,
-      companyId: user.companyId
+      companyId: user.companyId,
     },
     process.env.JWT_SECRET,
     {
-      expiresIn: '2d',
+      expiresIn: "2d",
     }
   );
 };
@@ -27,7 +32,7 @@ const signToken = (user) => {
 const isAuth = async (req, res, next) => {
   const { authorization } = req.headers;
   try {
-    const token = authorization.split(' ')[1];
+    const token = authorization.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
@@ -35,18 +40,18 @@ const isAuth = async (req, res, next) => {
     res.status(401).send({
       message: err.message,
       success: false,
-      data: null
+      data: null,
     });
   }
 };
 
 const isAdmin = async (req, res, next) => {
-  const admin = await Admin.findOne({ email: req.body.email });
-  if (admin.role === 'Admin') {
+  const admin = await userModel.findOne({ email: req.body.email });
+  if (userModel.role === "Admin") {
     next();
   } else {
     res.status(401).send({
-      message: 'User is not Admin',
+      message: "User is not Admin",
     });
   }
 };

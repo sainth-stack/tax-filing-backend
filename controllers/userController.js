@@ -1,7 +1,10 @@
-require("dotenv").config();
-const bcrypt = require("bcryptjs");
-const User = require("../models/user.model");
-const EmployModel = require("../models/employee.model");
+import dotenv from "dotenv";
+dotenv.config();
+
+import bcrypt from "bcryptjs";
+import userModel from "../models/userModel";
+import employeeModel from "./../models/employeeModel";
+
 const { signToken } = require("../config/auth");
 const nodemailer = require("nodemailer");
 const sendgridTransport = require("nodemailer-sendgrid-transport");
@@ -24,23 +27,23 @@ const registerUser = async (req, res) => {
   // #swagger.tags = ['User Management']
   try {
     let otp = generateRandomNumber(6);
-    let name = req.body.name.split(" ")
+    let name = req.body.name.split(" ");
     const newUser = new EmployModel({
       contactInformation: {
         email: req.body.email,
       },
       employmentInformation: {
-        role: req.body.role
+        role: req.body.role,
       },
       personalInformation: {
         firstName: name[0],
-        lastName: name.length > 1 ? name[1] : '',
+        lastName: name.length > 1 ? name[1] : "",
         password: bcrypt.hashSync(req.body.password),
         otp,
         otpExpire: Date.now() + 3600 * 1000,
       },
       companyId: req.body.companyId,
-      freeTrail: req.body?.freeTrail || false
+      freeTrail: req.body?.freeTrail || false,
     });
 
     const user = await newUser.save();
@@ -62,7 +65,10 @@ const registerUser = async (req, res) => {
     res.send({
       token,
       _id: user._id,
-      name: user.personalInformation.firstName + " " + user.personalInformation.lastName,
+      name:
+        user.personalInformation.firstName +
+        " " +
+        user.personalInformation.lastName,
       firstName: user.personalInformation.firstName,
       email: user.contactInformation.email,
       mobileNumber: user.contactInformation.mobileNumber,
@@ -81,16 +87,32 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
   // #swagger.tags = ['User Management']
-  const user = await EmployModel.findOne({ "contactInformation.email": req.body.email });
+  const user = await EmployModel.findOne({
+    "contactInformation.email": req.body.email,
+  });
   if (user) {
-    const user2 = await EmployModel.findOne({ "contactInformation.email": req.body.email, "employmentInformation.status": "Active" });
+    const user2 = await EmployModel.findOne({
+      "contactInformation.email": req.body.email,
+      "employmentInformation.status": "Active",
+    });
     if (user2) {
-      if (user && (req.body.password === "FreeTrail" ? true : bcrypt.compareSync(req.body.password, user.personalInformation.password))) {
+      if (
+        user &&
+        (req.body.password === "FreeTrail"
+          ? true
+          : bcrypt.compareSync(
+              req.body.password,
+              user.personalInformation.password
+            ))
+      ) {
         const token = signToken(user);
         res.send({
           token,
           _id: user._id,
-          name: user.personalInformation.firstName + " " + user.personalInformation.lastName,
+          name:
+            user.personalInformation.firstName +
+            " " +
+            user.personalInformation.lastName,
           firstName: user.personalInformation.firstName,
           email: user.contactInformation.email,
           mobileNumber: user.contactInformation.mobileNumber,
@@ -101,7 +123,7 @@ const loginUser = async (req, res) => {
           profilePicture: user.personalInformation.profilePicture,
           lineManager: user.employmentInformation.lineManager,
           freeTrail: user.freeTrail,
-          companyId: user.companyId
+          companyId: user.companyId,
         });
       } else {
         res.status(401).send({
@@ -122,15 +144,23 @@ const loginUser = async (req, res) => {
 
 const loginMicorsoftUser = async (req, res) => {
   // #swagger.tags = ['User Management']
-  const user = await EmployModel.findOne({ "contactInformation.email": req.body.email });
+  const user = await EmployModel.findOne({
+    "contactInformation.email": req.body.email,
+  });
   if (user) {
-    const user2 = await EmployModel.findOne({ "contactInformation.email": req.body.email, "employmentInformation.status": "Active" });
+    const user2 = await EmployModel.findOne({
+      "contactInformation.email": req.body.email,
+      "employmentInformation.status": "Active",
+    });
     const token = signToken(user);
     if (user2) {
       res.send({
         token,
         _id: user._id,
-        name: user.personalInformation.firstName + " " + user.personalInformation.lastName,
+        name:
+          user.personalInformation.firstName +
+          " " +
+          user.personalInformation.lastName,
         firstName: user.personalInformation.firstName,
         email: user.contactInformation.email,
         mobileNumber: user.contactInformation.mobileNumber,
@@ -141,7 +171,7 @@ const loginMicorsoftUser = async (req, res) => {
         profilePicture: user.personalInformation.profilePicture,
         lineManager: user.employmentInformation.lineManager,
         freeTrail: user.freeTrail,
-        companyId: user.companyId
+        companyId: user.companyId,
       });
     } else {
       res.status(401).send({
@@ -242,7 +272,6 @@ const getUserById = async (req, res) => {
   }
 };
 
-
 const updateUser = async (req, res) => {
   // #swagger.tags = ['User Management']
   try {
@@ -326,7 +355,7 @@ const forgotpassword = async (req, res) => {
     const isAdded = await EmployModel.findOne({
       "contactInformation.email": req.body.email,
       "contactInformation.verified": true,
-      "employmentInformation.status": "Active"
+      "employmentInformation.status": "Active",
     });
     if (!isAdded) {
       res.status(401).send({
@@ -338,7 +367,7 @@ const forgotpassword = async (req, res) => {
         personalInformation: {
           token,
           tokenExpire: Date.now() + 3600 * 1000,
-        }
+        },
       };
       const user = await EmployModel.findOneAndUpdate(
         { "contactInformation.email": req.body.email },
@@ -387,17 +416,21 @@ const resetpassword = async (req, res) => {
     "personalInformation.token": req.body.token,
     "personalInformation.tokenExpire": { $gt: Date.now() },
     "contactInformation.verified": true,
-    "employmentInformation.status": "Active"
+    "employmentInformation.status": "Active",
   });
   if (user) {
     const newUser = { password: bcrypt.hashSync(req.body.password) };
-    await EmployModel.findOneAndUpdate({ "personalInformation.token": user.personalInformation.token }, newUser, (err) => {
-      if (!err) {
-        res.send({
-          message: "Password Updated Successfully",
-        });
+    await EmployModel.findOneAndUpdate(
+      { "personalInformation.token": user.personalInformation.token },
+      newUser,
+      (err) => {
+        if (!err) {
+          res.send({
+            message: "Password Updated Successfully",
+          });
+        }
       }
-    });
+    );
   } else {
     res.status(401).send({
       message: "Invalid Token/Account Not Verified!",
@@ -406,17 +439,23 @@ const resetpassword = async (req, res) => {
 };
 
 const logout = async (req, res) => {
-  EmployModel.findOne({ "contactInformation.email": req.body.email }, (errr, user) => {
-    if (!errr) {
-      res.send({
-        success: true,
-        message: "Logout Successfully!",
-      });
-    } else {
-      res.send({ success: false, message: errr ? errr : "Something went wrong" });
+  EmployModel.findOne(
+    { "contactInformation.email": req.body.email },
+    (errr, user) => {
+      if (!errr) {
+        res.send({
+          success: true,
+          message: "Logout Successfully!",
+        });
+      } else {
+        res.send({
+          success: false,
+          message: errr ? errr : "Something went wrong",
+        });
+      }
     }
-  });
-}
+  );
+};
 
 module.exports = {
   signUpWithProvider,
@@ -431,5 +470,5 @@ module.exports = {
   forgotpassword,
   resetpassword,
   logout,
-  loginMicorsoftUser
+  loginMicorsoftUser,
 };
