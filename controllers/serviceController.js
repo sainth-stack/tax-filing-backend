@@ -6,7 +6,7 @@ import serviceModel from "../models/serviceModel.js";
 export const createService = async (req, res) => {
   try {
     const { serviceName, status, effectiveFrom, effectiveTo } = req.body;
-    if ((!serviceName, status, effectiveFrom, effectiveTo)) {
+    if (!(serviceName, status, effectiveFrom, effectiveTo)) {
       return res.send({
         success: false,
         message: "Please Provide All Fields  ",
