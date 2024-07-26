@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import path from "path";
+
 import connectDB from "./config/db.js";
 import companyRoutes from "./routes/companyRoutes.js";
 import serviceroutes from "./routes/serviceRoute.js";
