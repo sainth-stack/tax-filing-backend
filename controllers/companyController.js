@@ -1,11 +1,28 @@
 // controllers/companyController.js
 
+import { uploadFileToDrive } from "../middlewares/drive.js";
 import companyModel from "../models/companyModel.js";
 
 // Create a new company
 export const createCompany = async (req, res) => {
   try {
-    const company = new companyModel(req.body);
+    // const files = req.files; // Assuming you're using a middleware like multer to handle file uploads
+    // const fileLinks = {};
+
+    // // Upload files to Google Drive and get links
+    // for (const [key, file] of Object.entries(files)) {
+    //   if (file && file.path) {
+    //     const uploadResponse = await uploadFileToDrive(file.path);
+    //     fileLinks[key] = uploadResponse.webViewLink;
+    //   }
+    // }
+
+    const companyData = {
+      ...req.body,
+      // ...fileLinks,
+    };
+
+    const company = new companyModel(companyData);
     await company.save();
     res.status(201).json(company);
   } catch (error) {

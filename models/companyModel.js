@@ -85,6 +85,23 @@ const companySchema = new mongoose.Schema({
     mcaPassword: { type: String },
     bankOverdraftCashCreditRenewalDate: { type: String },
   },
+  attachements: {
+    panFile: { type: String, default: '' },
+    gstFile: { type: String, default: '' },
+    esiFile: { type: String, default: '' },
+    pfFile: { type: String, default: '' },
+    ptFile: { type: String, default: '' },
+    tanFile: { type: String, default: '' },
+    shopEstablishmentFile: { type: String, default: '' },
+    msmeFile: { type: String, default: '' },
+    fssaiFile: { type: String, default: '' },
+    factoryLicenseFile: { type: String, default: '' },
+    importExportFile: { type: String, default: '' },
+    partnershipFormcFile: { type: String, default: '' },
+    shramSuvidhaFile: { type: String, default: '' },
+    mcaFile: { type: String, default: '' },
+    cinFile: { type: String, default: '' },
+  }
 });
 const companyModel = mongoose.model("Company", companySchema);
 export default companyModel;
