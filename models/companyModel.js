@@ -47,7 +47,7 @@ const companySchema = new mongoose.Schema({
     seNumber: { type: String },
     seUsername: { type: String },
     sePassword: { type: String },
-    seRenewalDate: { type: Date },
+    seRenewalDate: { type: String },
   },
   msme: {
     msmeNumber: { type: String },
@@ -56,13 +56,13 @@ const companySchema = new mongoose.Schema({
     fssaiNumber: { type: String },
     fssaiUsername: { type: String },
     fssaiPassword: { type: String },
-    fssaiRenewalDate: { type: Date },
+    fssaiRenewalDate: { type: String },
   },
   factoryLicense: {
     flNumber: { type: String },
     flUsername: { type: String },
     flPassword: { type: String },
-    flRenewalDate: { type: Date },
+    flRenewalDate: { type: String },
   },
   importExport: {
     iecNumber: { type: String },
@@ -83,7 +83,7 @@ const companySchema = new mongoose.Schema({
     cin: { type: String },
     mcaUsername: { type: String },
     mcaPassword: { type: String },
-    bankOverdraftCashCreditRenewalDate: { type: Date },
+    bankOverdraftCashCreditRenewalDate: { type: String },
   },
 });
 const companyModel = mongoose.model("Company", companySchema);
