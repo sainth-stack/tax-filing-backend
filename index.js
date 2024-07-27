@@ -6,9 +6,6 @@ import companyRoutes from "./routes/companyRoutes.js";
 import serviceroutes from "./routes/serviceRoute.js";
 import { PORT } from "./config/environment.js";
 
-//Database Connection
-connectDB();
-
 //App Configuration
 const app = express();
 app.use(cors());
@@ -30,6 +27,8 @@ app.get("/", (req, res) => {
 //Server Configuration
 
 const port = PORT || 3600;
-app.listen(port, () => {
+app.listen(port, async () => {
+  //Database Connection
+  await connectDB();
   console.log("Server is running on port: " + port);
 });

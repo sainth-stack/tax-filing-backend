@@ -16,7 +16,7 @@ export const createCompany = async (req, res) => {
 // Get all companies
 export const getCompanies = async (req, res) => {
   try {
-    const companies = await Company.find();
+    const companies = await companyModel.find();
     res.status(200).json(companies);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -26,7 +26,7 @@ export const getCompanies = async (req, res) => {
 // Get a single company by ID
 export const getCompanyById = async (req, res) => {
   try {
-    const company = await Company.findById(req.params.id);
+    const company = await companyModel.findById(req.params.id);
     if (!company) {
       return res.status(404).json({ error: "Company not found" });
     }
@@ -39,9 +39,13 @@ export const getCompanyById = async (req, res) => {
 // Update a company by ID
 export const updateCompany = async (req, res) => {
   try {
-    const company = await Company.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const company = await companyModel.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+      }
+    );
     if (!company) {
       return res.status(404).json({ error: "Company not found" });
     }
@@ -54,7 +58,7 @@ export const updateCompany = async (req, res) => {
 // Delete a company by ID
 export const deleteCompany = async (req, res) => {
   try {
-    const company = await Company.findByIdAndDelete(req.params.id);
+    const company = await companyModel.findByIdAndDelete(req.params.id);
     if (!company) {
       return res.status(404).json({ error: "Company not found" });
     }

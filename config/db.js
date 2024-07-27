@@ -21,10 +21,10 @@ import { DATABASE_URL } from "./environment.js";
 //  })
 //}
 
-const connectDB = () => {
+const connectDB = async () => {
   console.log(DATABASE_URL);
   try {
-    mongoose
+    await mongoose
       .connect(DATABASE_URL, {
         useNewUrlParser: true,
         useUnifiedTopology: true,

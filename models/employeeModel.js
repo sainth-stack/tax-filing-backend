@@ -143,7 +143,7 @@ const Schema = new mongoose.Schema(
     },
     companyId: {
       type: String,
-      ref: "Company",
+      ref: "companyModel",
     },
     freeTrail: {
       type: String,
