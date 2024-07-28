@@ -1,34 +1,63 @@
 // controllers/companyController.js
 
-import { uploadFileToDrive } from "../middlewares/drive.js";
+import fs from 'fs';
 import companyModel from "../models/companyModel.js";
+import { uploadFileToDrive } from '../middlewares/drive.js';
+import path from 'path';
 
-// Create a new company
+
+
 export const createCompany = async (req, res) => {
   try {
-    // const files = req.files; // Assuming you're using a middleware like multer to handle file uploads
-    // const fileLinks = {};
-
-    // // Upload files to Google Drive and get links
-    // for (const [key, file] of Object.entries(files)) {
-    //   if (file && file.path) {
-    //     const uploadResponse = await uploadFileToDrive(file.path);
-    //     fileLinks[key] = uploadResponse.webViewLink;
-    //   }
-    // }
 
     const companyData = {
       ...req.body,
-      // ...fileLinks,
     };
 
     const company = new companyModel(companyData);
     await company.save();
     res.status(201).json(company);
   } catch (error) {
+    console.error('Error creating company:', error);
     res.status(400).json({ error: error.message });
   }
 };
+
+export const uploadFiles = async (req, res) => {
+
+  console.log(req.body); // Log the uploaded files
+  try {
+    const files = req.files; // Access the files from req.files
+    const fileLinks = {};
+
+    for (const file of files) {
+      const fileName = file.filename; // File name on disk
+      const filePath = path.join(file.destination, file.filename); // Full path to the file
+      const uploadResponse = await uploadFileToDrive(filePath);
+      fileLinks[file.fieldname] = uploadResponse.webViewLink;
+      fs.unlinkSync(filePath); // Clean up temp file
+    }
+
+    console.log(fileLinks);
+
+    const { companyId } = req.body;
+    const company = await companyModel.findById(companyId);
+    if (!company) {
+      return res.status(404).json({ error: 'Company not found' });
+    }
+
+    company.attachements = {
+      ...company.attachements,
+      ...fileLinks
+    };
+    await company.save();
+    res.status(201).json(company);
+  } catch (error) {
+    console.error('Error creating company:', error);
+    res.status(400).json({ error: error.message });
+  }
+};
+
 
 // Get all companies
 export const getCompanies = async (req, res) => {
