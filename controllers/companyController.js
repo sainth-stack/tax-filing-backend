@@ -46,8 +46,8 @@ export const uploadFiles = async (req, res) => {
       return res.status(404).json({ error: 'Company not found' });
     }
 
-    company.attachements = {
-      ...company.attachements,
+    company.attachments = {
+      ...company.attachments,
       ...fileLinks
     };
     await company.save();

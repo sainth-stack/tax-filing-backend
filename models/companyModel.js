@@ -85,7 +85,7 @@ const companySchema = new mongoose.Schema({
     mcaPassword: { type: String },
     bankOverdraftCashCreditRenewalDate: { type: String },
   },
-  attachements: {
+  attachments: {
     panFile: { type: String, default: '' },
     gstFile: { type: String, default: '' },
     esiFile: { type: String, default: '' },
