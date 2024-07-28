@@ -24,6 +24,7 @@ app.get("/", (req, res) => {
   res.send(`<h1>Welcome to Backend Server</h1>`);
 });
 
+
 //Server Configuration
 
 const port = PORT || 3600;
