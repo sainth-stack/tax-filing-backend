@@ -61,13 +61,27 @@ export const uploadFiles = async (req, res) => {
 
 // Get all companies
 export const getCompanies = async (req, res) => {
+  console.log(req.body)
+  const { name, status } = req.body;
+
   try {
-    const companies = await companyModel.find();
+    // Build the filter criteria based on the provided company name and client status
+    const filter = {};
+    if (name) {
+      filter['companyDetails.companyName'] = { $regex: name, $options: 'i' }; // Case-insensitive match
+    }
+    if (status) {
+      filter['companyDetails.clientStatus'] = status;
+    }
+
+    // Fetch companies based on the filter criteria
+    const companies = await companyModel.find(filter);
     res.status(200).json(companies);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // Get a single company by ID
 export const getCompanyById = async (req, res) => {

@@ -13,7 +13,7 @@ const router = express.Router();
 
 // Routes
 router.post("/companies", createCompany);
-router.get("/companies", getCompanies);
+router.post("/companies/filter", getCompanies);
 router.post("/files",upload.any(), uploadFiles);
 router.get("/companies/:id", getCompanyById);
 router.put("/companies/:id", updateCompany);
