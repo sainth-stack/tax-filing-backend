@@ -16,7 +16,7 @@ jobs:
         run: echo "${{ secrets.PASSWORD_SAI }}" | docker login -u "${{ secrets.USERNAME_SAI }}" --password-stdin
 
       - name: Build Docker Image
-        run: docker build -t sainath521/tax-filing-backend
+        run: docker build -t sainath521/tax-filing-backend .
 
       - name: Publish image to Docker Hub
         run: docker push sainath521/tax-filing-backend:latest   
