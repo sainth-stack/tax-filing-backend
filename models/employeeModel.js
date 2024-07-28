@@ -6,7 +6,7 @@ const Schema = new mongoose.Schema(
     personalInformation: {
       firstName: {
         type: String,
-        required: true,
+        /* required: true, */
       },
       lastName: {
         type: String,
@@ -152,4 +152,5 @@ const Schema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default employeeModel = mongoose.model("Employee", Schema);
+const employeeModel = mongoose.model("Employee", Schema);
+export default employeeModel;

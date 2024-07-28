@@ -1,20 +1,21 @@
-const express = require("express");
-const router = express.Router();
-const {
-  signUpWithProvider,
-  registerUser,
-  loginUser,
+import express from "express";
+import {
   changePassword,
+  deleteUser,
+  forgotpassword,
   getAllUsers,
   getUserById,
-  updateUser,
-  deleteUser,
-  verifyOTP,
-  forgotpassword,
-  resetpassword,
-  logout,
   loginMicorsoftUser,
-} = require("../controllers/userController");
+  loginUser,
+  logout,
+  registerUser,
+  resetpassword,
+  signUpWithProvider,
+  updateUser,
+  verifyOTP,
+} from "../controllers/userController.js";
+const router = express.Router();
+
 const prefix = "/users";
 //register a user
 router.post(`${prefix}/register`, registerUser);
@@ -24,6 +25,10 @@ router.post(`${prefix}/verifyOTP`, verifyOTP);
 
 //login a user
 router.post(`${prefix}/login`, loginUser);
+router.get(`${prefix}/login`, (req, res) => {
+  res.send("from login get");
+});
+
 router.post(`${prefix}/malogin`, loginMicorsoftUser);
 
 //register or login with google and fb
@@ -50,5 +55,4 @@ router.post(`${prefix}/resetpassword`, resetpassword);
 
 //logout
 router.post(`${prefix}/logout`, logout);
-
-module.exports = router;
+export default router;
