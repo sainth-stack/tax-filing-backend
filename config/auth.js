@@ -1,17 +1,10 @@
-import dotenv from "dotenv";
-dotenv.config();
 import jwt from "jsonwebtoken";
 
-import userModel from "../models/userModel";
-
-const signToken = (user) => {
+export const signToken = (user) => {
   return jwt.sign(
     {
       _id: user._id,
-      name:
-        user.personalInformation.firstName +
-        " " +
-        user.personalInformation.lastName,
+      name: `${user.personalInformation.firstName} ${user.personalInformation.lastName}`,
       email: user.contactInformation.email,
       mobileNumber: user.contactInformation.mobileNumber,
       image: user.personalInformation.image,
@@ -29,34 +22,27 @@ const signToken = (user) => {
   );
 };
 
-const isAuth = async (req, res, next) => {
+export const isAuth = (req, res, next) => {
   const { authorization } = req.headers;
-  try {
+  if (authorization) {
     const token = authorization.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    res.status(401).send({
-      message: err.message,
-      success: false,
-      data: null,
+    jwt.verify(token, process.env.JWT_SECRET, (err, decode) => {
+      if (err) {
+        res.status(401).send({ message: "Invalid Token" });
+      } else {
+        req.user = decode;
+        next();
+      }
     });
+  } else {
+    res.status(401).send({ message: "No Token" });
   }
 };
 
-const isAdmin = async (req, res, next) => {
-  const admin = await userModel.findOne({ email: req.body.email });
-  if (userModel.role === "Admin") {
+export const isAdmin = (req, res, next) => {
+  if (req.user && req.user.role === "Admin") {
     next();
   } else {
-    res.status(401).send({
-      message: "User is not Admin",
-    });
+    res.status(401).send({ message: "Admin Token is not valid." });
   }
-};
-module.exports = {
-  signToken,
-  isAuth,
-  isAdmin,
 };

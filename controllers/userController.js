@@ -2,14 +2,14 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import bcrypt from "bcryptjs";
-import userModel from "../models/userModel";
-import employeeModel from "./../models/employeeModel";
+import employeeModel from "./../models/employeeModel.js";
 
-const { signToken } = require("../config/auth");
-const nodemailer = require("nodemailer");
-const sendgridTransport = require("nodemailer-sendgrid-transport");
+import nodemailer from "nodemailer";
+import sendgridTransport from "nodemailer-sendgrid-transport";
+import { signToken } from "../config/auth.js";
+import userModel from "../models/userModel.js";
 
-const transporter = nodemailer.createTransport(
+export const transporter = nodemailer.createTransport(
   sendgridTransport({
     auth: {
       api_key: process.env.SENGRID_API_KEY,
@@ -23,12 +23,11 @@ function generateRandomNumber(n) {
   );
 }
 
-const registerUser = async (req, res) => {
-  // #swagger.tags = ['User Management']
+export const registerUser = async (req, res) => {
   try {
     let otp = generateRandomNumber(6);
-    let name = req.body.name.split(" ");
-    const newUser = new EmployModel({
+    let name = req.body.name;
+    const newUser = new employeeModel({
       contactInformation: {
         email: req.body.email,
       },
@@ -36,11 +35,11 @@ const registerUser = async (req, res) => {
         role: req.body.role,
       },
       personalInformation: {
-        firstName: name[0],
+        /*    firstName: name[0],
         lastName: name.length > 1 ? name[1] : "",
         password: bcrypt.hashSync(req.body.password),
         otp,
-        otpExpire: Date.now() + 3600 * 1000,
+        otpExpire: Date.now() + 3600 * 1000,*/
       },
       companyId: req.body.companyId,
       freeTrail: req.body?.freeTrail || false,
@@ -48,34 +47,21 @@ const registerUser = async (req, res) => {
 
     const user = await newUser.save();
     const token = signToken(user);
-    //transporter
-    //  .sendMail({
-    //    to: user.email,
-    //    from: "info@talentspotify.com",
-    //fromname: "Talent Spotify",
-    //    subject: "OTP Verification",
-    //    html: `
-    //  <p>Hi ${user.name},<br/><br/>
-    //  This is your otp <b>${otp}</b>. It will expire in 24 hours.
-    //  <br/><br/>
-    //  <p>Talent Spotify</p>
-    //  `,
-    //  })
-    //  .then((response) => {
+
     res.send({
       token,
       _id: user._id,
-      name:
+      /* name:
         user.personalInformation.firstName +
         " " +
         user.personalInformation.lastName,
-      firstName: user.personalInformation.firstName,
+      firstName: user.personalInformation.firstName, */
       email: user.contactInformation.email,
       mobileNumber: user.contactInformation.mobileNumber,
       image: user.personalInformation.image,
       role: user.employmentInformation.role,
       company: user.employmentInformation.legalEntity,
-      profilePicture: user.personalInformation.profilePicture,
+      /*  profilePicture: user.personalInformation.profilePicture, */
     });
     //});
   } catch (err) {
@@ -85,13 +71,13 @@ const registerUser = async (req, res) => {
   }
 };
 
-const loginUser = async (req, res) => {
+export const loginUser = async (req, res) => {
   // #swagger.tags = ['User Management']
-  const user = await EmployModel.findOne({
+  const user = await employeeModel.findOne({
     "contactInformation.email": req.body.email,
   });
   if (user) {
-    const user2 = await EmployModel.findOne({
+    const user2 = await employeeModel.findOne({
       "contactInformation.email": req.body.email,
       "employmentInformation.status": "Active",
     });
@@ -142,13 +128,13 @@ const loginUser = async (req, res) => {
   }
 };
 
-const loginMicorsoftUser = async (req, res) => {
+export const loginMicorsoftUser = async (req, res) => {
   // #swagger.tags = ['User Management']
-  const user = await EmployModel.findOne({
+  const user = await employeeModel.findOne({
     "contactInformation.email": req.body.email,
   });
   if (user) {
-    const user2 = await EmployModel.findOne({
+    const user2 = await employeeModel.findOne({
       "contactInformation.email": req.body.email,
       "employmentInformation.status": "Active",
     });
@@ -185,9 +171,9 @@ const loginMicorsoftUser = async (req, res) => {
   }
 };
 
-const changePassword = async (req, res) => {
+export const changePassword = async (req, res) => {
   // #swagger.tags = ['User Management']
-  const user = await User.findOne({ email: req.body.email });
+  const user = await userModel.findOne({ email: req.body.email });
   if (!user.password) {
     res.status(200).send({
       message: "For change password,You need to sign in with email & password!",
@@ -208,10 +194,10 @@ const changePassword = async (req, res) => {
   }
 };
 
-const signUpWithProvider = async (req, res) => {
+export const signUpWithProvider = async (req, res) => {
   // #swagger.tags = ['User Management']
   try {
-    const isAdded = await User.findOne({ email: req.body.email });
+    const isAdded = await userModel.findOne({ email: req.body.email });
     if (isAdded) {
       const token = signToken(isAdded);
       res.send({
@@ -225,7 +211,7 @@ const signUpWithProvider = async (req, res) => {
         role: isAdded.role,
       });
     } else {
-      const newUser = new User({
+      const newUser = new userModel({
         name: req.body.name,
         email: req.body.email,
         image: req.body.image,
@@ -250,20 +236,20 @@ const signUpWithProvider = async (req, res) => {
     });
   }
 };
-const getAllUsers = async (req, res) => {
+export const getAllUsers = async (req, res) => {
   // #swagger.tags = ['User Management']
   try {
-    const users = await User.find({}).sort({ _id: -1 });
+    const users = await employeeModel.find({}).sort({ _id: -1 });
     res.send(users);
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
 };
 
-const getUserById = async (req, res) => {
+export const getUserById = async (req, res) => {
   // #swagger.tags = ['User Management']
   try {
-    const user = await User.findById(req.params.id);
+    const user = await userModel.findById(req.params.id);
     res.send(user);
   } catch (err) {
     res.status(500).send({
@@ -272,10 +258,10 @@ const getUserById = async (req, res) => {
   }
 };
 
-const updateUser = async (req, res) => {
+export const updateUser = async (req, res) => {
   // #swagger.tags = ['User Management']
   try {
-    const user = await User.findById(req.params.id);
+    const user = await userModel.findById(req.params.id);
     if (user) {
       user.name = req.body.name;
       user.email = req.body.email;
@@ -305,7 +291,7 @@ const updateUser = async (req, res) => {
   }
 };
 
-const deleteUser = (req, res) => {
+export const deleteUser = (req, res) => {
   // #swagger.tags = ['User Management']
   User.deleteOne({ _id: req.params.id }, (err) => {
     if (err) {
@@ -320,9 +306,9 @@ const deleteUser = (req, res) => {
   });
 };
 
-const verifyOTP = async (req, res) => {
+export const verifyOTP = async (req, res) => {
   // #swagger.tags = ['User Management']
-  const user = await User.findOne({
+  const user = await userModel.findOne({
     email: req.body.email,
     otp: req.body.otp,
     otpExpire: { $gt: Date.now() },
@@ -349,10 +335,10 @@ const verifyOTP = async (req, res) => {
   }
 };
 
-const forgotpassword = async (req, res) => {
+export const forgotpassword = async (req, res) => {
   // #swagger.tags = ['User Management']
   try {
-    const isAdded = await EmployModel.findOne({
+    const isAdded = await employeeModel.findOne({
       "contactInformation.email": req.body.email,
       "contactInformation.verified": true,
       "employmentInformation.status": "Active",
@@ -369,7 +355,7 @@ const forgotpassword = async (req, res) => {
           tokenExpire: Date.now() + 3600 * 1000,
         },
       };
-      const user = await EmployModel.findOneAndUpdate(
+      const user = await employeeModel.findOneAndUpdate(
         { "contactInformation.email": req.body.email },
         newUser,
         (err) => {
@@ -410,9 +396,9 @@ const forgotpassword = async (req, res) => {
   }
 };
 
-const resetpassword = async (req, res) => {
+export const resetpassword = async (req, res) => {
   // #swagger.tags = ['User Management']
-  const user = await EmployModel.findOne({
+  const user = await employeeModel.findOne({
     "personalInformation.token": req.body.token,
     "personalInformation.tokenExpire": { $gt: Date.now() },
     "contactInformation.verified": true,
@@ -420,7 +406,7 @@ const resetpassword = async (req, res) => {
   });
   if (user) {
     const newUser = { password: bcrypt.hashSync(req.body.password) };
-    await EmployModel.findOneAndUpdate(
+    await employeeModel.findOneAndUpdate(
       { "personalInformation.token": user.personalInformation.token },
       newUser,
       (err) => {
@@ -438,8 +424,8 @@ const resetpassword = async (req, res) => {
   }
 };
 
-const logout = async (req, res) => {
-  EmployModel.findOne(
+export const logout = async (req, res) => {
+  employeeModel.findOne(
     { "contactInformation.email": req.body.email },
     (errr, user) => {
       if (!errr) {
@@ -455,20 +441,4 @@ const logout = async (req, res) => {
       }
     }
   );
-};
-
-module.exports = {
-  signUpWithProvider,
-  registerUser,
-  loginUser,
-  changePassword,
-  getAllUsers,
-  getUserById,
-  updateUser,
-  deleteUser,
-  verifyOTP,
-  forgotpassword,
-  resetpassword,
-  logout,
-  loginMicorsoftUser,
 };
