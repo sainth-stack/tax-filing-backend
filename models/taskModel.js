@@ -20,22 +20,18 @@ const taskSchema = new mongoose.Schema({
   },
   dueDate: {
     type: Date,
-    required: true,
   },
   actualCompletionDate: {
     type: Date,
   },
   taskType: {
     type: String,
-    required: true,
   },
   taskName: {
     type: String,
-    required: true,
   },
   applicationStatus: {
     type: String,
-    required: true,
   },
   arn: {
     type: String,
