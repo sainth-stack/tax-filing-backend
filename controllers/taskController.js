@@ -65,15 +65,38 @@ export const createTask = async (req, res) => {
   }
 };
 
-//get  all tasks
 export const getTasks = async (req, res) => {
+  const { company, effectiveFrom, effectiveTo } = req.body;
+
   try {
-    const tasks = await taskModel.find();
-    res.send(tasks);
+    // Initialize an empty filter object
+    const filter = {};
+
+    // Add company filter if provided
+    if (company) {
+      filter['company'] = { $regex: company, $options: 'i' }; // Case-insensitive match
+    }
+
+    // Add date range filters if provided
+    if (effectiveFrom && effectiveTo) {
+      filter.startDate = { $gte: new Date(effectiveFrom) };
+      filter.dueDate = { $lte: new Date(effectiveTo) };
+    } else if (effectiveFrom) {
+      filter.startDate = { $gte: new Date(effectiveFrom) };
+    } else if (effectiveTo) {
+      filter.dueDate = { $lte: new Date(effectiveTo) };
+    }
+
+    // Fetch tasks based on the filter criteria (if any)
+    const tasks = await taskModel.find(filter);
+    res.status(200).json(tasks);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+
 
 // Get a single task by ID
 export const getTaskById = async (req, res) => {
