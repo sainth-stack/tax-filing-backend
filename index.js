@@ -5,6 +5,7 @@ import connectDB from "./config/db.js";
 import companyRoutes from "./routes/companyRoutes.js";
 import serviceRoutes from "./routes/serviceRoute.js";
 import userRoutes from "./routes/userRoute.js";
+import taskRoutes from "./routes/taskRoutes.js";
 
 import { PORT } from "./config/environment.js";
 import dotenv from "dotenv";
@@ -23,6 +24,7 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use("/api", companyRoutes);
 app.use("/api", serviceRoutes);
 app.use("/api", userRoutes);
+app.use("/api", taskRoutes);
 
 //Default Route
 app.get("/", (req, res) => {
