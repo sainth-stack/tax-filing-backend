@@ -1,28 +1,29 @@
 import mongoose from "mongoose";
-
 import bcrypt from "bcryptjs";
+
 const Schema = new mongoose.Schema(
   {
     personalInformation: {
       firstName: {
         type: String,
-        /* required: true, */
+        // //required: true,
       },
       lastName: {
         type: String,
-        //required: true
+        // //required: true,
       },
       gender: {
         type: String,
-        require: true,
+        //required: true,
       },
       dateOfBirth: {
         type: Date,
-        require: true,
+        //required: true,
       },
       password: {
         type: String,
         default: bcrypt.hashSync("Test@123"),
+        // //required: true, // Uncomment if password is required
       },
       otp: {
         type: String,
@@ -46,29 +47,30 @@ const Schema = new mongoose.Schema(
       },
       email: {
         type: String,
-        require: true,
+        //required: true,
         unique: true,
+        lowercase: true,
       },
       loginMethod: {
         type: String,
         enum: ["SSO", "Manual"],
         default: "Manual",
-        require: true,
+        //required: true,
       },
       mobileNumber: {
-        type: Number,
-        require: true,
+        type: String, // Changed to String for consistency with phone format
+        //required: true,
       },
       countryCode: {
         type: Number,
       },
       isSameWhatsapp: {
         type: Boolean,
-        require: true,
+        //required: true,
       },
       whatsappNumber: {
-        type: Number,
-        require: true,
+        type: String, // Changed to String for consistency with phone format
+        //required: true,
       },
       countryCode2: {
         type: Number,
@@ -77,63 +79,63 @@ const Schema = new mongoose.Schema(
     employmentInformation: {
       hireDate: {
         type: Date,
-        require: true,
+        //required: true,
       },
       employeeNumber: {
         type: String,
-        require: true,
+        //required: true,
       },
       status: {
         type: String,
         enum: ["Active", "Inactive"],
         default: "Active",
-        require: true,
+        //required: true,
       },
       inactiveDate: {
         type: Date,
       },
       legalEntity: {
         type: String,
-        require: true,
+        //required: true,
         ref: "Entity",
       },
       department: {
         type: String,
-        require: true,
+        //required: true,
         ref: "Department",
       },
       designation: {
         type: String,
-        require: true,
+        //required: true,
         ref: "Designation",
       },
       grade: {
         type: String,
-        require: true,
+        //required: true,
         ref: "Grade",
       },
       location: {
         type: String,
-        require: true,
+        //required: true,
       },
       lineManager: {
         type: String,
-        require: true,
+        //required: true,
       },
       jobCategory: {
         type: String,
-        require: true,
+        //required: true,
       },
       role: {
         type: String,
         enum: ["Employee", "Manager", "HR Admin", "Super Admin"],
-        require: true,
+        //required: true,
       },
       departmentHead: {
         type: String,
         enum: ["Yes", "No"],
         default: "Yes",
-        require: true,
+        //required: true,
       },
     },
     status: {
@@ -147,6 +149,64 @@ const Schema = new mongoose.Schema(
     },
     freeTrail: {
       type: String,
+    },
+    name: {
+      type: String,
+      //required: true,
+    },
+    image: {
+      type: String,
+      required: false,
+    },
+    address: {
+      type: String,
+      required: false,
+    },
+    country: {
+      type: String,
+      required: false,
+    },
+    city: {
+      type: String,
+      required: false,
+    },
+    phone: {
+      type: String,
+      required: false,
+    },
+    email: {
+      type: String,
+      //required: true,
+      unique: true,
+      lowercase: true,
+    },
+    password: {
+      type: String,
+      required: false,
+    },
+    verified: {
+      type: Boolean,
+      default: true,
+    },
+    emailSignup: {
+      type: Boolean,
+      default: false,
+    },
+    role: {
+      type: String,
+      required: false,
+    },
+    otp: {
+      type: String,
+    },
+    otpExpire: {
+      type: Date,
+    },
+    token: {
+      type: String,
+    },
+    tokenExpire: {
+      type: Date,
     },
   },
   { timestamps: true }
