@@ -1,7 +1,7 @@
-const jwt = require('jsonwebtoken');
-const { JWT_SECRET } = require('../config/environment');
+import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '../config/environment.js';
 
-const signToken = (user) => {
+export const signToken = (user) => {
   return jwt.sign(
     {
       _id: user._id,
@@ -15,7 +15,7 @@ const signToken = (user) => {
   );
 };
 
-const isAuth = async (req, res, next) => {
+export const isAuth = async (req, res, next) => {
   const { authorization } = req.headers;
   try {
     const token = authorization.split(' ')[1];
@@ -29,7 +29,3 @@ const isAuth = async (req, res, next) => {
   }
 };
 
-module.exports = {
-  signToken,
-  isAuth,
-};

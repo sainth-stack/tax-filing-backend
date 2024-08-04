@@ -1,3 +1,4 @@
+import { signToken } from '../middlewares/auth.js';
 import User from '../models/employeeModel.js';
 
 export const createUser = async (req, res) => {
@@ -9,7 +10,7 @@ export const createUser = async (req, res) => {
       gender,
       status,
       inactiveDate,
-      emailAddress,
+      email,
       mobileNumber,
       sameAsWhatsappNumber,
       whatsappNumber,
@@ -42,6 +43,7 @@ export const createUser = async (req, res) => {
       user,
     });
   } catch (error) {
+    console.log(error)
     if (error.code === 11000) {
       res.status(400).json({ error: 'Email address already exists' });
     } else {
@@ -54,7 +56,7 @@ export const createUser = async (req, res) => {
 
 export const getUsers = async (req, res) => {
   const { name } = req.body;
-console.log(name)
+  console.log(name)
   try {
     // Initialize an empty filter object
     const filter = {};
@@ -111,5 +113,32 @@ export const deleteUser = async (req, res) => {
     res.status(200).json({ success: true, message: 'User deleted successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+export const loginUser = async (req, res) => {
+  // #swagger.tags = ['User Management']
+  const user = await User.findOne({
+    "email": req.body.email,
+  });
+  if (user) {
+    const user2 = await User.findOne({
+      "email": req.body.email,
+      "status": true,
+    });
+    if (user2) {
+      const token = signToken(user);
+      res.send({
+        token,
+        ...user2
+      });
+    }
+  }
+  else {
+    res.status(401).send({
+      message: "Your Account Is Not Verified",
+    });
   }
 };
