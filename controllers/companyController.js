@@ -1,15 +1,12 @@
 // controllers/companyController.js
 
-import fs from 'fs';
+import fs from "fs";
 import companyModel from "../models/companyModel.js";
-import { uploadFileToDrive } from '../middlewares/drive.js';
-import path from 'path';
-
-
+import { uploadFileToDrive } from "../middlewares/drive.js";
+import path from "path";
 
 export const createCompany = async (req, res) => {
   try {
-
     const companyData = {
       ...req.body,
     };
@@ -18,13 +15,12 @@ export const createCompany = async (req, res) => {
     await company.save();
     res.status(201).json(company);
   } catch (error) {
-    console.error('Error creating company:', error);
+    console.error("Error creating company:", error);
     res.status(400).json({ error: error.message });
   }
 };
 
 export const uploadFiles = async (req, res) => {
-
   console.log(req.body); // Log the uploaded files
   try {
     const files = req.files; // Access the files from req.files
@@ -43,35 +39,52 @@ export const uploadFiles = async (req, res) => {
     const { companyId } = req.body;
     const company = await companyModel.findById(companyId);
     if (!company) {
-      return res.status(404).json({ error: 'Company not found' });
+      return res.status(404).json({ error: "Company not found" });
     }
 
     company.attachments = {
       ...company.attachments,
-      ...fileLinks
+      ...fileLinks,
     };
     await company.save();
     res.status(201).json(company);
   } catch (error) {
-    console.error('Error creating company:', error);
+    console.error("Error creating company:", error);
     res.status(400).json({ error: error.message });
   }
 };
 
+// get alll companies
+export const getAllCompanies = async (req, res) => {
+  try {
+    const companies = await companyModel.find();
 
-// Get all companies
+    res.status(200).json({
+      success: true,
+      data: companies,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// Get filter companies
 export const getCompanies = async (req, res) => {
-  console.log(req.body)
+  console.log(req.body);
   const { name, status } = req.body;
 
   try {
     // Build the filter criteria based on the provided company name and client status
     const filter = {};
     if (name) {
-      filter['companyDetails.companyName'] = { $regex: name, $options: 'i' }; // Case-insensitive match
+      filter["companyDetails.companyName"] = { $regex: name, $options: "i" }; // Case-insensitive match
     }
     if (status) {
-      filter['companyDetails.clientStatus'] = status;
+      filter["companyDetails.clientStatus"] = status;
     }
 
     // Fetch companies based on the filter criteria
@@ -81,7 +94,6 @@ export const getCompanies = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 
 // Get a single company by ID
 export const getCompanyById = async (req, res) => {
