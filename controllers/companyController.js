@@ -21,7 +21,7 @@ export const createCompany = async (req, res) => {
 };
 
 export const uploadFiles = async (req, res) => {
-  console.log(req.body); // Log the uploaded files
+  console.log(req.files); // Log the uploaded files
   try {
     const files = req.files; // Access the files from req.files
     const fileLinks = {};

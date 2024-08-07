@@ -1,21 +1,17 @@
 // controllers/taskController.js
+import Company from "../models/companyModel.js";
 import taskModel from "./../models/taskModel.js";
-import Company from '../models/companyModel.js'
-
 
 export const getTasks = async (req, res) => {
-  const { company, effectiveFrom, effectiveTo } = req.body;
+  const { company, effectiveFrom, effectiveTo, assignedTo, status } = req.body;
 
   try {
-    // Initialize an empty filter object
     const filter = {};
 
-    // Add company filter if provided
     if (company) {
-      filter['company'] = { $regex: company, $options: 'i' }; // Case-insensitive match
+      filter.company = { $regex: company, $options: "i" };
     }
 
-    // Add date range filters if provided
     if (effectiveFrom && effectiveTo) {
       filter.startDate = { $gte: new Date(effectiveFrom) };
       filter.dueDate = { $lte: new Date(effectiveTo) };
@@ -25,16 +21,21 @@ export const getTasks = async (req, res) => {
       filter.dueDate = { $lte: new Date(effectiveTo) };
     }
 
-    // Fetch tasks based on the filter criteria (if any)
+    if (assignedTo) {
+      filter.assignedTo = { $regex: assignedTo, $options: "i" };
+    }
+
+    if (status) {
+      filter.applicationStatus = status;
+    }
+
     const tasks = await taskModel.find(filter);
-    res.status(200).json(tasks);
+    return res.status(200).send(tasks);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error fetching tasks:", error);
+    res.status(500).json({ error: "An error occurred while fetching tasks." });
   }
 };
-
-
-
 
 // Get a single task by ID
 export const getTaskById = async (req, res) => {
@@ -56,8 +57,8 @@ export const createTask = async (req, res) => {
     if (req.body.dateOfApproval) {
       // Find the company based on companyName in companyDetails and update the gst.status
       await Company.findOneAndUpdate(
-        { 'companyDetails.companyName': req.body.company }, // Query to find the document
-        { $set: { 'gst.status': 'active' } }, // Update operation
+        { "companyDetails.companyName": req.body.company }, // Query to find the document
+        { $set: { "gst.status": "active" } }, // Update operation
         { new: true } // Option to return the updated document
       );
     }
@@ -65,8 +66,8 @@ export const createTask = async (req, res) => {
     if (req.body.fileReturnStatus) {
       // Set gst.status to 'inactive'
       await Company.findOneAndUpdate(
-        { 'companyDetails.companyName': req.body.company }, // Query to find the document
-        { $set: { 'gst.status': 'inactive' } }, // Update operation
+        { "companyDetails.companyName": req.body.company },
+        { $set: { "gst.status": "inactive" } }, // Update operation
         { new: true } // Option to return the updated document
       );
     }
@@ -89,17 +90,17 @@ export const updateTask = async (req, res) => {
     if (req.body.dateOfApproval) {
       // Find the company based on companyName in companyDetails and update the gst.status
       await Company.findOneAndUpdate(
-        { 'companyDetails.companyName': req.body.company }, // Query to find the document
-        { $set: { 'gst.status': 'active' } }, // Update operation
+        { "companyDetails.companyName": req.body.company }, // Query to find the document
+        { $set: { "gst.status": "active" } }, // Update operation
         { new: true } // Option to return the updated document
       );
     }
 
-    if (req.body.applicationSubStatus =="rejected") {
+    if (req.body.applicationSubStatus == "rejected") {
       // Find the company based on companyName in companyDetails and update the gst.status
       await Company.findOneAndUpdate(
-        { 'companyDetails.companyName': req.body.company }, // Query to find the document
-        { $set: { 'gst.status': 'inactive' } }, // Update operation
+        { "companyDetails.companyName": req.body.company }, // Query to find the document
+        { $set: { "gst.status": "inactive" } }, // Update operation
         { new: true } // Option to return the updated document
       );
     }
@@ -107,8 +108,8 @@ export const updateTask = async (req, res) => {
     if (req.body.appealFileReturnStatus) {
       // Set gst.status to 'inactive'
       await Company.findOneAndUpdate(
-        { 'companyDetails.companyName': req.body.company }, // Query to find the document
-        { $set: { 'gst.status': 'inactive' } }, // Update operation
+        { "companyDetails.companyName": req.body.company }, // Query to find the document
+        { $set: { "gst.status": "inactive" } }, // Update operation
         { new: true } // Option to return the updated document
       );
     }
