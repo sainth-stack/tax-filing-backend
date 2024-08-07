@@ -95,7 +95,16 @@ export const updateTask = async (req, res) => {
       );
     }
 
-    if (req.body.fileReturnStatus) {
+    if (req.body.applicationSubStatus =="rejected") {
+      // Find the company based on companyName in companyDetails and update the gst.status
+      await Company.findOneAndUpdate(
+        { 'companyDetails.companyName': req.body.company }, // Query to find the document
+        { $set: { 'gst.status': 'inactive' } }, // Update operation
+        { new: true } // Option to return the updated document
+      );
+    }
+
+    if (req.body.appealFileReturnStatus) {
       // Set gst.status to 'inactive'
       await Company.findOneAndUpdate(
         { 'companyDetails.companyName': req.body.company }, // Query to find the document
