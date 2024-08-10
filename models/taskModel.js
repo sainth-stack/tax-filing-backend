@@ -45,6 +45,9 @@ const taskSchema = new mongoose.Schema({
   dateOfApproval: {
     type: Date,
   },
+  attachments: {
+    attachment: { type: String, default: "" },
+  },
 });
 
 const taskModel = mongoose.model("Task", taskSchema);

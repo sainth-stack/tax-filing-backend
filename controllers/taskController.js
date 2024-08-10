@@ -1,6 +1,8 @@
 // controllers/taskController.js
+import { uploadFileToDrive } from "../middlewares/drive.js";
 import Company from "../models/companyModel.js";
 import taskModel from "./../models/taskModel.js";
+import fs from "fs";
 
 export const getTasks = async (req, res) => {
   const { company, effectiveFrom, effectiveTo, assignedTo, status } = req.body;
@@ -132,5 +134,38 @@ export const deleteTask = async (req, res) => {
     res.status(200).json({ message: "Task deleted" });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+export const uploadFiles = async (req, res) => {
+  console.log(req.files); // Log the uploaded files
+  try {
+    const files = req.files; // Access the files from req.files
+    const fileLinks = {};
+
+    for (const file of files) {
+      const fileName = file.filename; // File name on disk
+      const filePath = path.join(file.destination, file.filename); // Full path to the file
+      const uploadResponse = await uploadFileToDrive(filePath);
+      fileLinks[file.fieldname] = uploadResponse.webViewLink;
+      fs.unlinkSync(filePath); // Clean up temp file
+    }
+
+    console.log(fileLinks);
+
+    const task = await taskModel.findById(req.body.taskId);
+    if (!task) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+
+    task.attachments = {
+      ...task.attachments,
+      ...fileLinks,
+    };
+    await task.save();
+    res.status(201).json(task);
+  } catch (error) {
+    console.error("Error creating task:", error);
+    res.status(400).json({ error: error.message });
   }
 };
