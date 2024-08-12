@@ -1,22 +1,20 @@
 // models/Task.js
 import mongoose from "mongoose";
+const { Schema } = mongoose;
 
-const taskSchema = new mongoose.Schema({
+const taskSchema = new Schema({
   company: {
     type: String,
-    required: true,
   },
   assignedTo: {
     type: String,
-    required: true,
   },
   priority: {
     type: String,
-    required: true,
+    enum: ['high', 'medium', 'low'],
   },
   startDate: {
     type: Date,
-    required: true,
   },
   dueDate: {
     type: Date,
@@ -26,29 +24,78 @@ const taskSchema = new mongoose.Schema({
   },
   taskType: {
     type: String,
+    enum: ['gst', 'providentFund', 'incomeTax', 'tds', 'esi', 'professionalTax'],
+  },
+  attachment: {
+    type: String,
   },
   taskName: {
     type: String,
   },
-  applicationStatus: {
+  applicationNumber: {
     type: String,
   },
   arn: {
     type: String,
   },
+  gstUsername: {
+    type: String,
+  },
+  prn: {
+    type: String,
+  },
+  legalName: {
+    type: String,
+  },
+  tradeName: {
+    type: String,
+  },
+  filingPeriod: {
+    type: String,
+  },
+  uploadStatus: {
+    type: String,
+    enum: ['uploaded', 'pending', 'failed'],
+  },
+  errorCode: {
+    type: String,
+  },
+  errorDescription: {
+    type: String,
+  },
+  periodOfReturn: {
+    type: String,
+  },
+  gstFilingStatus: {
+    type: String,
+    enum: ['filed', 'notFiled'],
+  },
+  filedDate: {
+    type: Date,
+  },
+  effectiveDate: {
+    type: Date,
+  },
+  order: {
+    type: Number,
+  },
+  businessName: {
+    type: String,
+  },
+  attachment: {
+    type: String,
+  },
+  filingMode: {
+    type: String,
+  },
+  prnDate: {
+    type: Date,
+  },
   arnDate: {
     type: Date,
   },
-  applicationSubStatus: {
-    type: String,
-  },
-  dateOfApproval: {
-    type: Date,
-  },
-  attachments: {
-    attachment: { type: String, default: "" },
-  },
 });
+
 
 const taskModel = mongoose.model("Task", taskSchema);
 

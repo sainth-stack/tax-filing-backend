@@ -3,6 +3,7 @@ import { uploadFileToDrive } from "../middlewares/drive.js";
 import Company from "../models/companyModel.js";
 import taskModel from "./../models/taskModel.js";
 import fs from "fs";
+import path from 'path';
 
 export const getTasks = async (req, res) => {
   const { company, effectiveFrom, effectiveTo, assignedTo, status } = req.body;
@@ -54,76 +55,115 @@ export const getTaskById = async (req, res) => {
 
 export const createTask = async (req, res) => {
   try {
-    const task = new taskModel(req.body);
+    const { body, files } = req;
+    const file = files[0];
+    console.log(file) // Access the single file from req.files
+    let fileLink = null;
+    if (file) {
+      const filePath = path.join(file.destination, file.filename); // Full path to the file
+      const uploadResponse = await uploadFileToDrive(filePath);
+      fileLink = uploadResponse.webViewLink;
+      fs.unlinkSync(filePath); // Clean up temp file
+    }
+    // Create the task object with the file link if available
+    const taskData = { ...body };
+    if (fileLink) {
+      taskData.attachment = fileLink;
+    }
+
+    const task = new taskModel(taskData);
     await task.save();
-    if (req.body.dateOfApproval) {
-      // Find the company based on companyName in companyDetails and update the gst.status
+
+    // Update company GST status based on task fields
+    if (body.dateOfApproval) {
       await Company.findOneAndUpdate(
-        { "companyDetails.companyName": req.body.company }, // Query to find the document
-        { $set: { "gst.status": "active" } }, // Update operation
+        { "companyDetails.companyName": body.company }, // Query to find the document
+        { $set: { "gst.status":body.taskName =="gstNewRegistration" ? "active" : "inactive"  } }, // Update operation
         { new: true } // Option to return the updated document
       );
     }
 
-    if (req.body.fileReturnStatus) {
-      // Set gst.status to 'inactive'
-      await Company.findOneAndUpdate(
-        { "companyDetails.companyName": req.body.company },
-        { $set: { "gst.status": "inactive" } }, // Update operation
-        { new: true } // Option to return the updated document
-      );
-    }
+    // if (body.fileReturnStatus) {
+    //   await Company.findOneAndUpdate(
+    //     { "companyDetails.companyName": body.company },
+    //     { $set: { "gst.status": "inactive" } }, // Update operation
+    //     { new: true } // Option to return the updated document
+    //   );
+    // }
 
     return res.status(201).send({
       success: true,
       message: "Task created successfully",
+      task,
     });
   } catch (error) {
+    console.error("Error creating task:", error);
     res.status(400).json({ error: error.message });
   }
 };
+
 // Update a task by ID
 export const updateTask = async (req, res) => {
   try {
-    const task = await taskModel.findByIdAndUpdate(req.params.id, req.body, {
+    const { body, files } = req;
+    const file = files[0]; // Access the single file from req.files
+
+    let fileLink = null;
+    if (file) {
+      const filePath = path.join(file.destination, file.filename); // Full path to the file
+      const uploadResponse = await uploadFileToDrive(filePath);
+      fileLink = uploadResponse.webViewLink;
+      fs.unlinkSync(filePath); // Clean up temp file
+    }
+
+    // Update the task object with the file link if available
+    const taskData = { ...body };
+    if (fileLink) {
+      taskData.attachment = fileLink;
+    }
+
+    const task = await taskModel.findByIdAndUpdate(req.params.id, taskData, {
       new: true,
     });
 
-    if (req.body.dateOfApproval) {
-      // Find the company based on companyName in companyDetails and update the gst.status
-      await Company.findOneAndUpdate(
-        { "companyDetails.companyName": req.body.company }, // Query to find the document
-        { $set: { "gst.status": "active" } }, // Update operation
-        { new: true } // Option to return the updated document
-      );
-    }
-
-    if (req.body.applicationSubStatus == "rejected") {
-      // Find the company based on companyName in companyDetails and update the gst.status
-      await Company.findOneAndUpdate(
-        { "companyDetails.companyName": req.body.company }, // Query to find the document
-        { $set: { "gst.status": "inactive" } }, // Update operation
-        { new: true } // Option to return the updated document
-      );
-    }
-
-    if (req.body.appealFileReturnStatus) {
-      // Set gst.status to 'inactive'
-      await Company.findOneAndUpdate(
-        { "companyDetails.companyName": req.body.company }, // Query to find the document
-        { $set: { "gst.status": "inactive" } }, // Update operation
-        { new: true } // Option to return the updated document
-      );
-    }
     if (!task) {
       return res.status(404).json({ error: "Task not found" });
     }
-    res.status(200).json(task);
+
+    // Update company GST status based on task fields
+    if (body.dateOfApproval) {
+      await Company.findOneAndUpdate(
+        { "companyDetails.companyName": body.company }, // Query to find the document
+        { $set: { "gst.status":body.taskName =="gstNewRegistration" ? "active" : "inactive"  } }, // Update operation
+        { new: true } // Option to return the updated document
+      );
+    }
+    // if (body.applicationSubStatus === "rejected") {
+    //   await Company.findOneAndUpdate(
+    //     { "companyDetails.companyName": body.company },
+    //     { $set: { "gst.status": "inactive" } }, // Update operation
+    //     { new: true } // Option to return the updated document
+    //   );
+    // }
+
+    if (body.appealFileReturnStatus) {
+      await Company.findOneAndUpdate(
+        { "companyDetails.companyName": body.company },
+        { $set: { "gst.status": "inactive" } }, // Update operation
+        { new: true } // Option to return the updated document
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Task updated successfully",
+      task,
+    });
   } catch (error) {
+    console.error("Error updating task:", error);
     res.status(400).json({ error: error.message });
   }
 };
-
 // Delete a task by ID
 export const deleteTask = async (req, res) => {
   try {

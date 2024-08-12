@@ -4,6 +4,7 @@ const companySchema = new mongoose.Schema({
   companyDetails: {
     companyName: { type: String },
     constitution: { type: String },
+    subConstitution: { type: String },
     clientStatus: { type: String },
     authorisedPerson: { type: String },
     phone: { type: String },
@@ -25,6 +26,7 @@ const companySchema = new mongoose.Schema({
     eWayBillPassword: { type: String },
     effectiveFrom: { type: String },
     effectiveTo: { type: String },
+    typeOfGstFiling: { type: String },
   },
   esi: {
     esiNumber: { type: String },
