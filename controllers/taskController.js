@@ -1,23 +1,35 @@
 // controllers/taskController.js
 import { uploadFileToDrive } from "../middlewares/drive.js";
 import Company from "../models/companyModel.js";
+import User from "../models/employeeModel.js";
 import taskModel from "./../models/taskModel.js";
 import fs from "fs";
-import path from 'path';
+import path from "path";
 
 export const getTasks = async (req, res) => {
-  const { company, effectiveFrom, effectiveTo, assignedTo, status } = req.body;
+  const {
+    company,
+    effectiveFrom,
+    effectiveTo,
+    assignedTo,
+    status,
+    applicationSubstatus,
+  } = req.body;
 
   try {
     const filter = {};
 
+    // Filter by company name using case-insensitive partial matching
     if (company) {
       filter.company = { $regex: company, $options: "i" };
     }
 
+    // Date filtering logic for startDate and dueDate
     if (effectiveFrom && effectiveTo) {
-      filter.startDate = { $gte: new Date(effectiveFrom) };
-      filter.dueDate = { $lte: new Date(effectiveTo) };
+      filter.$and = [
+        { startDate: { $gte: new Date(effectiveFrom) } },
+        { dueDate: { $lte: new Date(effectiveTo) } },
+      ];
     } else if (effectiveFrom) {
       filter.startDate = { $gte: new Date(effectiveFrom) };
     } else if (effectiveTo) {
@@ -25,14 +37,29 @@ export const getTasks = async (req, res) => {
     }
 
     if (assignedTo) {
-      filter.assignedTo = { $regex: assignedTo, $options: "i" };
+      const user = await User.findOne({
+        firstName: { $regex: assignedTo, $options: "i" },
+      });
+      if (user) {
+        return (filter.assignedTo = user.firstName);
+      }
     }
 
+    if (applicationSubstatus) {
+      filter.applicationSubstatus = {
+        $regex: applicationSubstatus,
+        $options: "i",
+      };
+    }
     if (status) {
       filter.applicationStatus = status;
     }
+    // Filter by task type
+    const tasks = await taskModel
+      .find(filter)
+      .populate("assignedTo", "firstName");
 
-    const tasks = await taskModel.find(filter);
+    // Send the tasks in the response
     return res.status(200).send(tasks);
   } catch (error) {
     console.error("Error fetching tasks:", error);
@@ -57,7 +84,7 @@ export const createTask = async (req, res) => {
   try {
     const { body, files } = req;
     const file = files[0];
-    console.log(file) // Access the single file from req.files
+    console.log(file); // Access the single file from req.files
     let fileLink = null;
     if (file) {
       const filePath = path.join(file.destination, file.filename); // Full path to the file
@@ -65,12 +92,20 @@ export const createTask = async (req, res) => {
       fileLink = uploadResponse.webViewLink;
       fs.unlinkSync(filePath); // Clean up temp file
     }
-    // Create the task object with the file link if available
-    const taskData = { ...body };
-    if (fileLink) {
-      taskData.attachment = fileLink;
-    }
 
+    /* now do  */
+    const user = await User.findById(body.assignedTo).select("firstName");
+    if (!user) {
+      return res.status(404).json({ error: "Assigned user not found" });
+    }
+    // Create the task object with the file link if available
+    const taskData = {
+      ...body,
+      assignedTo: user.firstName,
+      attachment: fileLink || undefined,
+    };
+
+    // Save the task to the database
     const task = new taskModel(taskData);
     await task.save();
 
@@ -78,7 +113,12 @@ export const createTask = async (req, res) => {
     if (body.dateOfApproval) {
       await Company.findOneAndUpdate(
         { "companyDetails.companyName": body.company }, // Query to find the document
-        { $set: { "gst.status":body.taskName =="gstNewRegistration" ? "active" : "inactive"  } }, // Update operation
+        {
+          $set: {
+            "gst.status":
+              body.taskName == "gstNewRegistration" ? "active" : "inactive",
+          },
+        }, // Update operation
         { new: true } // Option to return the updated document
       );
     }
@@ -134,7 +174,12 @@ export const updateTask = async (req, res) => {
     if (body.dateOfApproval) {
       await Company.findOneAndUpdate(
         { "companyDetails.companyName": body.company }, // Query to find the document
-        { $set: { "gst.status":body.taskName =="gstNewRegistration" ? "active" : "inactive"  } }, // Update operation
+        {
+          $set: {
+            "gst.status":
+              body.taskName == "gstNewRegistration" ? "active" : "inactive",
+          },
+        }, // Update operation
         { new: true } // Option to return the updated document
       );
     }

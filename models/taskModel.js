@@ -1,5 +1,6 @@
 // models/Task.js
 import mongoose from "mongoose";
+
 const { Schema } = mongoose;
 
 const taskSchema = new Schema({
@@ -7,11 +8,12 @@ const taskSchema = new Schema({
     type: String,
   },
   assignedTo: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref: "User",
   },
   priority: {
     type: String,
-    enum: ['high', 'medium', 'low'],
+    enum: ["high", "medium", "low"],
   },
   startDate: {
     type: Date,
@@ -24,7 +26,14 @@ const taskSchema = new Schema({
   },
   taskType: {
     type: String,
-    enum: ['gst', 'providentFund', 'incomeTax', 'tds', 'esi', 'professionalTax'],
+    enum: [
+      "gst",
+      "providentFund",
+      "incomeTax",
+      "tds",
+      "esi",
+      "professionalTax",
+    ],
   },
   attachment: {
     type: String,
@@ -55,7 +64,7 @@ const taskSchema = new Schema({
   },
   uploadStatus: {
     type: String,
-    enum: ['uploaded', 'pending', 'failed'],
+    enum: ["uploaded", "pending", "failed"],
   },
   errorCode: {
     type: String,
@@ -68,7 +77,7 @@ const taskSchema = new Schema({
   },
   gstFilingStatus: {
     type: String,
-    enum: ['filed', 'notFiled'],
+    enum: ["filed", "notFiled"],
   },
   filedDate: {
     type: Date,
@@ -95,7 +104,6 @@ const taskSchema = new Schema({
     type: Date,
   },
 });
-
 
 const taskModel = mongoose.model("Task", taskSchema);
 
