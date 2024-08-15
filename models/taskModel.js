@@ -1,4 +1,5 @@
 // models/Task.js
+import { application } from "express";
 import mongoose from "mongoose";
 
 const { Schema } = mongoose;
@@ -35,6 +36,147 @@ const taskSchema = new Schema({
       "professionalTax",
     ],
   },
+
+  gst: {
+    Taskname: {
+      type: String,
+    },
+
+    /* for gst new registration Field */
+    gst_New_Registration: {
+      applicationStatus: {
+        type: String,
+      },
+      arn: {
+        type: Number,
+      },
+      arn_date: {
+        type: String,
+      },
+      applicationStatus: {
+        type: String,
+      },
+      date_of_approval: {
+        type: String,
+      },
+    },
+
+    /* for gst  Inactive  registration Field */
+    gst_inactive_Registration: {
+      typeOfInactive: {
+        type: String,
+      },
+      Cancellation_Status: {
+        type: String,
+      },
+      applicationStatus: {
+        type: String,
+      },
+      Need_to_Revoc_Cancellation: { type: String },
+      arn: {
+        type: Number,
+      },
+      arn_date: {
+        type: String,
+      },
+      applicationStatus: {
+        type: String,
+      },
+      date_of_approval: {
+        type: String,
+      },
+      final_refund_status: {
+        type: String,
+      },
+    },
+
+    /* for gst    Refund Field */
+    gst_refud: {
+      applicationStatus: {
+        type: String,
+      },
+      arn: {
+        type: Number,
+      },
+      arn_date: {
+        type: String,
+      },
+      applicationSubstatus: {
+        type: String,
+      },
+      date_of_approval: {
+        type: String,
+      },
+    },
+
+    /* for gst    Amendents Field */
+
+    gst_amendents: {
+      applicationStatus: {
+        type: String,
+      },
+      arn: {
+        type: Number,
+      },
+      arn_date: {
+        type: String,
+      },
+      applicationSubstatus: {
+        type: String,
+      },
+      date_of_approval: {
+        type: String,
+      },
+    },
+
+    /* for gst    Monthly Filling  Field */
+    gst_monthly_filling: {
+      type_of_gst_form: {
+        type: String,
+      },
+      gstr1: {
+        type: String,
+      },
+      fillin_status: {
+        type: String,
+      },
+      file_date: {
+        type: String,
+      },
+      arn_number: {
+        type: Number,
+      },
+      month: {
+        type: Date,
+      },
+      year: {
+        type: Date,
+      },
+      previous_month_not_filled: {
+        type: String,
+      },
+    },
+
+    /* for gst    Monthly Payment  Field */
+    gst_monthly_payment: {
+      quarter: {
+        type: String,
+      },
+      payment: {
+        type: String,
+      },
+      month: {
+        type: String,
+      },
+      year: {
+        type: String,
+      },
+      paymentDate: {
+        type: String,
+      },
+    },
+  },
+
   attachment: {
     type: String,
   },
@@ -48,7 +190,7 @@ const taskSchema = new Schema({
     type: String,
   },
   arn: {
-    type: String,
+    type: Number,
   },
   gstUsername: {
     type: String,
