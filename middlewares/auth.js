@@ -1,5 +1,5 @@
-import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../config/environment.js';
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "../config/environment.js";
 
 export const signToken = (user) => {
   return jwt.sign(
@@ -10,7 +10,7 @@ export const signToken = (user) => {
     },
     JWT_SECRET,
     {
-      expiresIn: '2d',
+      expiresIn: "2d",
     }
   );
 };
@@ -18,7 +18,7 @@ export const signToken = (user) => {
 export const isAuth = async (req, res, next) => {
   const { authorization } = req.headers;
   try {
-    const token = authorization.split(' ')[1];
+    const token = authorization.split(" ")[1];
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
     next();
@@ -28,4 +28,3 @@ export const isAuth = async (req, res, next) => {
     });
   }
 };
-

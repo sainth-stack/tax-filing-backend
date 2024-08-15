@@ -14,7 +14,6 @@ const router = express.Router();
 
 // Routes
 router.get("/companies/all", getAllCompanies);
-
 router.post("/companies", createCompany);
 router.post("/companies/filter", getCompanies);
 router.post("/files", upload.any(), uploadFiles);

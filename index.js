@@ -5,9 +5,9 @@ import connectDB from "./config/db.js";
 import { PORT } from "./config/environment.js";
 import dotenv from "dotenv";
 import companyRoutes from "./routes/companyRoutes.js";
-import serviceroutes from "./routes/serviceRoute.js";
-import userRoutes from './routes/userRoute.js';
-import  taskRoutes  from "./routes/taskRoutes.js";
+import serviceRoutes from "./routes/serviceRoute.js";
+import userRoutes from "./routes/userRoute.js";
+import taskRoutes from "./routes/taskRoutes.js";
 
 dotenv.config();
 
@@ -17,21 +17,18 @@ app.use(cors());
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
-/* app.use(express.static(path.join(__dirname, "public"))); */
 
 // Routes
 app.use("/api", companyRoutes);
-app.use("/api", serviceroutes);
+app.use("/api", serviceRoutes);
 app.use("/api", userRoutes);
+/* pending task routes and check remaining */
 app.use("/api", taskRoutes);
 
 //Default Route
 app.get("/", (req, res) => {
-  res.send(`<h1>Welcome to Backend Server </h1>
-    
-  `);
+  res.send(`<h1>Welcome to Backend Running On port : ${PORT} Server </h1>`);
 });
-
 
 //Server Configuration
 

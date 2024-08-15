@@ -5,6 +5,7 @@ import companyModel from "../models/companyModel.js";
 import { uploadFileToDrive } from "../middlewares/drive.js";
 import path from "path";
 
+/* create company controller */
 export const createCompany = async (req, res) => {
   try {
     const companyData = {
@@ -20,10 +21,12 @@ export const createCompany = async (req, res) => {
   }
 };
 
+/* file upload controller */
 export const uploadFiles = async (req, res) => {
-  console.log(req.files); // Log the uploaded files
+  console.log(req.files);
   try {
-    const files = req.files; // Access the files from req.files
+    /* getting files from input */
+    const files = req.files;
     const fileLinks = {};
 
     for (const file of files) {
@@ -89,9 +92,9 @@ export const getCompanies = async (req, res) => {
 
     // Fetch companies based on the filter criteria
     const companies = await companyModel.find(filter);
-    res.status(200).json(companies);
+    res.status(200).send(companies);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).send({ error: error.message });
   }
 };
 
@@ -102,9 +105,9 @@ export const getCompanyById = async (req, res) => {
     if (!company) {
       return res.status(404).json({ error: "Company not found" });
     }
-    res.status(200).json(company);
+    res.status(200).send(company);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).send({ error: error.message });
   }
 };
 

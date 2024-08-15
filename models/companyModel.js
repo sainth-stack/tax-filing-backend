@@ -10,6 +10,7 @@ const companySchema = new mongoose.Schema({
     phone: { type: String },
     mailId: { type: String },
   },
+
   incomeTax: {
     pan: { type: String },
     incomeTaxPassword: { type: String },
@@ -17,6 +18,7 @@ const companySchema = new mongoose.Schema({
     effectiveFrom: { type: String },
     effectiveTo: { type: String },
   },
+
   gst: {
     gstin: { type: String },
     gstUserName: { type: String },
@@ -28,6 +30,7 @@ const companySchema = new mongoose.Schema({
     effectiveTo: { type: String },
     typeOfGstFiling: { type: String },
   },
+
   esi: {
     esiNumber: { type: String },
     esiUserId: { type: String },
@@ -36,6 +39,7 @@ const companySchema = new mongoose.Schema({
     effectiveFrom: { type: String },
     effectiveTo: { type: String },
   },
+
   providentFund: {
     pfNumber: { type: String },
     pfUserId: { type: String },
@@ -44,6 +48,7 @@ const companySchema = new mongoose.Schema({
     effectiveFrom: { type: String },
     effectiveTo: { type: String },
   },
+
   professionalTax: {
     ptEcNumber: { type: String },
     ptUsername: { type: String },
@@ -53,6 +58,7 @@ const companySchema = new mongoose.Schema({
     effectiveFrom: { type: String },
     effectiveTo: { type: String },
   },
+
   tds: {
     tan: { type: String },
     tanPassword: { type: String },
@@ -62,6 +68,7 @@ const companySchema = new mongoose.Schema({
     effectiveFrom: { type: String },
     effectiveTo: { type: String },
   },
+
   shopCommercialEstablishment: {
     seNumber: { type: String },
     seUsername: { type: String },
@@ -71,12 +78,14 @@ const companySchema = new mongoose.Schema({
     effectiveFrom: { type: String },
     effectiveTo: { type: String },
   },
+
   msme: {
     msmeNumber: { type: String },
     status: { type: String },
     effectiveFrom: { type: String },
     effectiveTo: { type: String },
   },
+
   fssai: {
     fssaiNumber: { type: String },
     fssaiUsername: { type: String },
@@ -86,6 +95,7 @@ const companySchema = new mongoose.Schema({
     effectiveFrom: { type: String },
     effectiveTo: { type: String },
   },
+
   factoryLicense: {
     flNumber: { type: String },
     flUsername: { type: String },
@@ -95,6 +105,7 @@ const companySchema = new mongoose.Schema({
     effectiveFrom: { type: String },
     effectiveTo: { type: String },
   },
+
   importExport: {
     iecNumber: { type: String },
     dgftUsername: { type: String },
@@ -105,12 +116,14 @@ const companySchema = new mongoose.Schema({
     effectiveFrom: { type: String },
     effectiveTo: { type: String },
   },
+
   partnershipFirmFormC: {
     formCNumber: { type: String },
     status: { type: String },
     effectiveFrom: { type: String },
     effectiveTo: { type: String },
   },
+
   shramSuvidhaPortal: {
     lin: { type: String },
     ssUsername: { type: String },
@@ -119,6 +132,7 @@ const companySchema = new mongoose.Schema({
     effectiveFrom: { type: String },
     effectiveTo: { type: String },
   },
+
   mca: {
     cin: { type: String },
     mcaUsername: { type: String },
@@ -128,6 +142,7 @@ const companySchema = new mongoose.Schema({
     effectiveFrom: { type: String },
     effectiveTo: { type: String },
   },
+
   attachments: {
     panFile: { type: String, default: "" },
     gstFile: { type: String, default: "" },

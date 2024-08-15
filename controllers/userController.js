@@ -147,22 +147,16 @@ export const deleteUser = async (req, res) => {
 };
 
 export const loginUser = async (req, res) => {
-  // #swagger.tags = ['User Management']
   const user = await User.findOne({
     email: req.body.email,
+    status: true,
   });
   if (user) {
-    const user2 = await User.findOne({
-      email: req.body.email,
-      status: true,
+    const token = signToken(user);
+    res.send({
+      token,
+      ...user,
     });
-    if (user2) {
-      const token = signToken(user);
-      res.send({
-        token,
-        ...user2,
-      });
-    }
   } else {
     res.status(401).send({
       message: "Your Account Is Not Verified",

@@ -8,7 +8,7 @@ const taskSchema = new Schema({
     type: String,
   },
   assignedTo: {
-    type:String
+    type: String,
   },
   priority: {
     type: String,
@@ -41,6 +41,9 @@ const taskSchema = new Schema({
     type: String,
   },
   applicationNumber: {
+    type: String,
+  },
+  applicationSubstatus: {
     type: String,
   },
   arn: {

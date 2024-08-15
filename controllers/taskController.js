@@ -6,80 +6,6 @@ import taskModel from "./../models/taskModel.js";
 import fs from "fs";
 import path from "path";
 
-export const getTasks = async (req, res) => {
-  const {
-    company,
-    effectiveFrom,
-    effectiveTo,
-    assignedTo,
-    status,
-    applicationSubstatus,
-  } = req.body;
-
-  try {
-    const filter = {};
-
-    // Filter by company name using case-insensitive partial matching
-    if (company) {
-      filter.company = { $regex: company, $options: "i" };
-    }
-
-    // Date filtering logic for startDate and dueDate
-    if (effectiveFrom && effectiveTo) {
-      filter.$and = [
-        { startDate: { $gte: new Date(effectiveFrom) } },
-        { dueDate: { $lte: new Date(effectiveTo) } },
-      ];
-    } else if (effectiveFrom) {
-      filter.startDate = { $gte: new Date(effectiveFrom) };
-    } else if (effectiveTo) {
-      filter.dueDate = { $lte: new Date(effectiveTo) };
-    }
-
-    if (assignedTo) {
-      const user = await User.findOne({
-        firstName: { $regex: assignedTo, $options: "i" },
-      });
-      if (user) {
-        return (filter.assignedTo = user.firstName);
-      }
-    }
-
-    if (applicationSubstatus) {
-      filter.applicationSubstatus = {
-        $regex: applicationSubstatus,
-        $options: "i",
-      };
-    }
-    if (status) {
-      filter.applicationStatus = status;
-    }
-    // Filter by task type
-    const tasks = await taskModel
-      .find(filter)
-      .populate("assignedTo", "firstName");
-
-    // Send the tasks in the response
-    return res.status(200).send(tasks);
-  } catch (error) {
-    console.error("Error fetching tasks:", error);
-    res.status(500).json({ error: "An error occurred while fetching tasks." });
-  }
-};
-
-// Get a single task by ID
-export const getTaskById = async (req, res) => {
-  try {
-    const task = await taskModel.findById(req.params.id);
-    if (!task) {
-      return res.status(404).json({ error: "Task not found" });
-    }
-    res.status(200).json(task);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
 export const createTask = async (req, res) => {
   try {
     const { body, files } = req;
@@ -123,14 +49,6 @@ export const createTask = async (req, res) => {
       );
     }
 
-    // if (body.fileReturnStatus) {
-    //   await Company.findOneAndUpdate(
-    //     { "companyDetails.companyName": body.company },
-    //     { $set: { "gst.status": "inactive" } }, // Update operation
-    //     { new: true } // Option to return the updated document
-    //   );
-    // }
-
     return res.status(201).send({
       success: true,
       message: "Task created successfully",
@@ -139,6 +57,77 @@ export const createTask = async (req, res) => {
   } catch (error) {
     console.error("Error creating task:", error);
     res.status(400).json({ error: error.message });
+  }
+};
+
+export const getTasks = async (req, res) => {
+  const {
+    company,
+    effectiveFrom,
+    effectiveTo,
+    assignedTo,
+    status,
+    applicationSubstatus,
+  } = req.body;
+
+  try {
+    const filter = {};
+
+    // Filter by company name using case-insensitive partial matching
+    if (company) {
+      filter.company = { $regex: company, $options: "i" };
+    }
+
+    // Date filtering logic for startDate and dueDate
+    if (effectiveFrom && effectiveTo) {
+      filter.$and = [
+        { startDate: { $gte: new Date(effectiveFrom) } },
+        { dueDate: { $lte: new Date(effectiveTo) } },
+      ];
+    } else if (effectiveFrom) {
+      filter.startDate = { $gte: new Date(effectiveFrom) };
+    } else if (effectiveTo) {
+      filter.dueDate = { $lte: new Date(effectiveTo) };
+    }
+
+    if (assignedTo) {
+      const user = await User.findOne({
+        firstName: { $regex: assignedTo, $options: "i" },
+      });
+      if (user) {
+        return (filter.assignedTo = user.firstName);
+      }
+    }
+
+    if (applicationSubstatus) {
+      filter.applicationSubstatus = applicationSubstatus;
+    }
+    if (status) {
+      filter.applicationStatus = status;
+    }
+    // Filter by task type
+    const tasks = await taskModel
+      .find(filter)
+      .populate("assignedTo", "firstName");
+
+    // Send the tasks in the response
+    return res.status(200).send(tasks);
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
+    res.status(500).json({ error: "An error occurred while fetching tasks." });
+  }
+};
+
+// Get a single task by ID
+export const getTaskById = async (req, res) => {
+  try {
+    const task = await taskModel.findById(req.params.id);
+    if (!task) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+    res.status(200).json(task);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -183,13 +172,6 @@ export const updateTask = async (req, res) => {
         { new: true } // Option to return the updated document
       );
     }
-    // if (body.applicationSubStatus === "rejected") {
-    //   await Company.findOneAndUpdate(
-    //     { "companyDetails.companyName": body.company },
-    //     { $set: { "gst.status": "inactive" } }, // Update operation
-    //     { new: true } // Option to return the updated document
-    //   );
-    // }
 
     if (body.appealFileReturnStatus) {
       await Company.findOneAndUpdate(
