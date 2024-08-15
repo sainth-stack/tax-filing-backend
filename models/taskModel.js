@@ -9,8 +9,11 @@ const taskSchema = new Schema({
     type: String,
   } /*  */,
   assignedTo: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
+    type: String,
+    // ref: "User",
+  },
+  assignedName: {
+    type: String
   },
   priority: {
     type: String,
@@ -37,216 +40,123 @@ const taskSchema = new Schema({
     ],
   },
 
-  gst: {
-    Taskname: {
-      type: String,
-    },
-
-    /* for gst new registration Field */
-    gst_New_Registration: {
-      applicationStatus: {
-        type: String,
-      },
-      arn: {
-        type: Number,
-      },
-      arn_date: {
-        type: String,
-      },
-      applicationStatus: {
-        type: String,
-      },
-      date_of_approval: {
-        type: String,
-      },
-    },
-
-    /* for gst  Inactive  registration Field */
-    gst_inactive_Registration: {
-      typeOfInactive: {
-        type: String,
-      },
-      Cancellation_Status: {
-        type: String,
-      },
-      applicationStatus: {
-        type: String,
-      },
-      Need_to_Revoc_Cancellation: { type: String },
-      arn: {
-        type: Number,
-      },
-      arn_date: {
-        type: String,
-      },
-      applicationStatus: {
-        type: String,
-      },
-      date_of_approval: {
-        type: String,
-      },
-      final_refund_status: {
-        type: String,
-      },
-    },
-
-    /* for gst    Refund Field */
-    gst_refud: {
-      applicationStatus: {
-        type: String,
-      },
-      arn: {
-        type: Number,
-      },
-      arn_date: {
-        type: String,
-      },
-      applicationSubstatus: {
-        type: String,
-      },
-      date_of_approval: {
-        type: String,
-      },
-    },
-
-    /* for gst    Amendents Field */
-
-    gst_amendents: {
-      applicationStatus: {
-        type: String,
-      },
-      arn: {
-        type: Number,
-      },
-      arn_date: {
-        type: String,
-      },
-      applicationSubstatus: {
-        type: String,
-      },
-      date_of_approval: {
-        type: String,
-      },
-    },
-
-    /* for gst    Monthly Filling  Field */
-    gst_monthly_filling: {
-      type_of_gst_form: {
-        type: String,
-      },
-      gstr1: {
-        type: String,
-      },
-      fillin_status: {
-        type: String,
-      },
-      file_date: {
-        type: String,
-      },
-      arn_number: {
-        type: Number,
-      },
-      month: {
-        type: Date,
-      },
-      year: {
-        type: Date,
-      },
-      previous_month_not_filled: {
-        type: String,
-      },
-    },
-
-    /* for gst    Monthly Payment  Field */
-    gst_monthly_payment: {
-      quarter: {
-        type: String,
-      },
-      payment: {
-        type: String,
-      },
-      month: {
-        type: String,
-      },
-      year: {
-        type: String,
-      },
-      paymentDate: {
-        type: String,
-      },
-    },
-  },
-
-  attachment: {
-    type: String,
-  },
   taskName: {
     type: String,
   },
-  applicationNumber: {
-    type: String,
-  },
-  applicationSubstatus: {
+
+  /* for gst new registration Field */
+  applicationStatus: {
     type: String,
   },
   arn: {
     type: Number,
   },
-  gstUsername: {
+  arn_date: {
     type: String,
   },
-  prn: {
+  applicationSubStatus: {
     type: String,
   },
-  legalName: {
+  date_of_approval: {
     type: String,
   },
-  tradeName: {
+
+
+  /* for gst  Inactive  registration Field */
+  gstInactive_typeOfInactive: {
     type: String,
   },
-  filingPeriod: {
+  gstInactive_cancellationStatus: {
     type: String,
   },
-  uploadStatus: {
-    type: String,
-    enum: ["uploaded", "pending", "failed"],
-  },
-  errorCode: {
+  gstInactive_volApplicationStatus: {
     type: String,
   },
-  errorDescription: {
+  gstInactive_arn: {
     type: String,
   },
-  periodOfReturn: {
+  gstInactive_arnDate: {
     type: String,
   },
-  gstFilingStatus: {
+  gstInactive_applicationSubStatus: {
     type: String,
-    enum: ["filed", "notFiled"],
   },
-  filedDate: {
-    type: Date,
+  gstInactive_dateOfApproval: {
+    type: String,
   },
-  effectiveDate: {
-    type: Date,
+  gstInactive_finalReturnStatus: {
+    type: String,
   },
-  order: {
+  gstInactive_needToRevoceCancellation: {
+    type: String,
+  },
+  gstInactive_applicationStatus: {
+    type: String,
+  },
+  gstInactive_goingForAppeal: {
+    type: String,
+  },
+  gstInactive_rejectState: {
+    type: String,
+  },
+  gstInactive_appealArn: {
+    type: String,
+  },
+  gstInactive_appealArnDate: {
+    type: String,
+  },
+  gstInactive_appealApplicationSubStatus: {
+    type: String,
+  },
+
+
+  //monthly
+
+  gstMonthly_gstType: {
+    type: String,
+  },
+  gstMonthly_filingStatus: {
+    type: String,
+  },
+  gstMonthly_previousMonth: {
+    type: String,
+  },
+  gstMonthly_taxAmount: {
+    type: String,
+  },
+  gstMonthly_fileDate: {
+    type: String,
+  },
+  gstMonthly_monthlyarn: {
     type: Number,
   },
-  businessName: {
+  gstMonthly_monthlyMonth: {
+    type: Date,
+  },
+  gstMonthly_monthlyYear: {
     type: String,
   },
+
+
+  gstMonthlyPayment_quarter: {
+    type: String,
+  },
+  gstMonthlyPayment_payment: {
+    type: String,
+  },
+  gstMonthlyPayment_monthlyMonth: {
+    type: String,
+  },
+  gstMonthlyPayment_monthlyYear: {
+    type: String,
+  },
+  gstMonthlyPayment_paymentDate: {
+    type: String,
+  },
+
+
   attachment: {
     type: String,
-  },
-  filingMode: {
-    type: String,
-  },
-  prnDate: {
-    type: Date,
-  },
-  arnDate: {
-    type: Date,
   },
 });
 

@@ -27,7 +27,7 @@ export const createTask = async (req, res) => {
     // Create the task object with the file link if available
     const taskData = {
       ...body,
-      assignedTo: user.firstName,
+      assignedName: user.firstName,
       attachment: fileLink || undefined,
     };
 
@@ -67,7 +67,7 @@ export const getTasks = async (req, res) => {
     effectiveTo,
     assignedTo,
     status,
-    applicationSubstatus,
+    applicationSubStatus,
   } = req.body;
 
   try {
@@ -80,35 +80,31 @@ export const getTasks = async (req, res) => {
 
     // Date filtering logic for startDate and dueDate
     if (effectiveFrom && effectiveTo) {
-      filter.$and = [
-        { startDate: { $gte: new Date(effectiveFrom) } },
-        { dueDate: { $lte: new Date(effectiveTo) } },
-      ];
+      filter.startDate = { $gte: new Date(effectiveFrom) };
+      filter.dueDate = { $lte: new Date(effectiveTo) };
     } else if (effectiveFrom) {
       filter.startDate = { $gte: new Date(effectiveFrom) };
     } else if (effectiveTo) {
       filter.dueDate = { $lte: new Date(effectiveTo) };
     }
 
+    // Filter by assignedTo directly as a string
     if (assignedTo) {
-      const user = await User.findOne({
-        firstName: { $regex: assignedTo, $options: "i" },
-      });
-      if (user) {
-        return (filter.assignedTo = user.firstName);
-      }
+      filter.assignedTo = assignedTo;
     }
 
-    if (applicationSubstatus) {
-      filter.applicationSubstatus = applicationSubstatus;
+    // Filter by application sub-status
+    if (applicationSubStatus) {
+      filter.applicationSubStatus = applicationSubStatus;
     }
+
+    // Filter by status
     if (status) {
       filter.applicationStatus = status;
     }
-    // Filter by task type
-    const tasks = await taskModel
-      .find(filter)
-      .populate("assignedTo", "firstName");
+
+    // Retrieve tasks based on the filter
+    const tasks = await taskModel.find(filter);
 
     // Send the tasks in the response
     return res.status(200).send(tasks);
@@ -117,6 +113,7 @@ export const getTasks = async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching tasks." });
   }
 };
+
 
 // Get a single task by ID
 export const getTaskById = async (req, res) => {
