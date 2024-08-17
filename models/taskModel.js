@@ -13,7 +13,7 @@ const taskSchema = new Schema({
     // ref: "User",
   },
   assignedName: {
-    type: String
+    type: String,
   },
   priority: {
     type: String,
@@ -60,7 +60,6 @@ const taskSchema = new Schema({
   date_of_approval: {
     type: String,
   },
-
 
   /* for gst  Inactive  registration Field */
   gstInactive_typeOfInactive: {
@@ -109,7 +108,6 @@ const taskSchema = new Schema({
     type: String,
   },
 
-
   //monthly
 
   gstMonthly_gstType: {
@@ -137,7 +135,6 @@ const taskSchema = new Schema({
     type: String,
   },
 
-
   gstMonthlyPayment_quarter: {
     type: String,
   },
@@ -154,7 +151,77 @@ const taskSchema = new Schema({
     type: String,
   },
 
+  //for PF model
 
+  pfRegistration_companyName: {
+    type: String,
+  },
+  pfRegistration_registrationDate: {
+    type: String,
+  },
+  pfMonthly_paymentQuarter: {
+    type: String,
+  },
+  pfMonthly_paymentMonth: {
+    type: String,
+  },
+  pfMonthly_paymentYear: {
+    type: Number,
+  },
+  pfMonthly_paymentDate: {
+    type: String,
+  },
+  pfAnnual_returnYear: {
+    type: String,
+  },
+
+  //for pf registration
+
+  submissionDate: {
+    type: Date,
+  },
+  registrationNumber: {
+    type: String,
+  },
+
+  // for pf-anuual
+  filingDate: {
+    type: Date,
+  },
+  totalEmployees: {
+    type: Number,
+  },
+  totalAmount: {
+    type: Number,
+  },
+  annualReturnNumber: {
+    type: String,
+  },
+
+  quarter: {
+    type: String,
+  },
+  filingStatus: {
+    type: String,
+  },
+  processingStatus: {
+    type: String,
+  },
+  form16Generated: {
+    type: String,
+  },
+
+  // Fields for taskName: 'tdsTcsMonthly'
+  paymentStatus: {
+    type: String,
+  },
+  paymentMonth: {
+    type: String,
+  },
+
+  paidDate: {
+    type: String,
+  },
   attachment: {
     type: String,
   },
