@@ -151,79 +151,71 @@ const taskSchema = new Schema({
     type: String,
   },
 
-  //for PF model
+  //PF registration
 
-  pfRegistration_companyName: {
+  pfRegistration_applicationStatus: {
     type: String,
   },
-  pfRegistration_registrationDate: {
+  pfRegistration_applicationNumber: {
     type: String,
   },
-  pfMonthly_paymentQuarter: {
-    type: String,
-  },
-  pfMonthly_paymentMonth: {
-    type: String,
-  },
-  pfMonthly_paymentYear: {
-    type: Number,
-  },
-  pfMonthly_paymentDate: {
-    type: String,
-  },
-  pfAnnual_returnYear: {
-    type: String,
-  },
-
-  //for pf registration
-
-  submissionDate: {
+  pfRegistration_applicationDate: {
     type: Date,
   },
-  registrationNumber: {
+  pfRegistration_ApplicationSubStatus: {
     type: String,
   },
-
-  // for pf-anuual
-  filingDate: {
+  pfRegistration_approval: {
     type: Date,
   },
-  totalEmployees: {
-    type: Number,
-  },
-  totalAmount: {
-    type: Number,
-  },
-  annualReturnNumber: {
+
+  //PF monthly
+
+  pfMonthly_filingStatus: {
     type: String,
+  },
+  pfMonthly_prevNotFiled: {
+    type: String,
+  },
+  pfMonthly_currentStatus: {
+    type: String,
+  },
+  pfMonthly_fileDate: {
+    type: Date,
   },
 
-  quarter: {
+  tdstcs_taskName: {
     type: String,
   },
-  filingStatus: {
+  tdstcs_quarter: {
     type: String,
   },
-  processingStatus: {
+  tdstcs_filingStatus: {
     type: String,
   },
-  form16Generated: {
+  tdstcs_processingStatus: {
     type: String,
   },
-
-  // Fields for taskName: 'tdsTcsMonthly'
-  paymentStatus: {
+  tdstcs_form16Generated: {
     type: String,
   },
-  paymentMonth: {
+  tdsmonthly_taskName: {
     type: String,
   },
-
-  paidDate: {
+  tdsmonthly_quarter: {
     type: String,
   },
-  attachment: {
+  tdsmonthly_paymentStatus: {
     type: String,
+  },
+  tdsmonthly_paymentMonth: {
+    type: String,
+  },
+  tdsmonthly_year: {
+    type: String,
+  },
+  tdsmonthly_paidDate: {
+    type: Date,
   },
 });
 
