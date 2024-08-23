@@ -60,6 +60,23 @@ export const createTask = async (req, res) => {
   }
 };
 
+// get all tasks
+export const getAllTasks = async (req, res) => {
+  try {
+    const tasks = await taskModel.find();
+
+    res.status(200).json({
+      success: true,
+      data: tasks,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
 export const getTasks = async (req, res) => {
   const {
     company,
@@ -113,7 +130,6 @@ export const getTasks = async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching tasks." });
   }
 };
-
 
 // Get a single task by ID
 export const getTaskById = async (req, res) => {
