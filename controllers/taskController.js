@@ -6,45 +6,50 @@ import taskModel from "./../models/taskModel.js";
 import fs from "fs";
 import path from "path";
 
+
 export const createTask = async (req, res) => {
   try {
     const { body, files } = req;
-    const file = files[0];
-    console.log(file); // Access the single file from req.files
-    let fileLink = null;
-    if (file) {
+    const fileLinks = {};
+
+    for (const file of files) {
+      const fileName = file.filename; // File name on disk
       const filePath = path.join(file.destination, file.filename); // Full path to the file
       const uploadResponse = await uploadFileToDrive(filePath);
-      fileLink = uploadResponse.webViewLink;
+      fileLinks[file.fieldname] = uploadResponse.webViewLink;
       fs.unlinkSync(filePath); // Clean up temp file
     }
 
-    /* now do  */
     const user = await User.findById(body.assignedTo).select("firstName");
     if (!user) {
       return res.status(404).json({ error: "Assigned user not found" });
     }
-    // Create the task object with the file link if available
+
     const taskData = {
       ...body,
       assignedName: user.firstName,
-      attachment: fileLink || undefined,
+      ...fileLinks,
     };
 
-    // Save the task to the database
     const task = new taskModel(taskData);
     await task.save();
 
-    // Update company GST status based on task fields
+    // Update company GST status and approvalCertificate based on task fields
+    const updateData = {};
+
     if (body.dateOfApproval) {
+      updateData["gst.status"] =
+        body.taskName === "gstNewRegistration" ? "active" : "inactive";
+    }
+
+    if (fileLinks.approvalCertificate) {
+      updateData["gst.approvalCertificate"] = fileLinks.approvalCertificate;
+    }
+
+    if (Object.keys(updateData).length > 0) {
       await Company.findOneAndUpdate(
         { "companyDetails.companyName": body.company }, // Query to find the document
-        {
-          $set: {
-            "gst.status":
-              body.taskName == "gstNewRegistration" ? "active" : "inactive",
-          },
-        }, // Update operation
+        { $set: updateData }, // Update operation
         { new: true } // Option to return the updated document
       );
     }
@@ -85,6 +90,7 @@ export const getTasks = async (req, res) => {
     assignedTo,
     status,
     applicationSubStatus,
+    taskType
   } = req.body;
 
   try {
@@ -119,7 +125,9 @@ export const getTasks = async (req, res) => {
     if (status) {
       filter.applicationStatus = status;
     }
-
+    if (taskType) {
+      filter.taskType = taskType
+    }
     // Retrieve tasks based on the filter
     const tasks = await taskModel.find(filter);
 

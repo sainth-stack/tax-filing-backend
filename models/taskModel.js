@@ -17,7 +17,6 @@ const taskSchema = new Schema({
   },
   priority: {
     type: String,
-    enum: ["high", "medium", "low"],
   },
   startDate: {
     type: Date,
@@ -29,19 +28,26 @@ const taskSchema = new Schema({
     type: Date,
   },
   taskType: {
-    type: String,
-    enum: [
-      "gst",
-      "providentFund",
-      "incomeTax",
-      "tds",
-      "esi",
-      "professionalTax",
-    ],
+    type: String
   },
 
   taskName: {
     type: String,
+  },
+  attachment: {
+    type: String
+  },
+  acknowledgement: {
+    type: String
+  },
+  challan: {
+    type: String
+  },
+  approvalCertificate: {
+    type: String
+  },
+  remarks: {
+    type: String
   },
 
   /* for gst new registration Field */
@@ -221,27 +227,27 @@ const taskSchema = new Schema({
 
   tax_taskName: {
     type: String,
-    enum: [
-      "incomeTaxAuditCases",
-      "incomeTaxNonAuditCases",
-      "incomeTaxAdvanceTax",
-    ],
-    required: true,
   },
   tax_formStatus: {
     type: String,
-    enum: ["filed", "notFiled"],
   },
   tax_filingStatus: {
     type: String,
-    enum: ["filed", "notFiled"],
   },
   tax_paymentStatus: {
     type: String,
-    enum: ["taxPaid", "taxNotPaid", "partiallyPaid", "verified", "notVerified"],
+  },
+  tax_filing_e_Date:{
+    type: Number,
   },
   tax_paymentAmount: {
     type: Number,
+  },
+  tax_verification_date: {
+    type: Date
+  },
+  tax_filingDate: {
+    type: Date
   },
   tax_paymentDate: {
     type: Date,
@@ -251,21 +257,17 @@ const taskSchema = new Schema({
   },
   tax_quarter: {
     type: String,
-    enum: ["quarter1", "quarter2", "quarter3", "quarter4"],
   },
 
   // Additional fields for different scenarios
   tax_audit_formStatus: {
     type: String,
-    enum: ["filed", "notFiled"],
   },
   tax_audit_filingStatus: {
     type: String,
-    enum: ["filed", "notFiled"],
   },
   tax_audit_paymentStatus: {
     type: String,
-    enum: ["taxPaid", "taxNotPaid", "partiallyPaid", "verified"],
   },
   tax_audit_paymentAmount: {
     type: Number,
@@ -276,11 +278,9 @@ const taskSchema = new Schema({
 
   tax_nonAudit_filingStatus: {
     type: String,
-    enum: ["filed", "notFiled"],
   },
   tax_nonAudit_paymentStatus: {
     type: String,
-    enum: ["taxPaid", "taxNotPaid", "partiallyPaid", "verified", "notVerified"],
   },
   tax_nonAudit_paymentAmount: {
     type: Number,
@@ -294,11 +294,9 @@ const taskSchema = new Schema({
 
   tax_advanceTax_quarter: {
     type: String,
-    enum: ["quarter1", "quarter2", "quarter3", "quarter4"],
   },
   tax_advanceTax_paymentStatus: {
     type: String,
-    enum: ["taxPaid", "taxNotPaid", "partiallyPaid", "verified"],
   },
   tax_advanceTax_paymentAmount: {
     type: Number,
@@ -308,19 +306,15 @@ const taskSchema = new Schema({
   },
   tax_advanceTax_filingStatus: {
     type: String,
-    enum: ["filed", "notFiled"],
   },
 
   //esi - model
 
   taskName: {
     type: String,
-    enum: ["esiNewRegistration", "esiRegularMonthlyActivity", "esiInactive"],
-    required: true,
   },
   esi_new_applicationStatus: {
     type: String,
-    enum: ["pendingForApply", "applied"],
   },
   esi_new_applicationNumber: {
     type: String,
@@ -330,12 +324,6 @@ const taskSchema = new Schema({
   },
   esi_new_applicationSubStatus: {
     type: String,
-    enum: [
-      "pendingForApproval",
-      "pendingForClarification",
-      "rejected",
-      "approved",
-    ],
   },
   esi_new_dateOfApproval: {
     type: Date,
@@ -343,19 +331,15 @@ const taskSchema = new Schema({
 
   esi_typeOfGSTForm: {
     type: String,
-    enum: ["gstr1", "gstr3b"],
   },
   esi_filingStatus: {
     type: String,
-    enum: ["filed", "notFiled"],
   },
   esi_previousMonthNotFiled: {
     type: String,
-    enum: ["yes", "no"],
   },
   esi_currentStatus: {
     type: String,
-    enum: ["documentsPending", "waitingForClarification", "workInProgress"],
   },
   esi_fileDate: {
     type: Date,
@@ -363,7 +347,6 @@ const taskSchema = new Schema({
 
   esi_inactive_applicationStatus: {
     type: String,
-    enum: ["closureApplied", "inactiveDueToNonFiling"],
   },
   esi_inactive_applicationNumber: {
     type: String,
@@ -372,13 +355,7 @@ const taskSchema = new Schema({
     type: Date,
   },
   esi_inactive_applicationSubStatus: {
-    type: String,
-    enum: [
-      "pendingForApproval",
-      "pendingForClarification",
-      "rejected",
-      "approved",
-    ],
+    type: String
   },
   esi_inactive_dateOfApproval: {
     type: Date,
@@ -387,19 +364,12 @@ const taskSchema = new Schema({
 
   // Task Name
   pft_taskName: {
-    type: String,
-    enum: [
-      "professionalTaxNewRegistration",
-      "professionalTaxRegularMonthlyActivity",
-      "professionalTaxInactive",
-    ],
-    required: true,
+    type: String
   },
 
   // Professional Tax - New Registration
   pft_applicationStatus: {
     type: String,
-    enum: ["pendingForApply", "applied"],
   },
   pft_applicationNumber: {
     type: String,
@@ -409,12 +379,6 @@ const taskSchema = new Schema({
   },
   pft_applicationSubStatus: {
     type: String,
-    enum: [
-      "pendingForApproval",
-      "pendingForClarification",
-      "rejected",
-      "approved",
-    ],
   },
   pft_new_dateOfApproval: {
     type: Date,
@@ -423,15 +387,12 @@ const taskSchema = new Schema({
   // Professional Tax - Regular Monthly Activity
   pft_typeOfGSTForm: {
     type: String,
-    enum: ["gstr1"],
   },
   pft_filingStatus: {
     type: String,
-    enum: ["filed", "notFiled"],
   },
   pft_currentStatus: {
     type: String,
-    enum: ["documentsPending", "waitingForClarification", "workInProgress"],
   },
   pft_fileDate: {
     type: Date,
@@ -440,7 +401,6 @@ const taskSchema = new Schema({
   // Professional Tax - Inactive
   pft_inactive_applicationStatus: {
     type: String,
-    enum: ["closureApplied", "inactiveDueToNonFiling"],
   },
   pft_inactive_applicationNumber: {
     type: String,
@@ -449,13 +409,7 @@ const taskSchema = new Schema({
     type: Date,
   },
   pft_inactive_applicationSubStatus: {
-    type: String,
-    enum: [
-      "pendingForApproval",
-      "pendingForClarification",
-      "rejected",
-      "approved",
-    ],
+    type: String
   },
   pft_inactive_dateOfApproval: {
     type: Date,

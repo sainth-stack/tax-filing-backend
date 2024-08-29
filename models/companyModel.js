@@ -30,6 +30,9 @@ const companySchema = new mongoose.Schema(
       effectiveFrom: { type: String },
       effectiveTo: { type: String },
       typeOfGstFiling: { type: String },
+      approvalCertificate: {
+        type: String
+      },
     },
 
     esi: {
