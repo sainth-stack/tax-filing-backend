@@ -8,7 +8,7 @@ import companyRoutes from "./routes/companyRoutes.js";
 import serviceRoutes from "./routes/serviceRoute.js";
 import userRoutes from "./routes/userRoute.js";
 import taskRoutes from "./routes/taskRoutes.js";
-
+import './middlewares/cronjob.js'
 dotenv.config();
 
 //App Configuration

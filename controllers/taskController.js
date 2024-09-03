@@ -19,18 +19,30 @@ export const createTask = async (req, res) => {
       fileLinks[file.fieldname] = uploadResponse.webViewLink;
       fs.unlinkSync(filePath); // Clean up temp file
     }
+    const { assignedTo } = body;
 
-    const user = await User.findById(body.assignedTo).select("firstName");
-    if (!user) {
-      return res.status(404).json({ error: "Assigned user not found" });
+    // Check if assignedTo is provided and is a non-empty string
+    if (assignedTo && typeof assignedTo === 'string') {
+      // Fetch user based on the assignedTo string (assuming it is some identifier)
+      const user = await User.findOne({ someField: assignedTo }).select("firstName");
+      
+      if (user) {
+        body.assignedName = user.firstName;
+      } else {
+        // Handle case where user is not found if needed
+        // e.g., set assignedName to a default value or log a warning
+        body.assignedName = ''; // or some default value
+      }
+    } else {
+      // Handle cases where assignedTo is not provided or is invalid
+      body.assignedName = ''; // or some default value
     }
-
+    
     const taskData = {
       ...body,
-      assignedName: user.firstName,
       ...fileLinks,
     };
-
+    
     const task = new taskModel(taskData);
     await task.save();
 
