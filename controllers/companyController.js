@@ -14,6 +14,7 @@ export const createCompany = async (req, res) => {
 
     const company = new companyModel(companyData);
     await company.save();
+    console.log("Company created successfully", company);
     res.status(201).json(company);
   } catch (error) {
     console.error("Error creating company:", error);

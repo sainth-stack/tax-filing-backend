@@ -10,10 +10,11 @@ const companySchema = new mongoose.Schema(
       authorisedPerson: { type: String },
       phone: { type: String },
       mailId: { type: String },
+      pan: { type: String },
+      companyAddress: { type: String },
     },
 
     incomeTax: {
-      pan: { type: String },
       incomeTaxPassword: { type: String },
       status: { type: String },
       effectiveFrom: { type: String },
@@ -31,7 +32,7 @@ const companySchema = new mongoose.Schema(
       effectiveTo: { type: String },
       typeOfGstFiling: { type: String },
       approvalCertificate: {
-        type: String
+        type: String,
       },
     },
 
@@ -56,7 +57,11 @@ const companySchema = new mongoose.Schema(
     professionalTax: {
       ptEcNumber: { type: String },
       ptUsername: { type: String },
+
       ptPassword: { type: String },
+      ptEcUsername: { type: String },
+      ptEcPassword: { type: String },
+
       ptNumber: { type: String },
       status: { type: String },
       effectiveFrom: { type: String },
