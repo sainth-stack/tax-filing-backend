@@ -36,6 +36,4 @@ const port = PORT || 3600;
 app.listen(port, async () => {
   //Database Connection
   await connectDB();
-  console.log("Server is running on port: " + port);
-  console.log("secret", process.env.test_env);
 });

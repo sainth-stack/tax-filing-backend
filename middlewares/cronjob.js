@@ -72,7 +72,6 @@ cron.schedule('0 0 1 * *', async () => {
       for (const filingData of companyFilingData) {
         const newFiling = new GstFiling(filingData);
         await newFiling.save();
-        console.log(`Created ${filingData.taskType} filing for company ${company.companyDetails.companyName}`);
       }
     }
 
