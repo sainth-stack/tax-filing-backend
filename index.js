@@ -7,8 +7,10 @@ import dotenv from "dotenv";
 import companyRoutes from "./routes/companyRoutes.js";
 import serviceRoutes from "./routes/serviceRoute.js";
 import userRoutes from "./routes/userRoute.js";
+import auditRoutes from "./routes/auditRoutes.js";
+
 import taskRoutes from "./routes/taskRoutes.js";
-import './middlewares/cronjob.js'
+import "./middlewares/cronjob.js";
 dotenv.config();
 
 //App Configuration
@@ -19,6 +21,7 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Routes
+app.use("/api", auditRoutes);
 app.use("/api", companyRoutes);
 app.use("/api", serviceRoutes);
 app.use("/api", userRoutes);

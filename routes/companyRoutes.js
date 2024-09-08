@@ -1,4 +1,3 @@
-// routes/companyRoutes.js
 import express from "express";
 import {
   createCompany,
@@ -10,15 +9,34 @@ import {
   uploadFiles,
 } from "../controllers/companyController.js";
 import upload from "../middlewares/multer.js";
+import saveChangedData from "../middlewares/auditTrail.js";
+
 const router = express.Router();
 
-// Routes
+router.post(
+  "/companies",
+  saveChangedData("companies", "Company"),
+  createCompany
+);
+
+router.put(
+  "/companies/:id",
+  saveChangedData("companies", "Company"),
+  updateCompany
+);
+
+router.delete(
+  "/companies/:id",
+  saveChangedData("companies", "Company"),
+  deleteCompany
+);
+
 router.get("/companies/all", getAllCompanies);
-router.post("/companies", createCompany);
+
 router.post("/companies/filter", getCompanies);
-router.post("/files", upload.any(), uploadFiles);
+
 router.get("/companies/:id", getCompanyById);
-router.put("/companies/:id", updateCompany);
-router.delete("/companies/:id", deleteCompany);
+
+router.post("/files", upload.any(), uploadFiles);
 
 export default router;
