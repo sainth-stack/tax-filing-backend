@@ -1,13 +1,15 @@
-// models/AuditTrail.js
+// server/models/AuditLog.js
 import mongoose from "mongoose";
 
-const AuditTrailSchema = new mongoose.Schema({
-  dataDocument: { type: Object, required: true },
-  collectionName: { type: String, required: true },
-  userId: { type: String, required: true },
-  featureName: { type: String, required: true },
-  operation: { type: String, required: true },
+// Define the schema for the audit log
+const AuditLogSchema = new mongoose.Schema({
+  collection: { type: String },
+  documentId: { type: mongoose.Schema.Types.ObjectId },
+  operation: {
+    type: String,
+  }, // Type of operation
   timestamp: { type: Date, default: Date.now },
 });
 
-export default mongoose.model("AuditTrail", AuditTrailSchema);
+const auditModel = mongoose.model("AuditLog", AuditLogSchema);
+export default auditModel;

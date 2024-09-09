@@ -1,50 +1,44 @@
-// middlewares/auditTrail.js
-import AuditTrailModel from "../models/AuditTrail.js";
+// server/middlewares/auditMiddleware.js
 
-const saveChangedData = (collectionName, featureName) => {
-  return async (req, res, next) => {
-    let operation;
+import mongoose from "mongoose";
+import auditModel from "../models/AuditTrail.js";
 
-    switch (req.method) {
-      case "POST":
-        operation = "Create";
-        break;
-      case "PUT":
-        operation = "Update";
-        break;
-      case "DELETE":
-        operation = "Delete";
-        break;
-      default:
-        operation = "Unknown";
+const auditMiddleware = (model) => async (req, res, next) => {
+  res.on("finish", async () => {
+    if (["POST", "PUT", "DELETE"].includes(req.method)) {
+      const operation =
+        req.method === "POST"
+          ? "CREATE"
+          : req.method === "PUT"
+          ? "UPDATE"
+          : "DELETE";
+
+      const collection = model.modelName;
+
+      const documentId = req.params.id || req.body._id;
+
+      const isValidObjectId = mongoose.Types.ObjectId.isValid(documentId);
+
+      const changes = { ...req.body };
+
+      const user = req.user ? req.user.id : "Unknown";
+
+      try {
+        await auditModel.create({
+          collection,
+          documentId: isValidObjectId ? documentId : undefined,
+          operation,
+          changes,
+          user,
+        });
+      } catch (error) {
+        console.error("Failed to create audit log:", error.message);
+      }
     }
-
-    const commonData = {
-      dataDocument: req.body,
-      collectionName,
-      userId: req.body.userId || req.body.employeeReferenceId,
-      featureName,
-    };
-
-    try {
-      await saveData(operation, commonData, req);
-      next();
-    } catch (err) {
-      console.error("Audit trail error:", err);
-      next();
-    }
-  };
-};
-
-async function saveData(operation, commonData, req) {
-  const newChangeData = new AuditTrailModel({
-    ...commonData,
-    operation,
-    timestamp: new Date(), // Ensure timestamp is set when saving
   });
 
-  const result = await newChangeData.save();
-  req.auditId = result._id;
-}
+  // Continue to the next middleware or route handler
+  next();
+};
 
-export default saveChangedData;
+export default auditMiddleware;

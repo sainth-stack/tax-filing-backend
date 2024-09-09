@@ -1,18 +1,20 @@
-// routes/auditRoutes.js
+// server/routes/auditRoutes.js
 import express from "express";
-import AuditTrailModel from "../models/AuditTrail.js";
+import auditModel from "../models/AuditTrail.js";
 
 const router = express.Router();
 
-router.get("/:featureName", async (req, res) => {
+// Route to fetch audit logs
+router.get("/audit-logs", async (req, res) => {
   try {
-    const auditData = await AuditTrailModel.find({
-      featureName: req.params.featureName,
-    }).sort({ timestamp: -1 });
-    res.json(auditData);
+    const logs = await auditModel.find().sort({ timestamp: -1 });
+    res.status(200).json({
+      message: "audit Logs",
+      logs: logs,
+      NoOfLogs: logs.length,
+    });
   } catch (error) {
-    console.error("Error fetching audit trail:", error);
-    res.status(500).send("Server error");
+    res.status(500).json({ error: error.message });
   }
 });
 
