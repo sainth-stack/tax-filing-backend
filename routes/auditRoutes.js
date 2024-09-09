@@ -1,13 +1,13 @@
 // server/routes/auditRoutes.js
 import express from "express";
-import auditModel from "../models/AuditTrail.js";
+import auditCompanyModel from "../models/AuditTrail.js";
 
 const router = express.Router();
 
 // Route to fetch audit logs
-router.get("/audit-logs", async (req, res) => {
+router.get("/audit-history", async (req, res) => {
   try {
-    const logs = await auditModel.find().sort({ timestamp: -1 });
+    const logs = await auditCompanyModel.find().sort({ timestamp: -1 });
     res.status(200).json({
       message: "audit Logs",
       logs: logs,
