@@ -16,7 +16,7 @@ export const createTask = async (req, res) => {
       const fileName = file.filename; // File name on disk
       const filePath = path.join(file.destination, file.filename); // Full path to the file
       const uploadResponse = await uploadFileToDrive(filePath);
-      fileLinks[file.fieldname] = uploadResponse.webViewLink;
+      fileLinks[file.fieldname] = uploadResponse?.url;
       fs.unlinkSync(filePath); // Clean up temp file
     }
     const { assignedTo } = body;
