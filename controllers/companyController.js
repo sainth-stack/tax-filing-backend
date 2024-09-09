@@ -34,11 +34,10 @@ export const uploadFiles = async (req, res) => {
       const fileName = file.filename; // File name on disk
       const filePath = path.join(file.destination, file.filename); // Full path to the file
       const uploadResponse = await uploadFileToDrive(filePath);
-      fileLinks[file.fieldname] = uploadResponse.webViewLink;
+      console.log(uploadResponse)
+      fileLinks[file.fieldname] = uploadResponse?.url;
       fs.unlinkSync(filePath); // Clean up temp file
     }
-
-    console.log(fileLinks);
 
     const { companyId } = req.body;
     const company = await companyModel.findById(companyId);

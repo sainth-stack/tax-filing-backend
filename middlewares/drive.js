@@ -1,69 +1,43 @@
-import axios from "axios";
-import { google } from "googleapis";
-import path from "path";
+import AWS from "aws-sdk";
 import fs from "fs";
+import path from "path";
 
-// Configure OAuth2 client
-const oAuth2Client = new google.auth.OAuth2(
-  "573823221354-d175srri1ta9un581atkp7b9qenst32u.apps.googleusercontent.com",
-  "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",
-  "https://developers.google.com/oauthplayground"
-);
+// Configure AWS SDK
+AWS.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID, // Replace with your access key or use environment variables
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY, // Replace with your secret key or use environment variables
+  region: process.env.AWS_REGION, // Replace with your AWS region or use environment variables
+});
 
-// Set your refresh token
-const YOUR_REFRESH_TOKEN =
-  "1//04RBBdPWDqSPFCgYIARAAGAQSNwF-L9Ir-PWlGTlwbAO5-2LOxdcGwYw36UxxrrR_KAZcqhv3xbj87t607qTJQB8HPsK8welLc6Q";
-oAuth2Client.setCredentials({ refresh_token: YOUR_REFRESH_TOKEN });
+// Create S3 service object
+const s3 = new AWS.S3();
 
-// Function to refresh the access token
-const refreshAccessToken = async () => {
-  try {
-    const response = await axios.post("https://oauth2.googleapis.com/token", {
-      client_id:
-        "573823221354-d175srri1ta9un581atkp7b9qenst32u.apps.googleusercontent.com",
-      client_secret: "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",
-      refresh_token: YOUR_REFRESH_TOKEN,
-      grant_type: "refresh_token",
-    });
-    const newAccessToken = response.data.access_token;
-    oAuth2Client.setCredentials({ access_token: newAccessToken });
-    return newAccessToken;
-  } catch (error) {
-    console.error(
-      "Error refreshing access token:",
-      error.response ? error.response.data : error.message
-    );
-    throw new Error("Error refreshing access token");
-  }
-};
-
-// Function to upload file to Google Drive
+// Function to upload file to S3 bucket
 export const uploadFileToDrive = async (filePath) => {
   try {
-    await refreshAccessToken(); // Refresh the access token before making the API call
+    // Read the file content
+    const fileContent = fs.readFileSync(filePath);
 
-    const drive = google.drive({ version: "v3", auth: oAuth2Client });
-
-    const fileMetadata = {
-      name: path.basename(filePath),
+    // Set up S3 upload parameters
+    const params = {
+      Bucket: process.env.AWS_BUCKET_NAME, // Your bucket name
+      Key: path.basename(filePath), // File name you want to save as in S3
+      Body: fileContent,
+      ContentType: "application/octet-stream", // Optional: set content type
     };
-    const media = {
-      body: fs.createReadStream(filePath),
+
+    // Uploading files to the bucket
+    const response = await s3.upload(params).promise();
+
+    // Log or return the uploaded file information (e.g., file URL)
+    console.log(`File uploaded successfully. ${response.Location}`);
+    return {
+      key: response.Key,
+      url: response.Location, // File URL
     };
-
-    const response = await drive.files.create({
-      resource: fileMetadata,
-      media: media,
-      fields: "id, webViewLink",
-    });
-
-    return response.data;
   } catch (error) {
-    console.error(
-      "Error uploading file to Google Drive:",
-      error.response ? error.response.data : error.message
-    );
-    throw new Error("Error uploading file to Google Drive");
+    console.error("Error uploading file to S3:", error.message);
+    throw new Error("Error uploading file to S3");
   }
 };
 
