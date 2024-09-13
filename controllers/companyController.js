@@ -15,7 +15,7 @@ export const createCompany = async (req, res) => {
     const company = new companyModel(companyData);
     await company.save();
     console.log("Company created successfully", company);
-    res.status(201).json(company);
+    res.send(company);
   } catch (error) {
     console.error("Error creating company:", error);
     res.status(400).json({ error: error.message });
@@ -34,7 +34,7 @@ export const uploadFiles = async (req, res) => {
       const fileName = file.filename; // File name on disk
       const filePath = path.join(file.destination, file.filename); // Full path to the file
       const uploadResponse = await uploadFileToDrive(filePath);
-      console.log(uploadResponse)
+      console.log(uploadResponse);
       fileLinks[file.fieldname] = uploadResponse?.url;
       fs.unlinkSync(filePath); // Clean up temp file
     }

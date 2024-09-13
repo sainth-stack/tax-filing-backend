@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.post("/audit-history", async (req, res) => {
   try {
-    const { documentId } = req.body;
+    const { documentId } = req?.body;
 
     if (!documentId || !mongoose.Types.ObjectId.isValid(documentId)) {
       return res
@@ -15,13 +15,11 @@ router.post("/audit-history", async (req, res) => {
         .json({ error: "Invalid or missing document ID format" });
     }
 
-    console.log(documentId, "check documentId");
-
     const logs = await auditCompanyModel
       .find({ documentId: new mongoose.Types.ObjectId(documentId) })
       .sort({ timestamp: -1 });
 
-    res.status(200).json({
+    res.send({
       message: "Audit Logs",
       logs: logs,
       NoOfLogs: logs.length,

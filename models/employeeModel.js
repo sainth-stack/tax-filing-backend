@@ -15,7 +15,6 @@ const userSchema = new mongoose.Schema({
   },
   status: {
     type: Boolean,
-    default: true,
   },
   inactiveDate: {
     type: String,
@@ -28,7 +27,6 @@ const userSchema = new mongoose.Schema({
   },
   sameAsWhatsappNumber: {
     type: Boolean,
-    default: true,
   },
   whatsappNumber: {
     type: Number,

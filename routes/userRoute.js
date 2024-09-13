@@ -8,6 +8,7 @@ import {
   loginUser,
   getAllUsers,
 } from "../controllers/userController.js";
+import { signToken } from "../middlewares/auth.js";
 
 const router = express.Router();
 

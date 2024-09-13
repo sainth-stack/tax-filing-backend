@@ -37,7 +37,7 @@ export const createUser = async (req, res) => {
 
     await user.save();
 
-    return res.status(201).send({
+    return res.send({
       success: true,
       message: "User created successfully",
       user,
@@ -147,12 +147,13 @@ export const deleteUser = async (req, res) => {
 };
 
 export const loginUser = async (req, res) => {
-  const user = await User.findOne({
+  const user = await User.find({
     email: req.body.email,
     status: true,
   });
   if (user) {
     const token = signToken(user);
+
     res.send({
       token,
       ...user,
