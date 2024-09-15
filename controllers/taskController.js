@@ -6,7 +6,6 @@ import taskModel from "./../models/taskModel.js";
 import fs from "fs";
 import path from "path";
 
-
 export const createTask = async (req, res) => {
   try {
     const { body, files } = req;
@@ -22,27 +21,29 @@ export const createTask = async (req, res) => {
     const { assignedTo } = body;
 
     // Check if assignedTo is provided and is a non-empty string
-    if (assignedTo && typeof assignedTo === 'string') {
+    if (assignedTo && typeof assignedTo === "string") {
       // Fetch user based on the assignedTo string (assuming it is some identifier)
-      const user = await User.findOne({ someField: assignedTo }).select("firstName");
-      
+      const user = await User.findOne({ someField: assignedTo }).select(
+        "firstName"
+      );
+
       if (user) {
         body.assignedName = user.firstName;
       } else {
         // Handle case where user is not found if needed
         // e.g., set assignedName to a default value or log a warning
-        body.assignedName = ''; // or some default value
+        body.assignedName = ""; // or some default value
       }
     } else {
       // Handle cases where assignedTo is not provided or is invalid
-      body.assignedName = ''; // or some default value
+      body.assignedName = ""; // or some default value
     }
-    
+
     const taskData = {
       ...body,
       ...fileLinks,
     };
-    
+
     const task = new taskModel(taskData);
     await task.save();
 
@@ -102,7 +103,7 @@ export const getTasks = async (req, res) => {
     assignedTo,
     status,
     applicationSubStatus,
-    taskType
+    taskType,
   } = req.body;
 
   try {
@@ -138,7 +139,7 @@ export const getTasks = async (req, res) => {
       filter.applicationStatus = status;
     }
     if (taskType) {
-      filter.taskType = taskType
+      filter.taskType = taskType;
     }
     // Retrieve tasks based on the filter
     const tasks = await taskModel.find(filter);

@@ -19,35 +19,40 @@ const taskSchema = new Schema({
     type: String,
   },
   startDate: {
+    require: true,
+
     type: Date,
   },
   dueDate: {
+    require: true,
+
     type: Date,
   },
   actualCompletionDate: {
+    require: true,
     type: Date,
   },
   taskType: {
-    type: String
+    type: String,
   },
 
   taskName: {
     type: String,
   },
   attachment: {
-    type: String
+    type: String,
   },
   acknowledgement: {
-    type: String
+    type: String,
   },
   challan: {
-    type: String
+    type: String,
   },
   approvalCertificate: {
-    type: String
+    type: String,
   },
   remarks: {
-    type: String
+    type: String,
   },
 
   /* for gst new registration Field */
@@ -237,17 +242,17 @@ const taskSchema = new Schema({
   tax_paymentStatus: {
     type: String,
   },
-  tax_filing_e_Date:{
+  tax_filing_e_Date: {
     type: Number,
   },
   tax_paymentAmount: {
     type: Number,
   },
   tax_verification_date: {
-    type: Date
+    type: Date,
   },
   tax_filingDate: {
-    type: Date
+    type: Date,
   },
   tax_paymentDate: {
     type: Date,
@@ -355,7 +360,7 @@ const taskSchema = new Schema({
     type: Date,
   },
   esi_inactive_applicationSubStatus: {
-    type: String
+    type: String,
   },
   esi_inactive_dateOfApproval: {
     type: Date,
@@ -364,7 +369,7 @@ const taskSchema = new Schema({
 
   // Task Name
   pft_taskName: {
-    type: String
+    type: String,
   },
 
   // Professional Tax - New Registration
@@ -409,7 +414,7 @@ const taskSchema = new Schema({
     type: Date,
   },
   pft_inactive_applicationSubStatus: {
-    type: String
+    type: String,
   },
   pft_inactive_dateOfApproval: {
     type: Date,
