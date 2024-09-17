@@ -201,7 +201,7 @@ const taskSchema = new Schema({
   tdstcs_quarter: {
     type: String,
   },
-  tdstcs_filingStatus: {
+  tdstcsMonthly_filingStatus: {
     type: String,
   },
   tdstcs_processingStatus: {
@@ -236,10 +236,10 @@ const taskSchema = new Schema({
   tax_formStatus: {
     type: String,
   },
-  tax_filingStatus: {
+  taxMonthly_filingStatus: {
     type: String,
   },
-  tax_paymentStatus: {
+  taxmonthly_paymentStatus: {
     type: String,
   },
   tax_filing_e_Date: {
@@ -337,7 +337,7 @@ const taskSchema = new Schema({
   esi_typeOfGSTForm: {
     type: String,
   },
-  esi_filingStatus: {
+  esiMonthly_filingStatus: {
     type: String,
   },
   esi_previousMonthNotFiled: {
@@ -393,7 +393,7 @@ const taskSchema = new Schema({
   pft_typeOfGSTForm: {
     type: String,
   },
-  pft_filingStatus: {
+  pftMonthly_filingStatus: {
     type: String,
   },
   pft_currentStatus: {
