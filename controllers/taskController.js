@@ -95,6 +95,7 @@ export const getAllTasks = async (req, res) => {
     });
   }
 };
+
 export const getTasks = async (req, res) => {
   const {
     company,
@@ -155,10 +156,13 @@ export const getTasks = async (req, res) => {
 // Get a single task by ID
 export const getTaskById = async (req, res) => {
   try {
-    const task = await taskModel.findById(req.params.id);
+    // Find the task by ID and populate the 'company' field with the Company document
+    const task = await taskModel.findById(req.params.id).populate('company');
+
     if (!task) {
       return res.status(404).json({ error: "Task not found" });
     }
+
     res.status(200).json(task);
   } catch (error) {
     res.status(500).json({ error: error.message });

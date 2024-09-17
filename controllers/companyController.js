@@ -4,6 +4,7 @@ import fs from "fs";
 import companyModel from "../models/companyModel.js";
 import { uploadFileToDrive } from "../middlewares/drive.js";
 import path from "path";
+import mongoose from 'mongoose';
 
 /* create company controller */
 export const createCompany = async (req, res) => {
@@ -98,10 +99,22 @@ export const getCompanies = async (req, res) => {
   }
 };
 
-// Get a single company by ID
+
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
 export const getCompanyById = async (req, res) => {
   try {
-    const company = await companyModel.findById(req.params.id);
+    const { id } = req.params;
+
+    let company;
+    if (isValidObjectId(id)) {
+      // If id is a valid ObjectId, query by ObjectId
+      company = await companyModel.findById(id);
+    } else {
+      // Otherwise, query by company name
+      company = await companyModel.findOne({ 'companyDetails.companyName': id });
+    }
+
     if (!company) {
       return res.status(404).json({ error: "Company not found" });
     }
@@ -110,6 +123,7 @@ export const getCompanyById = async (req, res) => {
     res.status(500).send({ error: error.message });
   }
 };
+
 
 // Update a company by ID
 export const updateCompany = async (req, res) => {

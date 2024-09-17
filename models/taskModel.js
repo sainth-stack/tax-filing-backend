@@ -7,7 +7,7 @@ const { Schema } = mongoose;
 const taskSchema = new Schema({
   company: {
     type: String,
-  } /*  */,
+  } ,
   assignedTo: {
     type: String,
     // ref: "User",
