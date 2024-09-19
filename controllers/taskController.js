@@ -105,6 +105,8 @@ export const getTasks = async (req, res) => {
     status,
     applicationSubStatus,
     taskType,
+    year,
+    month,
   } = req.body;
 
   try {
@@ -142,6 +144,23 @@ export const getTasks = async (req, res) => {
     if (taskType) {
       filter.taskType = taskType;
     }
+
+    if (year) {
+      filter.startDate = {
+        ...filter.startDate,
+        $gte: new Date(`${year}-01-01`),
+        $lt: new Date(`${year + 1}-01-01`),
+      };
+    }
+
+    if (month) {
+      filter.startDate = {
+        ...filter.startDate,
+        $gte: new Date(`${year}-${month}-01`),
+        $lt: new Date(`${year}-${month + 1}-01`),
+      };
+    }
+
     // Retrieve tasks based on the filter
     const tasks = await taskModel.find(filter);
 
@@ -157,7 +176,7 @@ export const getTasks = async (req, res) => {
 export const getTaskById = async (req, res) => {
   try {
     // Find the task by ID and populate the 'company' field with the Company document
-    const task = await taskModel.findById(req.params.id).populate('company');
+    const task = await taskModel.findById(req.params.id).populate("company");
 
     if (!task) {
       return res.status(404).json({ error: "Task not found" });
