@@ -94,17 +94,35 @@ export const getAllCompanies = async (req, res) => {
 
 // Get filter companies
 export const getCompanies = async (req, res) => {
-  console.log(req.body);
-  const { name, status } = req.body;
+  const { name, status, year, month } = req.body;
 
   try {
-    // Build the filter criteria based on the provided company name and client status
+    // Build the filter criteria based on the provided company name, client status, year, and month
     const filter = {};
+
+    // Filter by company name (case-insensitive)
     if (name) {
-      filter["companyDetails.companyName"] = { $regex: name, $options: "i" }; // Case-insensitive match
+      filter["companyDetails.companyName"] = { $regex: name, $options: "i" };
     }
+
+    // Filter by client status
     if (status) {
       filter["companyDetails.clientStatus"] = status;
+    }
+
+    // Filter by year and month (if provided)
+    if (year && month) {
+      // Convert year and month into a start and end date
+      const startOfMonth = new Date(`${year}-${month}-01`);  // First day of the month
+      const endOfMonth = new Date(year, month, 0);            // Last day of the month
+
+      // Use MongoDB query operators with date comparisons
+      filter["companyDetails.effectiveFrom"] = { 
+        $lte: endOfMonth.toISOString() // Convert end date to string if stored as a string
+      };
+      filter["companyDetails.effectiveTo"] = { 
+        $gte: startOfMonth.toISOString() // Convert start date to string if stored as a string
+      };
     }
 
     // Fetch companies based on the filter criteria
@@ -114,6 +132,8 @@ export const getCompanies = async (req, res) => {
     res.status(500).send({ error: error.message });
   }
 };
+
+
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
