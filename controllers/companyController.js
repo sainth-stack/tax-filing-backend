@@ -4,13 +4,26 @@ import fs from "fs";
 import companyModel from "../models/companyModel.js";
 import { uploadFileToDrive } from "../middlewares/drive.js";
 import path from "path";
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 /* create company controller */
 export const createCompany = async (req, res) => {
   try {
+    const { companyDetails, ...remainingData } = req.body;
+    const { companyName } = companyDetails;
+    const existingCompany = await companyModel.findOne({
+      "companyDetails.companyName": companyName,
+    });
+    if (existingCompany) {
+      return res.status(400).json({ message: "Company already exists" });
+    }
+
     const companyData = {
-      ...req.body,
+      companyDetails: {
+        companyName,
+        ...companyDetails,
+      },
+      ...remainingData,
     };
 
     const company = new companyModel(companyData);
@@ -18,8 +31,7 @@ export const createCompany = async (req, res) => {
     console.log("Company created successfully", company);
     res.send(company);
   } catch (error) {
-    console.error("Error creating company:", error);
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ error: error });
   }
 };
 
@@ -99,7 +111,6 @@ export const getCompanies = async (req, res) => {
   }
 };
 
-
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 export const getCompanyById = async (req, res) => {
@@ -112,7 +123,9 @@ export const getCompanyById = async (req, res) => {
       company = await companyModel.findById(id);
     } else {
       // Otherwise, query by company name
-      company = await companyModel.findOne({ 'companyDetails.companyName': id });
+      company = await companyModel.findOne({
+        "companyDetails.companyName": id,
+      });
     }
 
     if (!company) {
@@ -123,7 +136,6 @@ export const getCompanyById = async (req, res) => {
     res.status(500).send({ error: error.message });
   }
 };
-
 
 // Update a company by ID
 export const updateCompany = async (req, res) => {

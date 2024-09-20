@@ -3,7 +3,9 @@ import mongoose from "mongoose";
 const companySchema = new mongoose.Schema(
   {
     companyDetails: {
-      companyName: { type: String },
+      companyName: {
+        type: String,
+      },
       constitution: { type: String },
       subConstitution: { type: String },
       clientStatus: { type: String },
