@@ -14,6 +14,8 @@ const companySchema = new mongoose.Schema(
       mailId: { type: String },
       pan: { type: String },
       companyAddress: { type: String },
+      effectiveFrom: { type: String },
+      effectiveTo: { type: String },
     },
 
     incomeTax: {
