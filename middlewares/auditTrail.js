@@ -1,61 +1,50 @@
-// server/middlewares/auditMiddleware.js
-
 import mongoose from "mongoose";
 import auditCompanyModel from "../models/AuditTrail.js";
 import companyModel from "../models/companyModel.js";
 
 const auditMiddleware = (model) => async (req, res, next) => {
-  console.log(`Request method: ${req.method}`);
-
   res.on("finish", async () => {
-    console.log(`Response finished with status code: ${res.statusCode}`);
-
-    if (["POST", "PUT", "DELETE"].includes(req?.method)) {
+    if (["POST", "PUT", "DELETE"].includes(req.method)) {
       const operation =
-        req?.method == "POST"
+        req.method === "POST"
           ? "CREATE"
-          : req?.method == "PUT"
+          : req.method === "PUT"
           ? "UPDATE"
           : "DELETE";
 
-      const collection = await model.collection.collectionName;
+      const documentId =
+        req.method === "POST"
+          ? res.locals.companyId || req.body.companyId || req.user?.companyId
+          : req.params.companyId || req.body.companyId;
 
-      let documentId;
-
-      // Capture document ID based on method
-      if (req.method === "POST") {
-        // Assuming the document is created in this middleware or controller and the ID should be in the response
-        documentId = res.locals.documentId || req.body._id;
-      } else {
-        documentId = req.params.id || req.body._id;
-      }
-
-      console.log("Document ID:", documentId);
-
-      /*       console.log("Document ID:", documentId); */
-
+      const user = req.user ? req.user.email : "Anonymous";
       let authorisedPerson = "Unknown";
+
       try {
-        // Validate ObjectId
         if (!mongoose.Types.ObjectId.isValid(documentId)) {
-          console.error("Invalid Company Details:", documentId);
+          console.error("Invalid Document ID:", documentId);
           return;
         }
 
-        const existingDocument = await companyModel.findById(documentId);
-        /* console.log("Existing Document:", existingDocument); */
-        if (existingDocument) {
-          authorisedPerson = existingDocument.companyDetails.authorisedPerson;
+        let existingDocument;
+        if (req.method === "PUT") {
+          // Fetch the updated document after the update operation
+          existingDocument = await model.findByIdAndUpdate(
+            documentId,
+            req.body,
+            { new: true }
+          );
+        } else {
+          existingDocument = await model.findById(documentId);
         }
-      } catch (error) {
-        console.error("Failed to fetch existing document:", error.message);
-      }
 
-      const user = req.user ? req.user.username : "Anonymous"; // Replace with actual user identification
+        if (!existingDocument) {
+          return res.status(404).json({ message: "Document not found" });
+        }
 
-      try {
+        // Create an audit log entry
         const createdAudit = new auditCompanyModel({
-          collection,
+          collection: model.collection.collectionName,
           documentId,
           operation,
           user,

@@ -1,4 +1,3 @@
-// server/routes/auditRoutes.js
 import express from "express";
 import auditCompanyModel from "../models/AuditTrail.js";
 import mongoose from "mongoose";
@@ -7,8 +6,9 @@ const router = express.Router();
 
 router.post("/audit-history", async (req, res) => {
   try {
-    const { documentId } = req?.body;
+    const { documentId } = req.body;
 
+    console.log("Document ID in the audit routes:", documentId);
     if (!documentId || !mongoose.Types.ObjectId.isValid(documentId)) {
       return res
         .status(400)
@@ -19,11 +19,13 @@ router.post("/audit-history", async (req, res) => {
       .find({ documentId: new mongoose.Types.ObjectId(documentId) })
       .sort({ timestamp: -1 });
 
-    res.send({
+    res.json({
       message: "Audit Logs",
-      logs: logs,
+      logs,
       NoOfLogs: logs.length,
     });
+
+    console.log("Audit Logs:", logs);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

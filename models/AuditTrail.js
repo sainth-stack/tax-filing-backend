@@ -5,12 +5,11 @@ const AuditLogSchema = new mongoose.Schema({
   collection: { type: String },
   documentId: {
     type: mongoose.Schema.Types.ObjectId,
-    refPath: "collection",
+    refPath: "User",
   },
   user: { type: String },
-  authorisedPerson: { type: String }, // Add authorisedPerson field
+  authorisedPerson: { type: String },
   operation: { type: String },
-  // To store changes made in the document
   timestamp: { type: Date, default: Date.now },
 });
 

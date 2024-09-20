@@ -27,7 +27,9 @@ export const createCompany = async (req, res) => {
     };
 
     const company = new companyModel(companyData);
+
     await company.save();
+    res.locals.companyId = company._id;
     console.log("Company created successfully", company);
     res.send(company);
   } catch (error) {
@@ -63,6 +65,8 @@ export const uploadFiles = async (req, res) => {
       ...fileLinks,
     };
     await company.save();
+    res.locals.companyId = company._id;
+
     res.status(201).json(company);
   } catch (error) {
     console.error("Error creating company:", error);
@@ -140,16 +144,15 @@ export const getCompanyById = async (req, res) => {
 // Update a company by ID
 export const updateCompany = async (req, res) => {
   try {
-    const company = await companyModel.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-      }
-    );
+    const { id } = req.params;
+    console.log("Updating company with ID:", id);
+    const company = await companyModel.findByIdAndUpdate(id, req.body, {
+      new: true,
+    });
     if (!company) {
       return res.status(404).json({ error: "Company not found" });
     }
+
     res.status(200).json(company);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -163,6 +166,7 @@ export const deleteCompany = async (req, res) => {
     if (!company) {
       return res.status(404).json({ error: "Company not found" });
     }
+
     res.status(200).json({ message: "Company deleted" });
   } catch (error) {
     res.status(500).json({ error: error.message });
