@@ -113,15 +113,15 @@ export const getCompanies = async (req, res) => {
     // Filter by year and month (if provided)
     if (year && month) {
       // Convert year and month into a start and end date
-      const startOfMonth = new Date(`${year}-${month}-01`);  // First day of the month
-      const endOfMonth = new Date(year, month, 0);            // Last day of the month
+      const startOfMonth = new Date(`${year}-${month}-01`); // First day of the month
+      const endOfMonth = new Date(year, month, 0); // Last day of the month
 
       // Use MongoDB query operators with date comparisons
-      filter["companyDetails.effectiveFrom"] = { 
-        $lte: endOfMonth.toISOString() // Convert end date to string if stored as a string
+      filter["companyDetails.effectiveFrom"] = {
+        $lte: endOfMonth.toISOString(), // Convert end date to string if stored as a string
       };
-      filter["companyDetails.effectiveTo"] = { 
-        $gte: startOfMonth.toISOString() // Convert start date to string if stored as a string
+      filter["companyDetails.effectiveTo"] = {
+        $gte: startOfMonth.toISOString(), // Convert start date to string if stored as a string
       };
     }
 
@@ -132,8 +132,6 @@ export const getCompanies = async (req, res) => {
     res.status(500).send({ error: error.message });
   }
 };
-
-
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -172,7 +170,7 @@ export const updateCompany = async (req, res) => {
     if (!company) {
       return res.status(404).json({ error: "Company not found" });
     }
-
+    res.locals.companyId = company._id;
     res.status(200).json(company);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -186,7 +184,7 @@ export const deleteCompany = async (req, res) => {
     if (!company) {
       return res.status(404).json({ error: "Company not found" });
     }
-
+    res.locals.companyId = company._id;
     res.status(200).json({ message: "Company deleted" });
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -8,11 +8,8 @@ router.post("/audit-history", async (req, res) => {
   try {
     const { documentId } = req.body;
 
-    console.log("Document ID in the audit routes:", documentId);
     if (!documentId || !mongoose.Types.ObjectId.isValid(documentId)) {
-      return res
-        .status(400)
-        .json({ error: "Invalid or missing document ID format" });
+      return res.status(400).json({ error: "Invalid or missing document ID" });
     }
 
     const logs = await auditCompanyModel
@@ -24,8 +21,6 @@ router.post("/audit-history", async (req, res) => {
       logs,
       NoOfLogs: logs.length,
     });
-
-    console.log("Audit Logs:", logs);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -1,17 +1,14 @@
 // server/models/AuditLog.js
 import mongoose from "mongoose";
-
-const AuditLogSchema = new mongoose.Schema({
-  collection: { type: String },
-  documentId: {
-    type: mongoose.Schema.Types.ObjectId,
-    refPath: "User",
-  },
-  user: { type: String },
-  authorisedPerson: { type: String },
-  operation: { type: String },
+const auditTrailSchema = new mongoose.Schema({
+  collection: String,
+  documentId: mongoose.Schema.Types.ObjectId,
+  operation: String,
+  user: String,
+  authorisedPerson: String,
+  changes: mongoose.Schema.Types.Mixed, // To store the changes in key-value format
   timestamp: { type: Date, default: Date.now },
 });
 
-const auditCompanyModel = mongoose.model("AuditLog", AuditLogSchema);
+const auditCompanyModel = mongoose.model("AuditTrail", auditTrailSchema);
 export default auditCompanyModel;

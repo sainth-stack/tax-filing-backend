@@ -1,5 +1,5 @@
-import { signToken } from "../middlewares/auth.js";
 import User from "../models/employeeModel.js";
+import { signToken } from "./../middlewares/auth.js";
 
 export const createUser = async (req, res) => {
   try {
@@ -147,20 +147,28 @@ export const deleteUser = async (req, res) => {
 };
 
 export const loginUser = async (req, res) => {
-  const user = await User.find({
-    email: req.body.email,
-    status: true,
-  });
-  if (user) {
+  try {
+    const user = await User.findOne({
+      email: req.body.email,
+      status: true,
+    });
+
+    if (!user) {
+      return res.status(401).send({
+        message: "Your Account Is Not Verified",
+      });
+    }
+
     const token = signToken(user);
 
     res.send({
       token,
-      ...user,
+      user, // Return the user object, not an array
     });
-  } else {
-    res.status(401).send({
-      message: "Your Account Is Not Verified",
+  } catch (error) {
+    console.error("Login error:", error.message);
+    res.status(500).send({
+      message: "Internal server error",
     });
   }
 };

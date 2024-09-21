@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+/* import jwt from "jsonwebtoken";
 
 export const signToken = (user) => {
   return jwt.sign(
@@ -46,3 +46,4 @@ export const isAdmin = (req, res, next) => {
     res.status(401).send({ message: "Admin Token is not valid." });
   }
 };
+ */

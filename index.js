@@ -1,42 +1,42 @@
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
 
 import connectDB from "./config/db.js";
 import { PORT } from "./config/environment.js";
-import dotenv from "dotenv";
 import companyRoutes from "./routes/companyRoutes.js";
 import serviceRoutes from "./routes/serviceRoute.js";
 import userRoutes from "./routes/userRoute.js";
 import auditRoutes from "./routes/auditRoutes.js";
-
 import taskRoutes from "./routes/taskRoutes.js";
 import "./middlewares/cronjob.js";
+
+// Load environment variables
 dotenv.config();
 
-//App Configuration
+// Initialize app
 const app = express();
-app.use(cors());
 
+// Middleware configuration
+app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-// Routes
+// Register routes
 app.use("/api", auditRoutes);
 app.use("/api", companyRoutes);
 app.use("/api", serviceRoutes);
 app.use("/api", userRoutes);
-/* pending task routes and check remaining */
 app.use("/api", taskRoutes);
 
-//Default Route
+// Default route
 app.get("/", (req, res) => {
-  res.send(`<h1>Welcome to Backend Running On port : ${PORT} Server </h1>`);
+  res.send(`<h1>Welcome to Backend Running On port: ${PORT} Server</h1>`);
 });
 
-//Server Configuration
-
+// Start the server and connect to the database
 const port = PORT || 3600;
 app.listen(port, async () => {
-  //Database Connection
   await connectDB();
+  console.log(`Server is running on port ${port}`);
 });

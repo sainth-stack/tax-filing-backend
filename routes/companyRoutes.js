@@ -15,7 +15,6 @@ import auditMiddleware from "../middlewares/auditTrail.js";
 
 const router = express.Router();
 
-// Apply audit middleware to routes that modify data
 router.post("/companies", auditMiddleware(companyModel), createCompany);
 router.put("/companies/:id", auditMiddleware(companyModel), updateCompany);
 router.delete("/companies/:id", auditMiddleware(companyModel), deleteCompany);
