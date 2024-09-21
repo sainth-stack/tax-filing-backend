@@ -117,7 +117,7 @@ export const getTasks = async (req, res) => {
       filter.company = { $regex: company, $options: "i" };
     }
 
-    // Date filtering logic for startDate and dueDate
+    // Date filtering logic for effectiveFrom and effectiveTo
     if (effectiveFrom && effectiveTo) {
       filter.startDate = { $gte: new Date(effectiveFrom) };
       filter.dueDate = { $lte: new Date(effectiveTo) };
@@ -141,23 +141,35 @@ export const getTasks = async (req, res) => {
     if (status) {
       filter.applicationStatus = status;
     }
+    
+    // Filter by task type
     if (taskType) {
       filter.taskType = taskType;
     }
 
-    if (year) {
-      filter.startDate = {
-        ...filter.startDate,
-        $gte: new Date(`${year}-01-01`),
-        $lt: new Date(`${year + 1}-01-01`),
-      };
-    }
+    // Year and Month Filtering based on getCompanies logic
+    if (year && month) {
+      // Convert year and month into start and end dates
+      const startOfMonth = new Date(`${year}-${month}-01`); // First day of the month
+      const endOfMonth = new Date(year, month, 0); // Last day of the month
 
-    if (month) {
+      // Filter tasks where startDate is before the end of the month and dueDate is after the start of the month
       filter.startDate = {
-        ...filter.startDate,
-        $gte: new Date(`${year}-${month}-01`),
-        $lt: new Date(`${year}-${month + 1}-01`),
+        $lte: endOfMonth.toISOString(),
+      };
+      filter.dueDate = {
+        $gte: startOfMonth.toISOString(),
+      };
+    } else if (year) {
+      // Filter by entire year if only year is provided
+      const startOfYear = new Date(`${year}-01-01`);
+      const endOfYear = new Date(`${year}-12-31`);
+
+      filter.startDate = {
+        $lte: endOfYear.toISOString(),
+      };
+      filter.dueDate = {
+        $gte: startOfYear.toISOString(),
       };
     }
 
@@ -171,6 +183,7 @@ export const getTasks = async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching tasks." });
   }
 };
+
 
 // Get a single task by ID
 export const getTaskById = async (req, res) => {
