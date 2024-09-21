@@ -6,7 +6,7 @@ export const signToken = (user) => {
   return jwt.sign(
     {
       _id: user._id,
-      name: user.name,
+      name: user.firstName,
       email: user.email,
     },
     JWT_SECRET,

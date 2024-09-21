@@ -23,7 +23,8 @@ const auditMiddleware = (model) => async (req, res, next) => {
         return;
       }
 
-      const user = req.user ? req.user.email : "Anonymous";
+      console.log("user chaecking", req.user);
+      const user = req.user ? req.user.name : "Anonymous";
       const authorisedPerson = "Unknown";
 
       try {

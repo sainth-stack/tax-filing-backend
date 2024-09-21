@@ -147,11 +147,12 @@ export const deleteUser = async (req, res) => {
 };
 
 export const loginUser = async (req, res) => {
+  const { email } = req.body;
   try {
     const user = await User.findOne({
-      email: req.body.email,
-      status: true,
+      email,
     });
+    console.log("User model user checking", user);
 
     if (!user) {
       return res.status(401).send({
