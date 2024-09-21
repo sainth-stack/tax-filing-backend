@@ -12,12 +12,23 @@ import {
 import upload from "../middlewares/multer.js";
 import companyModel from "../models/companyModel.js";
 import auditMiddleware from "../middlewares/auditTrail.js";
+import { isAuth } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-router.post("/companies", auditMiddleware(companyModel), createCompany);
-router.put("/companies/:id", auditMiddleware(companyModel), updateCompany);
-router.delete("/companies/:id", auditMiddleware(companyModel), deleteCompany);
+router.post("/companies", isAuth, auditMiddleware(companyModel), createCompany);
+router.put(
+  "/companies/:id",
+  isAuth,
+  auditMiddleware(companyModel),
+  updateCompany
+);
+router.delete(
+  "/companies/:id",
+  isAuth,
+  auditMiddleware(companyModel),
+  deleteCompany
+);
 
 // Non-modifying routes don't need the audit middleware
 router.get("/companies/all", getAllCompanies);
