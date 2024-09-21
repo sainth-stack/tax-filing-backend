@@ -15,22 +15,22 @@ export const signToken = (user) => {
 };
 
 // Middleware to verify JWT token and attach user to the request
-export const isAuth = async (req, res, next) => {
+export const isAuth = (req, res, next) => {
   const { authorization } = req.headers;
 
-  if (!authorization) {
-    return res.status(401).json({ message: "Authorization header missing" });
+  // Check for the presence of the authorization header
+  if (!authorization || !authorization.startsWith("Bearer ")) {
+    return res
+      .status(401)
+      .json({ message: "Authorization header missing or malformed" });
   }
 
   try {
     const token = authorization.split(" ")[1]; // Extract token from 'Bearer token'
-    if (!token) {
-      return res.status(401).json({ message: "Token missing or malformed" });
-    }
 
     // Verify token and attach user to the request
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
+    req.user = decoded; // Attach user info to req
     next(); // Proceed to the next middleware or route handler
   } catch (err) {
     res.status(401).json({ message: "Unauthorized: " + err.message });
