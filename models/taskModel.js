@@ -7,10 +7,9 @@ const { Schema } = mongoose;
 const taskSchema = new Schema({
   company: {
     type: String,
-  } ,
+  },
   assignedTo: {
     type: String,
-    // ref: "User",
   },
   assignedName: {
     type: String,
@@ -394,7 +393,6 @@ const taskSchema = new Schema({
     type: String,
   },
   pftMonthly_filingStatus: {
-    
     type: String,
   },
   pft_currentStatus: {

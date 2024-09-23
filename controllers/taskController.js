@@ -161,6 +161,7 @@ export const getTasks = async (req, res) => {
       };
     }
 
+    console.log("filter", filter);
     // Retrieve tasks based on the filter
     const tasks = await taskModel.find(filter);
 
