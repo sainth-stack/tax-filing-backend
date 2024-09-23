@@ -18,18 +18,13 @@ const taskSchema = new Schema({
     type: String,
   },
   startDate: {
-    require: true,
-
     type: Date,
   },
   dueDate: {
-    require: true,
-
     type: Date,
   },
   actualCompletionDate: {
-    require: true,
-    type: Date,
+    type: mongoose.Schema.Types.Mixed,
   },
   taskType: {
     type: String,
