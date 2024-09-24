@@ -116,13 +116,31 @@ export const getCompanies = async (req, res) => {
       const startOfMonth = new Date(`${year}-${month}-01`); // First day of the month
       const endOfMonth = new Date(year, month, 0); // Last day of the month
 
-      // Use MongoDB query operators with date comparisons
-      filter["companyDetails.effectiveFrom"] = {
-        $lte: endOfMonth.toISOString(), // Convert end date to string if stored as a string
-      };
-      filter["companyDetails.effectiveTo"] = {
-        $gte: startOfMonth.toISOString(), // Convert start date to string if stored as a string
-      };
+      // Handle effectiveFrom and effectiveTo based on conditions
+      filter.$or = [
+        // Case 1: Both effectiveFrom and effectiveTo exist
+        {
+          "companyDetails.effectiveFrom": {
+            $exists: true,
+            $lte: endOfMonth.toISOString(), // effectiveFrom is before or on the last day of the month
+          },
+          "companyDetails.effectiveTo": {
+            $exists: true,
+            $gte: startOfMonth.toISOString(), // effectiveTo is after or on the first day of the month
+          },
+        },
+        // Case 2: Only effectiveFrom exists or effectiveTo is an empty string
+        {
+          "companyDetails.effectiveFrom": {
+            $exists: true,
+            $lte: endOfMonth.toISOString(), // effectiveFrom must be in or before the current month
+          },
+          $or: [
+            { "companyDetails.effectiveTo": { $exists: false } }, // effectiveTo does not exist
+            { "companyDetails.effectiveTo": "" }, // effectiveTo is an empty string
+          ],
+        },
+      ];
     }
 
     // Fetch companies based on the filter criteria
@@ -132,6 +150,8 @@ export const getCompanies = async (req, res) => {
     res.status(500).send({ error: error.message });
   }
 };
+
+
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
