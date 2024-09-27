@@ -93,7 +93,7 @@ export const getAllCompanies = async (req, res) => {
 };
 
 // Get filter companies
-export const getCompanies = async (req, res) => {
+export const getFilterCompanies = async (req, res) => {
   const { name, status, year, month } = req.body;
 
   try {

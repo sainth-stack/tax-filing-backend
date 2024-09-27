@@ -1,18 +1,22 @@
-import AgencyModel from "../models/AgencyModel";
-
+import AgencyModel from "../models/AgencyModel.js";
 
 // Create a new agency
 export const createAgency = async (req, res) => {
     try {
-        const { name, address, contactNumber, email } = req.body;
+        // Accessing the nested AgencyDetails object
+        const { agencyName, agencyLocation, effectiveStartDate, effectiveEndDate } = req.body.AgencyDetails;
 
+        console.log("req.body.AgencyDetails", req.body.AgencyDetails);
+
+        // Create a new agency using the extracted values
         const newAgency = new AgencyModel({
-            name,
-            address,
-            contactNumber,
-            email
+            agencyName,
+            agencyLocation,
+            effectiveStartDate,
+            effectiveEndDate
         });
 
+        // Save the new agency to the database
         await newAgency.save();
         res.send({ message: 'Agency created successfully', agency: newAgency });
     } catch (error) {
@@ -20,13 +24,14 @@ export const createAgency = async (req, res) => {
     }
 };
 
+
 // Get all agencies
 export const getAgencies = async (req, res) => {
     try {
         const agencies = await AgencyModel.find();
         res.send(agencies);
     } catch (error) {
-        res.send({ message: error.message });
+        res.status(500).json({ message: error.message });
     }
 };
 
@@ -44,8 +49,15 @@ export const getAgencyById = async (req, res) => {
 // Update an agency by ID
 export const updateAgency = async (req, res) => {
     try {
-        const agency = await AgencyModel.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!agency) return res.send({ message: 'Agency not found' });
+        const { agencyName, agencyLocation, effectiveStartDate, effectiveEndDate } = req.body.AgencyDetails;
+
+        const agency = await AgencyModel.findByIdAndUpdate(
+            req.params.id,
+            { agencyName, agencyLocation, effectiveStartDate, effectiveEndDate },
+            { new: true }
+        );
+
+        if (!agency) return res.status(404).json({ message: 'Agency not found' });
         res.send({ message: 'Agency updated successfully', agency });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -59,6 +71,30 @@ export const deleteAgency = async (req, res) => {
         if (!agency) return res.status(404).json({ message: 'Agency not found' });
         res.send({ message: 'Agency deleted successfully' });
     } catch (error) {
-        res.send({ message: error.message });
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
+
+// Get filter companies
+export const getFilterAgencies = async (req, res) => {
+    const { name } = req.body;
+
+    try {
+        const filter = {};
+
+        if (name) {
+            filter["agencyName"] = { $regex: name, $options: "i" };
+        }
+
+
+        console.log("filter", filter)
+
+        // Fetch companies based on the filter criteria
+        const companies = await AgencyModel.find(filter || {});
+        res.status(200).send(companies);
+    } catch (error) {
+        res.status(500).send({ error: error.message });
     }
 };

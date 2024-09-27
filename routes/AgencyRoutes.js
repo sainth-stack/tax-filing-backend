@@ -4,8 +4,9 @@ import {
     getAgencies,
     getAgencyById,
     updateAgency,
-    deleteAgency
-} from './controllers/agencyController.js';
+    deleteAgency,
+    getFilterAgencies
+} from '../controllers/AgencyController.js';
 
 const router = express.Router();
 
@@ -13,7 +14,7 @@ const router = express.Router();
 router.post('/agencies', createAgency);
 
 // Get all agencies
-router.get('/agencies', getAgencies);
+router.get('/agencies/all', getAgencies);
 
 // Get a single agency by ID
 router.get('/agencies/:id', getAgencyById);
@@ -23,5 +24,8 @@ router.put('/agencies/:id', updateAgency);
 
 // Delete an agency by ID
 router.delete('/agencies/:id', deleteAgency);
+
+router.post("/agencies/filter", getFilterAgencies);
+
 
 export default router;

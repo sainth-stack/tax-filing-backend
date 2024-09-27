@@ -4,8 +4,9 @@ import {
   createCompany,
   deleteCompany,
   getAllCompanies,
-  getCompanies,
+
   getCompanyById,
+  getFilterCompanies,
   updateCompany,
   uploadFiles,
 } from "../controllers/companyController.js";
@@ -32,7 +33,7 @@ router.delete(
 
 // Non-modifying routes don't need the audit middleware
 router.get("/companies/all", getAllCompanies);
-router.post("/companies/filter", getCompanies);
+router.post("/companies/filter", getFilterCompanies);
 router.get("/companies/:id", getCompanyById);
 
 // Separate route for file uploads, no audit required
