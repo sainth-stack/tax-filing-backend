@@ -9,6 +9,8 @@ import serviceRoutes from "./routes/serviceRoute.js";
 import userRoutes from "./routes/userRoute.js";
 import auditRoutes from "./routes/auditRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
+import agencyRoutes from "./routes/AgencyRoutes.js";
+
 import "./middlewares/cronjob.js";
 
 // Load environment variables
@@ -28,6 +30,7 @@ app.use("/api", companyRoutes);
 app.use("/api", serviceRoutes);
 app.use("/api", userRoutes);
 app.use("/api", taskRoutes);
+app.use('/api', agencyRoutes);
 
 // Default route
 app.get("/", (req, res) => {
