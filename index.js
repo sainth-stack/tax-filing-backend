@@ -12,6 +12,7 @@ import taskRoutes from "./routes/taskRoutes.js";
 import agencyRoutes from "./routes/AgencyRoutes.js";
 
 import "./middlewares/cronjob.js";
+import './middlewares/cronjob-email.js'
 
 // Load environment variables
 dotenv.config();

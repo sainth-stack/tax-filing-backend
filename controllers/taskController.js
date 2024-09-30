@@ -5,6 +5,8 @@ import User from "../models/employeeModel.js";
 import taskModel from "./../models/taskModel.js";
 import fs from "fs";
 import path from "path";
+import emailTemplates from "../templates/emailTemplates.js";
+import sendEmail from "../middlewares/sendEmail.js";
 
 export const createTask = async (req, res) => {
   try {
@@ -18,20 +20,20 @@ export const createTask = async (req, res) => {
       fileLinks[file.fieldname] = uploadResponse?.url;
       fs.unlinkSync(filePath); // Clean up temp file
     }
-    const { assignedTo } = body;
 
-    // Check if assignedTo is provided and is a non-empty string
-    if (assignedTo && typeof assignedTo === "string") {
+    const { assignedTo, taskName } = body;
+
+    if (assignedTo) {
       // Fetch user based on the assignedTo string (assuming it is some identifier)
-      const user = await User.findOne({ someField: assignedTo }).select(
-        "firstName"
-      );
-
+      const user = await User.findOne({ _id: assignedTo }).select("firstName email");
       if (user) {
         body.assignedName = user.firstName;
+
+        // Send email notification to assignee
+        const emailContent = emailTemplates.assignTask(taskName, user.firstName);
+        sendEmail(user.email, emailContent.subject, emailContent.body);
       } else {
         // Handle case where user is not found if needed
-        // e.g., set assignedName to a default value or log a warning
         body.assignedName = ""; // or some default value
       }
     } else {
@@ -77,7 +79,6 @@ export const createTask = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
-
 // get all tasks
 export const getAllTasks = async (req, res) => {
   try {
@@ -141,7 +142,7 @@ export const getTasks = async (req, res) => {
     if (status) {
       filter.applicationStatus = status;
     }
-    
+
     // Filter by task type
     if (taskType) {
       filter.taskType = taskType;
@@ -216,18 +217,32 @@ export const updateTask = async (req, res) => {
       fs.unlinkSync(filePath); // Clean up temp file
     }
 
-    // Update the task object with the file link if available
+    // Fetch the existing task to check if 'assignedTo' has changed
+    const existingTask = await taskModel.findById(req.params.id);
+
+    if (!existingTask) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+
     const taskData = { ...body };
     if (fileLink) {
       taskData.attachment = fileLink;
     }
 
-    const task = await taskModel.findByIdAndUpdate(req.params.id, taskData, {
+    // Update the task
+    const updatedTask = await taskModel.findByIdAndUpdate(req.params.id, taskData, {
       new: true,
     });
 
-    if (!task) {
-      return res.status(404).json({ error: "Task not found" });
+    // Check if assignedTo is updated
+    if (body.assignedTo && body.assignedTo !== existingTask.assignedTo) {
+      // Fetch the new assigned user details
+      const user = await User.findOne({ _id: body.assignedTo }).select("firstName email");
+      if (user) {
+        // Send email notification to the new assignee
+        const emailContent = emailTemplates.assignTask(updatedTask.taskName, user.firstName);
+        sendEmail(user.email, emailContent.subject, emailContent.body);
+      }
     }
 
     // Update company GST status based on task fields
@@ -255,13 +270,14 @@ export const updateTask = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Task updated successfully",
-      task,
+      task: updatedTask,
     });
   } catch (error) {
     console.error("Error updating task:", error);
     res.status(400).json({ error: error.message });
   }
 };
+
 // Delete a task by ID
 export const deleteTask = async (req, res) => {
   try {
