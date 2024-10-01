@@ -11,11 +11,11 @@ const AgencySchema = new mongoose.Schema({
         type: String,
         required: false // Agency Location is not required, adjust as needed
     },
-    effectiveStartDate: {
+    effectiveFrom: {
         type: Date,
         //required: true // Effective Start Date is required
     },
-    effectiveEndDate: {
+    effectiveTo: {
         type: Date,
         //required: true // Effective End Date is required
     },

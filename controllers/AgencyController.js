@@ -4,7 +4,7 @@ import AgencyModel from "../models/AgencyModel.js";
 export const createAgency = async (req, res) => {
     try {
         // Accessing the nested AgencyDetails object
-        const { agencyName, agencyLocation, effectiveStartDate, effectiveEndDate } = req.body.AgencyDetails;
+        const { agencyName, agencyLocation, effectiveFrom, effectiveTo } = req.body.AgencyDetails;
 
         console.log("req.body.AgencyDetails", req.body.AgencyDetails);
 
@@ -12,8 +12,8 @@ export const createAgency = async (req, res) => {
         const newAgency = new AgencyModel({
             agencyName,
             agencyLocation,
-            effectiveStartDate,
-            effectiveEndDate
+            effectiveFrom,
+            effectiveTo
         });
 
         // Save the new agency to the database
@@ -49,11 +49,11 @@ export const getAgencyById = async (req, res) => {
 // Update an agency by ID
 export const updateAgency = async (req, res) => {
     try {
-        const { agencyName, agencyLocation, effectiveStartDate, effectiveEndDate } = req.body.AgencyDetails;
+        const { agencyName, agencyLocation, effectiveFrom, effectiveTo } = req.body.AgencyDetails;
 
         const agency = await AgencyModel.findByIdAndUpdate(
             req.params.id,
-            { agencyName, agencyLocation, effectiveStartDate, effectiveEndDate },
+            { agencyName, agencyLocation, effectiveFrom, effectiveTo },
             { new: true }
         );
 
@@ -79,22 +79,33 @@ export const deleteAgency = async (req, res) => {
 
 // Get filter companies
 export const getFilterAgencies = async (req, res) => {
-    const { name } = req.body;
+    const { agencyName, agencyLocation, effectiveFrom, effectiveTo } = req.body;
 
     try {
         const filter = {};
 
-        if (name) {
-            filter["agencyName"] = { $regex: name, $options: "i" };
+        if (agencyName) {
+            filter["agencyName"] = { $regex: agencyName, $options: "i" };
         }
 
+        if (agencyLocation) {
+            filter["agencyLocation"] = { $regex: agencyLocation, $options: "i" };
+        }
 
-        console.log("filter", filter)
+        if (effectiveFrom) {
+            filter["effectiveFrom"] = { $gte: new Date(effectiveFrom) };
+        }
 
-        // Fetch companies based on the filter criteria
-        const companies = await AgencyModel.find(filter || {});
-        res.status(200).send(companies);
+        if (effectiveTo) {
+            filter["effectiveTo"] = { $lte: new Date(effectiveTo) };
+        }
+
+        console.log("filter", filter);
+
+        const agencies = await AgencyModel.find(filter);
+        res.status(200).send(agencies);
     } catch (error) {
         res.status(500).send({ error: error.message });
     }
 };
+
