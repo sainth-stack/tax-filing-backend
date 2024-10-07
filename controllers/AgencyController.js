@@ -3,26 +3,32 @@ import AgencyModel from "../models/AgencyModel.js";
 // Create a new agency
 export const createAgency = async (req, res) => {
     try {
-        // Accessing the nested AgencyDetails object
         const { agencyName, agencyLocation, effectiveFrom, effectiveTo } = req.body.AgencyDetails;
 
-        console.log("req.body.AgencyDetails", req.body.AgencyDetails);
 
-        // Create a new agency using the extracted values
+        const existingAgency = await AgencyModel.findOne({ agencyName });
+
+        console.log("first", existingAgency);
+        if (existingAgency) {
+            return res.status(400).json({ message: "Agency already exists" });
+        }
+
         const newAgency = new AgencyModel({
             agencyName,
             agencyLocation,
             effectiveFrom,
-            effectiveTo
+            effectiveTo,
         });
 
-        // Save the new agency to the database
         await newAgency.save();
         res.send({ message: 'Agency created successfully', agency: newAgency });
+
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(400).json({ error: error });
+
     }
 };
+
 
 
 // Get all agencies
