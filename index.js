@@ -4,6 +4,9 @@ import dotenv from "dotenv";
 
 import connectDB from "./config/db.js";
 import { PORT } from "./config/environment.js";
+
+//routes
+import notificationRoutes from "./routes/notificationRoutes.js";
 import companyRoutes from "./routes/companyRoutes.js";
 import serviceRoutes from "./routes/serviceRoute.js";
 import userRoutes from "./routes/userRoute.js";
@@ -12,7 +15,7 @@ import taskRoutes from "./routes/taskRoutes.js";
 import agencyRoutes from "./routes/AgencyRoutes.js";
 
 import "./middlewares/cronjob.js";
-import './middlewares/cronjob-email.js'
+import "./middlewares/cronjob-email.js";
 
 // Load environment variables
 dotenv.config();
@@ -31,7 +34,8 @@ app.use("/api", companyRoutes);
 app.use("/api", serviceRoutes);
 app.use("/api", userRoutes);
 app.use("/api", taskRoutes);
-app.use('/api', agencyRoutes);
+app.use("/api", agencyRoutes);
+app.use("/api", notificationRoutes);
 
 // Default route
 app.get("/", (req, res) => {
