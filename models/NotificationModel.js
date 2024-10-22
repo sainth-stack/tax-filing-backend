@@ -15,13 +15,16 @@ const NotificationSchema = new mongoose.Schema(
       //required: true,
     },
 
-    to: {
-      type: [String],
+    toAddress: {
+      type: Array,
       //required: false,
     },
-    cc: {
-      type: [String],
+    ccAddress: {
+      type: Array,
       //required: false,
+    },
+    agency:{
+      type:String
     },
     subject: {
       type: String,

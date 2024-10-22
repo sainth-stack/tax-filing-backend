@@ -73,8 +73,8 @@ export const getAllUsers = async (req, res) => {
 // Get users by filter users
 
 export const getUsers = async (req, res) => {
-  const { name } = req.body;
-  console.log(name);
+  const { name, agency } = req.body;
+
   try {
     // Initialize an empty filter object
     const filter = {};
@@ -83,8 +83,13 @@ export const getUsers = async (req, res) => {
     if (name) {
       filter["$or"] = [
         { firstName: { $regex: name, $options: "i" } }, // Case-insensitive match for first name
-        { lastName: { $regex: name, $options: "i" } }, // Case-insensitive match for last name
+        { lastName: { $regex: name, $options: "i" } },  // Case-insensitive match for last name
       ];
+    }
+
+    // Add agency filter if provided
+    if (agency) {
+      filter.agency = { $regex: agency, $options: "i" }; // Case-insensitive match for agency
     }
 
     // Fetch users based on the filter criteria (if any)

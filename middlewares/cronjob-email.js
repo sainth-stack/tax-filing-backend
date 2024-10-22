@@ -1,9 +1,11 @@
 import cron from 'node-cron';
+import mongoose from 'mongoose'; // Import mongoose
 import User from '../models/employeeModel.js';
 import Task from '../models/taskModel.js';
 import connectDB from '../config/db.js';
 import sendEmail from '../middlewares/sendEmail.js';
 import emailTemplates from '../templates/emailTemplates.js';
+import NotificationModel from '../models/NotificationModel.js'; // Adjust the import as necessary
 
 // Connect to the database
 connectDB();
@@ -12,14 +14,13 @@ connectDB();
 const getStartOfDay = (date) => new Date(date.setHours(0, 0, 0, 0));
 const getEndOfDay = (date) => new Date(date.setHours(23, 59, 59, 999));
 
-cron.schedule('0 6 * * *', async () => {
+cron.schedule('*/5 * * * * *', async () => {
   console.log('Running task reminder check...');
 
   // Get today's date and set start/end boundaries for today and tomorrow
   const today = new Date();
   const startOfToday = getStartOfDay(new Date(today));
   const endOfToday = getEndOfDay(new Date(today));
-
   const tomorrow = new Date();
   tomorrow.setDate(today.getDate() + 1);
   const startOfTomorrow = getStartOfDay(new Date(tomorrow));
@@ -41,7 +42,6 @@ cron.schedule('0 6 * * *', async () => {
       actualCompletionDate: { $in: [null, ""] },  // Match tasks that are either null or empty string
     });
 
-
     // Send reminders for tasks due tomorrow
     await sendReminders(tasksDueTomorrow, "dueDateReminderBefore");
 
@@ -57,30 +57,48 @@ cron.schedule('0 6 * * *', async () => {
   }
 });
 
-
-
-/**
- * Send email reminders based on the task list and email template type.
- * @param {Array} tasks List of tasks
- * @param {String} templateType The email template type: 'dueDateReminderBefore' or 'dueDateReminderAfter'
- * @param {Boolean} overdue Whether the task is overdue
- */
 async function sendReminders(tasks, templateType, overdue = false) {
   for (const task of tasks) {
+    // Ensure assignedTo is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(task.assignedTo)) {
+      console.error(`Invalid ObjectId for assignedTo: ${task.assignedTo}`);
+      continue; // Skip this iteration if invalid
+    }
+
     const user = await User.findOne({ _id: task.assignedTo, status: true });
+
     // Check if the assigned user exists and is active
     if (user) {
-      const { firstName } = user;
-      const dueDate = task.dueDate.toLocaleDateString();
-      const { subject, body } = emailTemplates[templateType](task.taskName, firstName, dueDate);
-      if (overdue) {
-        console.log(`Sending overdue reminder to ${task.assignedTo}`);
-      } else {
-        console.log(`Sending reminder for ${task.assignedName} to ${task.assignedTo}`);
-      }
+      // Fetch notification settings for the user
+      console.log(user.agency)
+      const notificationSettings = await NotificationModel.findOne({ agency: user.agency });
+      if (notificationSettings) {
+        const { firstName } = user;
+        const dueDate = task.dueDate.toLocaleDateString();
+        const { subject, body } = emailTemplates[templateType](task.taskName, firstName, dueDate);
 
-      // Send the email
-      await sendEmail(user.email, subject, body);
+        if (overdue) {
+          if (notificationSettings.oneDayAfterDueDate) {
+            console.log(`Sending overdue reminder to ${task.assignedTo}`);
+            // Send the email
+            await sendEmail(user.email, subject, body);
+          }
+        } else {
+          if (templateType === "dueDateReminderBefore" && notificationSettings.oneDayBeforeDueDate) {
+            console.log(`Sending reminder for ${task.assignedName} to ${task.assignedTo}`);
+            // Send the email
+            await sendEmail(user.email, subject, body);
+          } else if (templateType === "dueDateReminderAfter" && notificationSettings.oneDayAfterDueDate) {
+            console.log(`Sending reminder for ${task.assignedName} to ${task.assignedTo}`);
+            // Send the email
+            await sendEmail(user.email, subject, body);
+          }
+        }
+      } else {
+        console.log(`No notification settings found for ${task.assignedTo}`);
+      }
+    } else {
+      console.log(`User not found or inactive for assignedTo: ${task.assignedTo}`);
     }
   }
 }
