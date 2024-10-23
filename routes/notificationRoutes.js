@@ -11,6 +11,9 @@ import {
 const router = express.Router();
 
 router.post("/notifications", createNotification);
+
+//router.post("/notifications/:agency", createNotification);
+
 router.get("/notifications/all", getAllNotifications);
 router.get("/notifications/:id", getNotificationById);
 router.put("/notifications/:id", updateNotification);

@@ -10,9 +10,7 @@ const userSchema = new mongoose.Schema({
   hireDate: {
     type: String,
   },
-  role:{
-    type:String
-  },
+
   gender: {
     type: String,
   },

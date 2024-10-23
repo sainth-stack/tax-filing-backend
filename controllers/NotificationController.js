@@ -27,7 +27,11 @@ export const getAllNotifications = async (req, res) => {
 // Get a single notification by ID
 export const getNotificationById = async (req, res) => {
   try {
-    const notification = await NotificationModel.findOne({ agency: req.params.id });
+    const notification = await NotificationModel.find({
+      agency: req.params.id,
+    });
+
+    console.log("notification", req.params.id);
     if (!notification)
       return res.status(404).json({ message: "Notification not found" });
     res.status(200).json(notification);
@@ -39,7 +43,6 @@ export const getNotificationById = async (req, res) => {
 // Update a notification
 export const updateNotification = async (req, res) => {
   try {
-
     // Update the notification and return the updated document
     const notification = await NotificationModel.findByIdAndUpdate(
       req.params.id,
