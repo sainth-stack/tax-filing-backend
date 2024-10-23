@@ -1,5 +1,5 @@
-import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
 
 dotenv.config();
 
@@ -16,19 +16,19 @@ const transporter = nodemailer.createTransport({
 
 // Function to send email
 const sendEmail = async (to, subject, body) => {
-  console.log(to)
+  console.log(to);
   const mailOptions = {
     from: process.env.EMAIL_USER, // Sender's email address
-    to,                           // Recipient's email address
-    subject,                      // Email subject
-    text: body,                   // Plain text body
-    html: `<p>${body.replace(/\n/g, '<br>')}</p>`, // HTML body with line breaks
+    to, // Recipient's email address
+    subject, // Email subject
+    text: body, // Plain text body
+    html: `${body.replace(/\n/g, "<br>")}`, // HTML body with line breaks
   };
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully:', info.messageId);
+    console.log("Email sent successfully:", info.messageId);
   } catch (error) {
-    console.error('Error sending email:', error.message);
+    console.error("Error sending email:", error.message);
   }
 };
 
