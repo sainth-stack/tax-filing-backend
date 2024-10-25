@@ -20,9 +20,15 @@ const companySchema = new mongoose.Schema(
 
     incomeTax: {
       incomeTaxPassword: { type: String },
+      incomeTraceTaxUsername: { type: String },
+      incomeTraceTaxPassword: { type: String },
       status: { type: String },
       effectiveFrom: { type: String },
       effectiveTo: { type: String },
+      approvalCertificate: {
+        type: String,
+        default: ""
+      },
     },
 
     gst: {
@@ -35,8 +41,10 @@ const companySchema = new mongoose.Schema(
       effectiveFrom: { type: String },
       effectiveTo: { type: String },
       typeOfGstFiling: { type: String },
+      dueDateReturn: { type: String },
       approvalCertificate: {
         type: String,
+        default: ""
       },
     },
 
@@ -47,6 +55,10 @@ const companySchema = new mongoose.Schema(
       status: { type: String },
       effectiveFrom: { type: String },
       effectiveTo: { type: String },
+      approvalCertificate: {
+        type: String,
+        default: ""
+      },
     },
 
     providentFund: {
@@ -56,6 +68,10 @@ const companySchema = new mongoose.Schema(
       status: { type: String },
       effectiveFrom: { type: String },
       effectiveTo: { type: String },
+      approvalCertificate: {
+        type: String,
+        default: ""
+      },
     },
 
     professionalTax: {
@@ -70,6 +86,10 @@ const companySchema = new mongoose.Schema(
       status: { type: String },
       effectiveFrom: { type: String },
       effectiveTo: { type: String },
+      approvalCertificate: {
+        type: String,
+        default: ""
+      },
     },
 
     tds: {
@@ -80,6 +100,10 @@ const companySchema = new mongoose.Schema(
       status: { type: String },
       effectiveFrom: { type: String },
       effectiveTo: { type: String },
+      approvalCertificate: {
+        type: String,
+        default: ""
+      },
     },
 
     shopCommercialEstablishment: {
@@ -90,6 +114,10 @@ const companySchema = new mongoose.Schema(
       status: { type: String },
       effectiveFrom: { type: String },
       effectiveTo: { type: String },
+      approvalCertificate: {
+        type: String,
+        default: ""
+      },
     },
 
     msme: {
@@ -97,6 +125,10 @@ const companySchema = new mongoose.Schema(
       status: { type: String },
       effectiveFrom: { type: String },
       effectiveTo: { type: String },
+      approvalCertificate: {
+        type: String,
+        default: ""
+      },
     },
 
     fssai: {
@@ -107,6 +139,10 @@ const companySchema = new mongoose.Schema(
       status: { type: String },
       effectiveFrom: { type: String },
       effectiveTo: { type: String },
+      approvalCertificate: {
+        type: String,
+        default: ""
+      },
     },
 
     factoryLicense: {
@@ -117,6 +153,10 @@ const companySchema = new mongoose.Schema(
       status: { type: String },
       effectiveFrom: { type: String },
       effectiveTo: { type: String },
+      approvalCertificate: {
+        type: String,
+        default: ""
+      },
     },
 
     importExport: {
@@ -128,6 +168,10 @@ const companySchema = new mongoose.Schema(
       status: { type: String },
       effectiveFrom: { type: String },
       effectiveTo: { type: String },
+      approvalCertificate: {
+        type: String,
+        default: ""
+      },
     },
 
     partnershipFirmFormC: {
@@ -135,6 +179,10 @@ const companySchema = new mongoose.Schema(
       status: { type: String },
       effectiveFrom: { type: String },
       effectiveTo: { type: String },
+      approvalCertificate: {
+        type: String,
+        default: ""
+      },
     },
 
     shramSuvidhaPortal: {
@@ -144,6 +192,10 @@ const companySchema = new mongoose.Schema(
       status: { type: String },
       effectiveFrom: { type: String },
       effectiveTo: { type: String },
+      approvalCertificate: {
+        type: String,
+        default: ""
+      },
     },
 
     mca: {
@@ -154,6 +206,10 @@ const companySchema = new mongoose.Schema(
       status: { type: String },
       effectiveFrom: { type: String },
       effectiveTo: { type: String },
+      approvalCertificate: {
+        type: String,
+        default: ""
+      },
     },
 
     attachments: {
