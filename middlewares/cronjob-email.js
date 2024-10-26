@@ -14,7 +14,7 @@ connectDB();
 const getStartOfDay = (date) => new Date(date.setHours(0, 0, 0, 0));
 const getEndOfDay = (date) => new Date(date.setHours(23, 59, 59, 999));
 
-cron.schedule('*/5 * * * * *', async () => {
+cron.schedule('0 6 * * *', async () => {
   console.log('Running task reminder check...');
 
   // Get today's date and set start/end boundaries for today and tomorrow
@@ -65,18 +65,20 @@ async function sendReminders(tasks, templateType, overdue = false) {
       continue; // Skip this iteration if invalid
     }
 
+    // Fetch the user based on assignedTo ID
     const user = await User.findOne({ _id: task.assignedTo, status: true });
 
     // Check if the assigned user exists and is active
     if (user) {
-      // Fetch notification settings for the user
-      console.log(user.agency)
+      // Fetch notification settings for the user's agency
       const notificationSettings = await NotificationModel.findOne({ agency: user.agency });
+
       if (notificationSettings) {
         const { firstName } = user;
         const dueDate = task.dueDate.toLocaleDateString();
         const { subject, body } = emailTemplates[templateType](task.taskName, firstName, dueDate);
 
+        // Check for overdue reminders
         if (overdue) {
           if (notificationSettings.oneDayAfterDueDate) {
             console.log(`Sending overdue reminder to ${task.assignedTo}`);
@@ -84,13 +86,12 @@ async function sendReminders(tasks, templateType, overdue = false) {
             await sendEmail(user.email, subject, body);
           }
         } else {
+          // Handle reminders based on the template type
           if (templateType === "dueDateReminderBefore" && notificationSettings.oneDayBeforeDueDate) {
             console.log(`Sending reminder for ${task.assignedName} to ${task.assignedTo}`);
-            // Send the email
             await sendEmail(user.email, subject, body);
           } else if (templateType === "dueDateReminderAfter" && notificationSettings.oneDayAfterDueDate) {
             console.log(`Sending reminder for ${task.assignedName} to ${task.assignedTo}`);
-            // Send the email
             await sendEmail(user.email, subject, body);
           }
         }
@@ -102,3 +103,4 @@ async function sendReminders(tasks, templateType, overdue = false) {
     }
   }
 }
+

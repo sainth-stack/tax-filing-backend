@@ -39,23 +39,30 @@ export const createCompany = async (req, res) => {
 
 /* file upload controller */
 export const uploadFiles = async (req, res) => {
-  console.log(req.files);
   try {
     /* getting files from input */
     const files = req.files;
     const fileLinks = {};
 
+    const { companyId } = req.body;
+    const company = await companyModel.findById(companyId);
+
     for (const file of files) {
       const fileName = file.filename; // File name on disk
       const filePath = path.join(file.destination, file.filename); // Full path to the file
       const uploadResponse = await uploadFileToDrive(filePath);
-      console.log(uploadResponse);
-      fileLinks[file.fieldname] = uploadResponse?.url;
-      fs.unlinkSync(filePath); // Clean up temp file
+      const fields = file?.fieldname?.split('.')
+      console.log(fields)
+      console.log(company[fields[0]][fields[1]])
+      if (fields?.length > 1) {
+        company[fields[0]][fields[1]] = uploadResponse?.url
+      } else {
+        fileLinks[file.fieldname] = uploadResponse?.url;
+        fs.unlinkSync(filePath);
+      }
     }
 
-    const { companyId } = req.body;
-    const company = await companyModel.findById(companyId);
+
     if (!company) {
       return res.status(404).json({ error: "Company not found" });
     }

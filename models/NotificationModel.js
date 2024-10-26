@@ -1,50 +1,56 @@
 import mongoose from "mongoose";
 
+const RoleDataSchema = new mongoose.Schema({
+  toAddress: {
+    type: [], // Array of email addresses
+    default: [], // Default to an empty array
+  },
+  ccAddress: {
+    type: [], 
+    default: [],
+  },
+  subject: {
+    type: String,
+    default: "",
+  },
+  message: {
+    type: String,
+    default: "",
+  },
+  attachment: {
+    type: String, // Store single file path or name
+    default: "",
+  },
+});
+
 const NotificationSchema = new mongoose.Schema(
   {
     oneDayBeforeDueDate: {
-      type: Boolean,
-      //required: true,
+      status: { type: Boolean, default: false },
+      name: { type: String, default: "One Day Before DueDate" },
+      roleData: { type: RoleDataSchema, default: () => ({}) },
     },
     oneDayAfterDueDate: {
-      type: Boolean,
-      //required: true,
+      status: { type: Boolean, default: false },
+      name: { type: String, default: "One Day After DueDate" },
+      roleData: { type: RoleDataSchema, default: () => ({}) },
     },
     assignNewTask: {
-      type: Boolean,
-      //required: true,
+      status: { type: Boolean, default: false },
+      name: { type: String, default: "Assign New Task" },
+      roleData: { type: RoleDataSchema, default: () => ({}) },
     },
-
-    toAddress: {
-      type: Array,
-      //required: false,
-    },
-    ccAddress: {
-      type: Array,
-      //required: false,
-    },
-    agency:{
-      type:String
-    },
-    subject: {
+    agency: {
       type: String,
-      //required: true,
-    },
-    message: {
-      type: String,
-      //required: true,
-    },
-    attachments: {
-      type: [String],
-      // required: false, // Uncomment if you want to make this required
+      required: true,
     },
   },
   {
-    timestamps: true,
+    timestamps: true, // Automatically add createdAt and updatedAt timestamps
   }
 );
 
-// Create the Email model
+// Create the Notification model
 const NotificationModel = mongoose.model("Notification", NotificationSchema);
 
 export default NotificationModel;

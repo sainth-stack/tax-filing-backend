@@ -7,14 +7,15 @@ import fs from "fs";
 import path from "path";
 import emailTemplates from "../templates/emailTemplates.js";
 import sendEmail from "../middlewares/sendEmail.js";
+import NotificationModel from "../models/NotificationModel.js";
 
 export const createTask = async (req, res) => {
   try {
     const { body, files } = req;
     const fileLinks = {};
 
+    // Handle file uploads
     for (const file of files) {
-      const fileName = file.filename; // File name on disk
       const filePath = path.join(file.destination, file.filename); // Full path to the file
       const uploadResponse = await uploadFileToDrive(filePath);
       fileLinks[file.fieldname] = uploadResponse?.url;
@@ -25,22 +26,28 @@ export const createTask = async (req, res) => {
 
     if (assignedTo) {
       // Fetch user based on the assignedTo string (assuming it is some identifier)
-      const user = await User.findOne({ _id: assignedTo }).select("firstName email");
+      const user = await User.findOne({ _id: assignedTo }).select("firstName email agency");
       if (user) {
         body.assignedName = user.firstName;
 
-        // Send email notification to assignee
-        const emailContent = emailTemplates.assignTask(taskName, user.firstName);
-        sendEmail(user.email, emailContent.subject, emailContent.body);
+        // Fetch notification settings for the user's agency
+        const notificationSettings = await NotificationModel.findOne({ agency: user.agency });
+        // Check if the assignNewTask notification is enabled
+        if (notificationSettings && notificationSettings.assignNewTask.status) {
+          const subject = notificationSettings.assignNewTask.roleData.subject || emailTemplates.assignTask(taskName, user.firstName).subject;
+          const bodyContent = notificationSettings.assignNewTask.roleData.message || emailTemplates.assignTask(taskName, user.firstName).body;
+
+          // Send email to the assigned user
+          sendEmail(user.email, subject, bodyContent);
+        }
       } else {
-        // Handle case where user is not found if needed
         body.assignedName = ""; // or some default value
       }
     } else {
-      // Handle cases where assignedTo is not provided or is invalid
-      body.assignedName = ""; // or some default value
+      body.assignedName = "";
     }
 
+    // Prepare task data
     const taskData = {
       ...body,
       ...fileLinks,
@@ -203,7 +210,6 @@ export const getTaskById = async (req, res) => {
   }
 };
 
-// Update a task by ID
 export const updateTask = async (req, res) => {
   try {
     const { body, files } = req;
@@ -235,13 +241,23 @@ export const updateTask = async (req, res) => {
     });
 
     // Check if assignedTo is updated
+    console.log(body.assignedTo)
     if (body.assignedTo && body.assignedTo !== existingTask.assignedTo) {
       // Fetch the new assigned user details
-      const user = await User.findOne({ _id: body.assignedTo }).select("firstName email");
+      const user = await User.findOne({ _id: body.assignedTo });
+      console.log(user)
       if (user) {
-        // Send email notification to the new assignee
-        const emailContent = emailTemplates.assignTask(updatedTask.taskName, user.firstName);
-        sendEmail(user.email, emailContent.subject, emailContent.body);
+        // Fetch notification settings for the user's agency
+        const notificationSettings = await NotificationModel.findOne({ agency: user.agency });
+
+        // Check if assignNewTask notification is enabled
+        if (notificationSettings && notificationSettings.assignNewTask.status) {
+          const subject = notificationSettings.assignNewTask.roleData.subject || emailTemplates.assignTask(updatedTask.taskName, user.firstName).subject;
+          const bodyContent = notificationSettings.assignNewTask.roleData.message || emailTemplates.assignTask(updatedTask.taskName, user.firstName).body;
+
+          // Send email notification to the new assignee
+          sendEmail(user.email, subject, bodyContent);
+        }
       }
     }
 
@@ -252,7 +268,7 @@ export const updateTask = async (req, res) => {
         {
           $set: {
             "gst.status":
-              body.taskName == "gstNewRegistration" ? "active" : "inactive",
+              body.taskName === "gstNewRegistration" ? "active" : "inactive",
           },
         }, // Update operation
         { new: true } // Option to return the updated document
@@ -277,6 +293,7 @@ export const updateTask = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
 
 // Delete a task by ID
 export const deleteTask = async (req, res) => {
