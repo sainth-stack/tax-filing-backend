@@ -61,7 +61,7 @@ export const createAutoTask = async (req, res) => {
       ...fileLinks,
     };
 
-    const AutoTask = new AutoTaskModel(taskData);
+    const AutoTask = await AutoTaskModel.create(taskData);
     await AutoTask.save();
 
     // Update company GST status and approvalCertificate based on task fields
@@ -87,7 +87,7 @@ export const createAutoTask = async (req, res) => {
     return res.status(201).send({
       success: true,
       message: "Task created successfully",
-      task,
+      AutoTask,
     });
   } catch (error) {
     console.error("Error creating task:", error);

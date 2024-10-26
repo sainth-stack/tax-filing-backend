@@ -16,7 +16,7 @@ const router = express.Router();
 // Routes
 router.get("/tasks/auto/all", getAllAutoTasks);
 
-router.post("/tasks/auto/", upload.any(), createAutoTask);
+router.post("/tasks/auto", upload.any(), createAutoTask);
 router.post("/tasks/auto/filter", getAutoTasks);
 router.get("/tasks/auto/:id", getAutoTaskById);
 router.put("/tasks/auto/:id", upload.any(), updateAutoTask);
