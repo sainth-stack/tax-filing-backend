@@ -13,6 +13,7 @@ import userRoutes from "./routes/userRoute.js";
 import auditRoutes from "./routes/auditRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import agencyRoutes from "./routes/AgencyRoutes.js";
+import autoTaskRoutes from "./routes/AutoTaskRoutes.js";
 
 import "./middlewares/cronjob.js";
 import "./middlewares/cronjob-email.js";
@@ -34,6 +35,8 @@ app.use("/api", companyRoutes);
 app.use("/api", serviceRoutes);
 app.use("/api", userRoutes);
 app.use("/api", taskRoutes);
+app.use("/api", autoTaskRoutes);
+
 app.use("/api", agencyRoutes);
 app.use("/api", notificationRoutes);
 
