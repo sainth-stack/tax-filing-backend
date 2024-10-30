@@ -11,6 +11,9 @@ const ServiceCalendar = new mongoose.Schema(
       type: Date,
       /* required: true, */
     },
+    taskId: {
+      type: String
+    }
   },
   { timestamps: true }
 );

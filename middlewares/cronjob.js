@@ -1,69 +1,51 @@
 import cron from 'node-cron';
-import GstFiling from '../models/taskModel.js';
+import GstFiling from '../models/AutoTaskModel.js';
 import Company from '../models/companyModel.js';
+import ServiceCalendarModel from '../models/ServiceCalendar.js';
 import connectDB from '../config/db.js';
 
-cron.schedule('0 0 1 * *', async () => {
+cron.schedule('0 6 * * *', async () => {
   try {
-    console.log('Starting GST filing process every 10 minutes...');
+    console.log('Starting GST filing process at 6 AM...');
 
     await connectDB();
 
     const companies = await Company.find({});
-
     const now = new Date();
+    const today = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
 
-    const startDate = new Date(now.getFullYear(), now.getMonth(), 2);
-    const dueDate = new Date(now.getFullYear(), now.getMonth(), 6);
+    const serviceTasks = await ServiceCalendarModel.find({
+      date: new Date(today),
+    });
+
+    const validTaskIds = serviceTasks.map((task) => task.taskId);
 
     const defaultFilingDataTemplate = [
-      {
-        priority: "high",
-        startDate: startDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
-        dueDate: dueDate.toISOString().split('T')[0],     // Format as YYYY-MM-DD
-        taskType: "gst",
-        taskName: "gstMonthly"
-      },
-      {
-        priority: "high",
-        startDate: startDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
-        dueDate: dueDate.toISOString().split('T')[0],     // Format as YYYY-MM-DD
-        taskType: "gst",
-        taskName: "gstMonthlyPayment"
-      },
-      {
-        priority: "high",
-        startDate: startDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
-        dueDate: dueDate.toISOString().split('T')[0],     // Format as YYYY-MM-DD
-        taskType: "providentFund",
-        taskName: "pfMonthly"
-      },
-      {
-        priority: "high",
-        startDate: startDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
-        dueDate: dueDate.toISOString().split('T')[0],     // Format as YYYY-MM-DD
-        taskType: "tds",
-        taskName: "tdsTcsMonthly"
-      },
-      {
-        priority: "high",
-        startDate: startDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
-        dueDate: dueDate.toISOString().split('T')[0],     // Format as YYYY-MM-DD
-        taskType: "esi",
-        taskName: "esiRegularMonthlyActivity"
-      },
-      {
-        priority: "high",
-        startDate: startDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
-        dueDate: dueDate.toISOString().split('T')[0],     // Format as YYYY-MM-DD
-        taskType: "professionalTax",
-        taskName: "professionalTaxRegularMonthlyActivity"
-      }
+      { taskId: "1", taskName: "gstMonthly", taskType: "gst", priority: "high" },
+      { taskId: "2", taskName: "gstMonthlyPayment", taskType: "gst", priority: "high" },
+      { taskId: "3", taskName: "pfMonthly", taskType: "providentFund", priority: "high" },
+      { taskId: "4", taskName: "tdsTcsMonthly", taskType: "tds", priority: "high" },
+      { taskId: "5", taskName: "esiRegularMonthlyActivity", taskType: "esi", priority: "high" },
+      { taskId: "6", taskName: "professionalTaxRegularMonthlyActivity", taskType: "professionalTax", priority: "high" },
     ];
 
-    // Create a GST filing for each company
+    // Start date is today, and due date is 5 days after today
+    const startDate = new Date(now);
+    const dueDate = new Date(now);
+    dueDate.setDate(startDate.getDate() + 5); // Add 5 days to the current date
+
+    // Filter filing data to include only tasks whose taskIds are in `validTaskIds`
+    const filteredFilingData = defaultFilingDataTemplate.filter(filing =>
+      validTaskIds.includes(filing.taskName)
+    ).map(filing => ({
+      ...filing,
+      startDate: startDate.toISOString().split('T')[0], // YYYY-MM-DD
+      dueDate: dueDate.toISOString().split('T')[0],     // YYYY-MM-DD
+    }));
+
+    // Create a GST filing for each company based on the filtered tasks
     for (const company of companies) {
-      const companyFilingData = defaultFilingDataTemplate.map(filing => ({
+      const companyFilingData = filteredFilingData.map(filing => ({
         ...filing,
         company: company.companyDetails.companyName,
       }));
@@ -74,7 +56,7 @@ cron.schedule('0 0 1 * *', async () => {
       }
     }
 
-    console.log('GST filing process every 10 minutes completed.');
+    console.log('GST filing process at 6 AM completed.');
   } catch (error) {
     console.error('Error occurred during GST filing process:', error);
   }

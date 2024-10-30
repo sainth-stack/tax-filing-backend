@@ -76,23 +76,27 @@ async function sendReminders(tasks, templateType, overdue = false) {
       if (notificationSettings) {
         const { firstName } = user;
         const dueDate = task.dueDate.toLocaleDateString();
-        const { subject, body } = emailTemplates[templateType](task.taskName, firstName, dueDate);
+        const taskName = task.taskName;
 
         // Check for overdue reminders
         if (overdue) {
           if (notificationSettings.oneDayAfterDueDate) {
-            console.log(`Sending overdue reminder to ${task.assignedTo}`);
-            // Send the email
-            await sendEmail(user.email, subject, body);
+            const subject = notificationSettings.oneDayAfterDueDate.subject || emailTemplates.overdueReminder(taskName, firstName, dueDate).subject;
+            const bodyContent = notificationSettings.oneDayAfterDueDate.message || emailTemplates.overdueReminder(taskName, firstName, dueDate).body;
+            await sendEmail(user.email, subject, bodyContent);
           }
         } else {
-          // Handle reminders based on the template type
           if (templateType === "dueDateReminderBefore" && notificationSettings.oneDayBeforeDueDate) {
+            const subject = notificationSettings.oneDayBeforeDueDate.subject || emailTemplates.dueDateReminderBefore(taskName, firstName, dueDate).subject;
+            const bodyContent = notificationSettings.oneDayBeforeDueDate.message || emailTemplates.dueDateReminderBefore(taskName, firstName, dueDate).body;
             console.log(`Sending reminder for ${task.assignedName} to ${task.assignedTo}`);
-            await sendEmail(user.email, subject, body);
+            await sendEmail(user.email, subject, bodyContent);
           } else if (templateType === "dueDateReminderAfter" && notificationSettings.oneDayAfterDueDate) {
+            const subject = notificationSettings.oneDayAfterDueDate.subject || emailTemplates.dueDateReminderAfter(taskName, firstName, dueDate).subject;
+            const bodyContent = notificationSettings.oneDayAfterDueDate.message || emailTemplates.dueDateReminderAfter(taskName, firstName, dueDate).body;
+
             console.log(`Sending reminder for ${task.assignedName} to ${task.assignedTo}`);
-            await sendEmail(user.email, subject, body);
+            await sendEmail(user.email, subject, bodyContent);
           }
         }
       } else {

@@ -6,14 +6,27 @@ import { uploadFileToDrive } from "../middlewares/drive.js";
 import path from "path";
 import mongoose from "mongoose";
 
-/* create company controller */
+import taskModel from '../models/AutoTaskModel.js';
+
+// Default filing data template for tasks
+const defaultFilingDataTemplate = [
+  { taskId: "1", taskName: "gstMonthly", taskType: "gst", priority: "high" },
+  { taskId: "2", taskName: "gstMonthlyPayment", taskType: "gst", priority: "high" },
+  { taskId: "3", taskName: "pfMonthly", taskType: "providentFund", priority: "high" },
+  { taskId: "4", taskName: "tdsTcsMonthly", taskType: "tds", priority: "high" },
+  { taskId: "5", taskName: "esiRegularMonthlyActivity", taskType: "esi", priority: "high" },
+  { taskId: "6", taskName: "professionalTaxRegularMonthlyActivity", taskType: "professionalTax", priority: "high" },
+];
+// Create company controller
 export const createCompany = async (req, res) => {
   try {
     const { companyDetails, ...remainingData } = req.body;
-    const { companyName } = companyDetails;
+    const { companyName } = companyDetails; // Extract company name
+
     const existingCompany = await companyModel.findOne({
       "companyDetails.companyName": companyName,
     });
+
     if (existingCompany) {
       return res.status(400).json({ message: "Company already exists" });
     }
@@ -27,15 +40,84 @@ export const createCompany = async (req, res) => {
     };
 
     const company = new companyModel(companyData);
-
     await company.save();
+
+    // Create tasks for active services
+    await createTasksForCompany(company._id, req.body);
+
     res.locals.companyId = company._id;
     console.log("Company created successfully", company);
     res.send(company);
   } catch (error) {
-    res.status(400).json({ error: error });
+    res.status(400).json({ error: error.message });
   }
 };
+
+// Function to create tasks for the new company based on active services
+const createTasksForCompany = async (companyId, servicesData) => {
+  try {
+    const tasksToCreate = [];
+
+    // Check for active services in the incoming data
+    if (servicesData.gst && servicesData.gst.status === "active") {
+      tasksToCreate.push({
+        ...defaultFilingDataTemplate.find(task => task.taskType === "gst"),
+        effectiveFrom: servicesData.gst.effectiveFrom  // Get effectiveFrom for GST
+      });
+    }
+
+    if (servicesData.esi && servicesData.esi.status === "active") {
+      tasksToCreate.push({
+        ...defaultFilingDataTemplate.find(task => task.taskType === "esi"),
+        effectiveFrom: servicesData.esi.effectiveFrom  // Get effectiveFrom for ESI
+      });
+    }
+
+    if (servicesData.providentFund && servicesData.providentFund.status === "active") {
+      tasksToCreate.push({
+        ...defaultFilingDataTemplate.find(task => task.taskType === "providentFund"),
+        effectiveFrom: servicesData.providentFund.effectiveFrom  // Get effectiveFrom for Provident Fund
+      });
+    }
+
+    if (servicesData.tds && servicesData.tds.status === "active") {
+      tasksToCreate.push({
+        ...defaultFilingDataTemplate.find(task => task.taskType === "tds"),
+        effectiveFrom: servicesData.tds.effectiveFrom  // Get effectiveFrom for TDS
+      });
+    }
+
+    if (servicesData.professionalTax && servicesData.professionalTax.status === "active") {
+      tasksToCreate.push({
+        ...defaultFilingDataTemplate.find(task => task.taskType === "professionalTax"),
+        effectiveFrom: servicesData.professionalTax.effectiveFrom  // Get effectiveFrom for Professional Tax
+      });
+    }
+
+    // Map tasks and associate them with the company
+    const tasks = tasksToCreate.map(task => {
+      // Calculate due date by adding 5 days to effectiveFrom
+      const startDate = new Date(task.effectiveFrom);
+      const dueDate = new Date(startDate);
+      dueDate.setDate(startDate.getDate() + 5); // Add 5 days to the start date
+
+      return {
+        ...task,
+        companyId,            // Associate task with the company
+        startDate: task.effectiveFrom, // Set start date to effectiveFrom
+        dueDate: dueDate.toISOString().split('T')[0], // Format dueDate as YYYY-MM-DD
+        status: 'pending'     // Default status for new tasks
+      };
+    });
+
+    // Insert tasks into the task collection
+    await taskModel.insertMany(tasks);
+    console.log("Tasks created successfully for company ID:", companyId);
+  } catch (error) {
+    console.error("Error creating tasks:", error);
+  }
+};
+
 
 /* file upload controller */
 export const uploadFiles = async (req, res) => {
