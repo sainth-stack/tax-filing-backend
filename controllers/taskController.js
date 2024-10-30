@@ -11,7 +11,8 @@ import NotificationModel from "../models/NotificationModel.js";
 
 export const createTask = async (req, res) => {
   try {
-    const { body, files } = req;
+    const { body } = req;
+      const files = req.files || [];
     const fileLinks = {};
 
     // Handle file uploads

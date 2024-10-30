@@ -4,8 +4,8 @@ import {
   createCompany,
   deleteCompany,
   getAllCompanies,
-
   getCompanyById,
+  getCompanyByPan,
   getFilterCompanies,
   updateCompany,
   uploadFiles,
@@ -35,6 +35,7 @@ router.delete(
 router.get("/companies/all", getAllCompanies);
 router.post("/companies/filter", getFilterCompanies);
 router.get("/companies/:id", getCompanyById);
+router.get("/companies/pan/:pan", getCompanyByPan);
 
 // Separate route for file uploads, no audit required
 router.post("/files", upload.any(), uploadFiles);

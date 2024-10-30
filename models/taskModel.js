@@ -7,6 +7,7 @@ const { Schema } = mongoose;
 const taskSchema = new Schema({
   company: {
     type: String,
+    //required: true,
   },
   assignedTo: {
     type: String,
