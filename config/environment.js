@@ -1,6 +1,6 @@
 export const PORT = 4500;
 
-export const DATABASE_URL = `mongodb+srv://prashanth:BnHRQrqZHdnosfEe@cluster0.cpydc.mongodb.net/tax-filing2?retryWrites=true&w=majority`;
+export const DATABASE_URL = `mongodb+srv://prashanth:BnHRQrqZHdnosfEe@cluster0.cpydc.mongodb.net/tax-filing?retryWrites=true&w=majority`;
 
 //export const DATABASE_URL = `mongodb+srv://prashanth:BnHRQrqZHdnosfEe@cluster0.cpydc.mongodb.net/tax-filing?retryWrites=true&w=majority`;
 
