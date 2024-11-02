@@ -133,17 +133,16 @@ export const uploadFiles = async (req, res) => {
       const fileName = file.filename; // File name on disk
       const filePath = path.join(file.destination, file.filename); // Full path to the file
       const uploadResponse = await uploadFileToDrive(filePath);
-      const fields = file?.fieldname?.split('.')
-      console.log(fields)
-      console.log(company[fields[0]][fields[1]])
+      const fields = file?.fieldname?.split(".");
+      console.log(fields);
+      console.log(company[fields[0]][fields[1]]);
       if (fields?.length > 1) {
-        company[fields[0]][fields[1]] = uploadResponse?.url
+        company[fields[0]][fields[1]] = uploadResponse?.url;
       } else {
         fileLinks[file.fieldname] = uploadResponse?.url;
         fs.unlinkSync(filePath);
       }
     }
-
 
     if (!company) {
       return res.status(404).json({ error: "Company not found" });
@@ -240,13 +239,12 @@ export const getFilterCompanies = async (req, res) => {
   }
 };
 
-
-
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 export const getCompanyById = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log("id", id);
 
     let company;
     if (isValidObjectId(id)) {
@@ -297,5 +295,29 @@ export const deleteCompany = async (req, res) => {
     res.status(200).json({ message: "Company deleted" });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+//filter company by PAN
+export const getCompanyByPan = async (req, res) => {
+  try {
+    const { pan } = req.params; // Extract PAN from the request parameters
+
+    console.log("Searching for PAN:", pan);
+
+    // Find the company by the PAN number within companyDetails
+    const company = await companyModel.findOne({
+      "companyDetails.pan": pan, // Correctly reference the PAN field
+    });
+
+    console.log("Found company:", company);
+
+    if (!company) {
+      return res.status(404).json({ error: "Company not found" });
+    }
+
+    res.status(200).send(company);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
   }
 };
