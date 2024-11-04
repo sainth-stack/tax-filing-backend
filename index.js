@@ -19,6 +19,7 @@ import serviceCalendarRoutes from "./routes/serviceCalendarRoutes.js";
 import "./middlewares/cronjob.js";
 import "./middlewares/cronjob-email.js";
 import "./middlewares/monthUpdateAutomatically.js"
+import "./middlewares/automaticPriorityUpdate.js"
 // Load environment variables
 dotenv.config();
 

@@ -4,22 +4,23 @@ import Company from '../models/companyModel.js';
 import ServiceCalendarModel from '../models/ServiceCalendar.js';
 import connectDB from '../config/db.js';
 
-cron.schedule('0 6 * * *', async () => {
+cron.schedule('0 0 1 * *', async () => { 
   try {
-    console.log('Starting GST filing process at 6 AM...');
+    console.log('Starting GST filing process on the 1st of the month...');
 
     await connectDB();
 
     const companies = await Company.find({});
     const now = new Date();
-    const today = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    const startDate = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
 
-    const serviceTasks = await ServiceCalendarModel.find({
-      date: new Date(today),
-    });
+    // Fetch all service tasks
+    const serviceTasks = await ServiceCalendarModel.find({}); // Fetch all service tasks, not limited to today
 
+    // Get valid task IDs
     const validTaskIds = serviceTasks.map((task) => task.taskId);
 
+    // Default filing data template
     const defaultFilingDataTemplate = [
       { taskId: "1", taskName: "gstMonthly", taskType: "gst", priority: "high" },
       { taskId: "2", taskName: "gstMonthlyPayment", taskType: "gst", priority: "high" },
@@ -29,21 +30,20 @@ cron.schedule('0 6 * * *', async () => {
       { taskId: "6", taskName: "professionalTaxRegularMonthlyActivity", taskType: "professionalTax", priority: "high" },
     ];
 
-    // Start date is today, and due date is 5 days after today
-    const startDate = new Date(now);
-    const dueDate = new Date(now);
-    dueDate.setDate(startDate.getDate() + 5); // Add 5 days to the current date
-
-    // Filter filing data to include only tasks whose taskIds are in `validTaskIds`
-    const filteredFilingData = defaultFilingDataTemplate.filter(filing =>
-      validTaskIds.includes(filing.taskName)
-    ).map(filing => ({
-      ...filing,
-      startDate: startDate.toISOString().split('T')[0], // YYYY-MM-DD
-      dueDate: dueDate.toISOString().split('T')[0],     // YYYY-MM-DD
-    }));
-
-    // Create a GST filing for each company based on the filtered tasks
+    // Map filtered filing data with due dates from service tasks
+    const filteredFilingData = defaultFilingDataTemplate
+      .filter(filing => validTaskIds.includes(filing.taskName)) // Filter based on taskId
+      .map(filing => {
+        // Find the corresponding service task to get the due date
+        const serviceTask = serviceTasks.find(task => task.taskId === filing.taskName);
+        
+        return {
+          ...filing,
+          startDate: startDate,
+          dueDate: serviceTask ? serviceTask.date.toISOString().split('T')[0] : null, // Use due date from service task
+        };
+      });
+console.log(filteredFilingData)
     for (const company of companies) {
       const companyFilingData = filteredFilingData.map(filing => ({
         ...filing,
@@ -56,7 +56,7 @@ cron.schedule('0 6 * * *', async () => {
       }
     }
 
-    console.log('GST filing process at 6 AM completed.');
+    console.log('GST filing process on the 1st of the month completed.');
   } catch (error) {
     console.error('Error occurred during GST filing process:', error);
   }
