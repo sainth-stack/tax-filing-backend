@@ -105,7 +105,7 @@ const createTasksForCompany = async (companyId, servicesData) => {
         ...task,
         companyId,            // Associate task with the company
         startDate: task.effectiveFrom, // Set start date to effectiveFrom
-        dueDate: dueDate.toISOString().split('T')[0], // Format dueDate as YYYY-MM-DD
+        dueDate: dueDate.toISOString(), // Format dueDate as YYYY-MM-DD
         status: 'pending'     // Default status for new tasks
       };
     });
