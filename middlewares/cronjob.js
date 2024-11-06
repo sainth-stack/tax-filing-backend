@@ -43,7 +43,6 @@ cron.schedule('0 0 1 * *', async () => {
           dueDate: serviceTask ? serviceTask.date.toISOString().split('T')[0] : null, // Use due date from service task
         };
       });
-console.log(filteredFilingData)
     for (const company of companies) {
       const companyFilingData = filteredFilingData.map(filing => ({
         ...filing,

@@ -43,7 +43,7 @@ export const createCompany = async (req, res) => {
     await company.save();
 
     // Create tasks for active services
-    await createTasksForCompany(company._id, req.body);
+    await createTasksForCompany(company?.companyDetails?.companyName, req.body);
 
     res.locals.companyId = company._id;
     console.log("Company created successfully", company);
@@ -103,7 +103,7 @@ const createTasksForCompany = async (companyId, servicesData) => {
 
       return {
         ...task,
-        companyId,            // Associate task with the company
+        company:companyId,            // Associate task with the company
         startDate: task.effectiveFrom, // Set start date to effectiveFrom
         dueDate: dueDate.toISOString(), // Format dueDate as YYYY-MM-DD
         status: 'pending'     // Default status for new tasks
