@@ -10,8 +10,8 @@ import taskModel from '../models/AutoTaskModel.js';
 
 // Default filing data template for tasks
 const defaultFilingDataTemplate = [
-  { taskId: "1", taskName: "gstMonthly", taskType: "gst", priority: "high" },
-  { taskId: "2", taskName: "gstMonthlyPayment", taskType: "gst", priority: "high" },
+  { taskId: "1", taskName: "gstMonthly", taskType: "gst", priority: "high", gstMonthly_gstType: 'gstr1' },
+  { taskId: "2", taskName: "gstMonthly", taskType: "gst", priority: "high", gstMonthly_gstType: 'gstr3b' },
   { taskId: "3", taskName: "pfMonthly", taskType: "providentFund", priority: "high" },
   { taskId: "4", taskName: "tdsTcsMonthly", taskType: "tds", priority: "high" },
   { taskId: "5", taskName: "esiRegularMonthlyActivity", taskType: "esi", priority: "high" },
@@ -46,7 +46,6 @@ export const createCompany = async (req, res) => {
     await createTasksForCompany(company?.companyDetails?.companyName, req.body);
 
     res.locals.companyId = company._id;
-    console.log("Company created successfully", company);
     res.send(company);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -58,55 +57,47 @@ const createTasksForCompany = async (companyId, servicesData) => {
   try {
     const tasksToCreate = [];
 
-    // Check for active services in the incoming data
-    if (servicesData.gst && servicesData.gst.status === "active") {
-      tasksToCreate.push({
-        ...defaultFilingDataTemplate.find(task => task.taskType === "gst"),
-        effectiveFrom: servicesData.gst.effectiveFrom  // Get effectiveFrom for GST
-      });
-    }
+    const createRecurringTasks = (serviceData, taskType) => {
+      if (serviceData && serviceData.status === "active") {
+        let effectiveDate = new Date(serviceData.effectiveFrom);
+        const today = new Date();
 
-    if (servicesData.esi && servicesData.esi.status === "active") {
-      tasksToCreate.push({
-        ...defaultFilingDataTemplate.find(task => task.taskType === "esi"),
-        effectiveFrom: servicesData.esi.effectiveFrom  // Get effectiveFrom for ESI
-      });
-    }
+        // Get all tasks of the specified taskType
+        const tasksOfType = defaultFilingDataTemplate.filter(task => task.taskType === taskType);
 
-    if (servicesData.providentFund && servicesData.providentFund.status === "active") {
-      tasksToCreate.push({
-        ...defaultFilingDataTemplate.find(task => task.taskType === "providentFund"),
-        effectiveFrom: servicesData.providentFund.effectiveFrom  // Get effectiveFrom for Provident Fund
-      });
-    }
+        // Create a task for each month from effective date up to the current month
+        while (effectiveDate <= today) {
+          tasksOfType.forEach(taskTemplate => {
+            tasksToCreate.push({
+              ...taskTemplate,
+              effectiveFrom: new Date(effectiveDate) // Clone effective date for this task
+            });
+          });
 
-    if (servicesData.tds && servicesData.tds.status === "active") {
-      tasksToCreate.push({
-        ...defaultFilingDataTemplate.find(task => task.taskType === "tds"),
-        effectiveFrom: servicesData.tds.effectiveFrom  // Get effectiveFrom for TDS
-      });
-    }
+          effectiveDate.setMonth(effectiveDate.getMonth() + 1); // Move to the next month
+        }
+      }
+    };
 
-    if (servicesData.professionalTax && servicesData.professionalTax.status === "active") {
-      tasksToCreate.push({
-        ...defaultFilingDataTemplate.find(task => task.taskType === "professionalTax"),
-        effectiveFrom: servicesData.professionalTax.effectiveFrom  // Get effectiveFrom for Professional Tax
-      });
-    }
+    // Check each service and create recurring tasks
+    createRecurringTasks(servicesData.gst, "gst");
+    createRecurringTasks(servicesData.esi, "esi");
+    createRecurringTasks(servicesData.providentFund, "providentFund");
+    createRecurringTasks(servicesData.tds, "tds");
+    createRecurringTasks(servicesData.professionalTax, "professionalTax");
 
     // Map tasks and associate them with the company
     const tasks = tasksToCreate.map(task => {
-      // Calculate due date by adding 5 days to effectiveFrom
       const startDate = new Date(task.effectiveFrom);
       const dueDate = new Date(startDate);
       dueDate.setDate(startDate.getDate() + 5); // Add 5 days to the start date
 
       return {
         ...task,
-        company:companyId,            // Associate task with the company
-        startDate: task.effectiveFrom, // Set start date to effectiveFrom
-        dueDate: dueDate.toISOString(), // Format dueDate as YYYY-MM-DD
-        status: 'pending'     // Default status for new tasks
+        company: companyId,
+        startDate: task.effectiveFrom,
+        dueDate: dueDate.toISOString(),
+        status: 'pending'
       };
     });
 
@@ -117,6 +108,7 @@ const createTasksForCompany = async (companyId, servicesData) => {
     console.error("Error creating tasks:", error);
   }
 };
+
 
 
 /* file upload controller */
@@ -134,8 +126,6 @@ export const uploadFiles = async (req, res) => {
       const filePath = path.join(file.destination, file.filename); // Full path to the file
       const uploadResponse = await uploadFileToDrive(filePath);
       const fields = file?.fieldname?.split(".");
-      console.log(fields);
-      console.log(company[fields[0]][fields[1]]);
       if (fields?.length > 1) {
         company[fields[0]][fields[1]] = uploadResponse?.url;
       } else {
@@ -244,8 +234,6 @@ const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 export const getCompanyById = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("id", id);
-
     let company;
     if (isValidObjectId(id)) {
       // If id is a valid ObjectId, query by ObjectId
@@ -270,19 +258,54 @@ export const getCompanyById = async (req, res) => {
 export const updateCompany = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("Updating company with ID:", id);
-    const company = await companyModel.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
-    if (!company) {
+    const { companyDetails, ...servicesData } = req.body;
+
+    // Fetch the existing company data before updating
+    const existingCompany = await companyModel.findById(id);
+    if (!existingCompany) {
       return res.status(404).json({ error: "Company not found" });
     }
-    res.locals.companyId = company._id;
-    res.status(200).json(company);
+
+    // Update the company information
+    const updatedCompany = await companyModel.findByIdAndUpdate(id, req.body, {
+      new: true,
+    });
+
+    // Check each service and create tasks only if newly enabled
+    const newlyEnabledServices = {};
+
+    const checkAndAddService = (serviceKey) => {
+      const currentService = servicesData[serviceKey];
+      const previousService = existingCompany[serviceKey];
+
+      if (
+        currentService &&
+        currentService.status === "active" &&
+        (!previousService || previousService.status !== "active")
+      ) {
+        newlyEnabledServices[serviceKey] = currentService;
+      }
+    };
+
+    // Add checks for each service
+    checkAndAddService("gst");
+    checkAndAddService("esi");
+    checkAndAddService("providentFund");
+    checkAndAddService("tds");
+    checkAndAddService("professionalTax");
+
+    // Only create tasks if there are newly enabled services
+    if (Object.keys(newlyEnabledServices).length > 0) {
+      await createTasksForCompany(updatedCompany?.companyDetails?.companyName, newlyEnabledServices);
+    }
+
+    res.locals.companyId = updatedCompany._id;
+    res.status(200).json(updatedCompany);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
+
 
 // Delete a company by ID
 export const deleteCompany = async (req, res) => {
@@ -303,14 +326,10 @@ export const getCompanyByPan = async (req, res) => {
   try {
     const { pan } = req.params; // Extract PAN from the request parameters
 
-    console.log("Searching for PAN:", pan);
-
     // Find the company by the PAN number within companyDetails
     const company = await companyModel.findOne({
       "companyDetails.pan": pan, // Correctly reference the PAN field
     });
-
-    console.log("Found company:", company);
 
     if (!company) {
       return res.status(404).json({ error: "Company not found" });

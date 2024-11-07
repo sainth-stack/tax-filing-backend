@@ -92,7 +92,7 @@ const taskSchema = new Schema({
   gstInactive_finalReturnStatus: {
     type: String,
   },
-  gstInactive_needToRevoceCancellation: {
+  gstInactive_cancellationDate: {
     type: String,
   },
   gstInactive_applicationStatus: {

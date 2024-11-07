@@ -22,8 +22,8 @@ cron.schedule('0 0 1 * *', async () => {
 
     // Default filing data template
     const defaultFilingDataTemplate = [
-      { taskId: "1", taskName: "gstMonthly", taskType: "gst", priority: "high" },
-      { taskId: "2", taskName: "gstMonthlyPayment", taskType: "gst", priority: "high" },
+      { taskId: "1", taskName: "gstMonthly", taskType: "gst", priority: "high", gstMonthly_gstType: 'gstr1' },
+      { taskId: "2", taskName: "gstMonthly", taskType: "gst", priority: "high", gstMonthly_gstType: 'gstr3b' },
       { taskId: "3", taskName: "pfMonthly", taskType: "providentFund", priority: "high" },
       { taskId: "4", taskName: "tdsTcsMonthly", taskType: "tds", priority: "high" },
       { taskId: "5", taskName: "esiRegularMonthlyActivity", taskType: "esi", priority: "high" },
@@ -33,16 +33,19 @@ cron.schedule('0 0 1 * *', async () => {
     // Map filtered filing data with due dates from service tasks
     const filteredFilingData = defaultFilingDataTemplate
       .filter(filing => validTaskIds.includes(filing.taskName)) // Filter based on taskId
-      .map(filing => {
-        // Find the corresponding service task to get the due date
-        const serviceTask = serviceTasks.find(task => task.taskId === filing.taskName);
-        
-        return {
+      .flatMap(filing => {
+        // Get all matching service tasks for this filing
+        const matchingServiceTasks = serviceTasks.filter(task => task.taskId === filing.taskName);
+
+        // Map each matching service task to create separate filings
+        return matchingServiceTasks.map(serviceTask => ({
           ...filing,
           startDate: startDate,
-          dueDate: serviceTask ? serviceTask.date.toISOString().split('T')[0] : null, // Use due date from service task
-        };
+          dueDate: serviceTask.date.toISOString().split('T')[0], // Use due date from service task
+        }));
       });
+
+    // Loop through each company and save the filing data
     for (const company of companies) {
       const companyFilingData = filteredFilingData.map(filing => ({
         ...filing,

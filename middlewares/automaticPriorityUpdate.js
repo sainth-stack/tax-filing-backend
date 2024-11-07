@@ -13,8 +13,8 @@ cron.schedule('0 6 * * *', async () => { // Run at 6 AM every day
         // Find all tasks where taskName is 'gstInactive'
         const tasks = await GstFiling.find({ taskName: 'gstInactive' });
         for (const task of tasks) {
-            const approvalDate = new Date(task.gstInactive_dateOfApproval); // Use the new key for approval date
-            const finalReturnStatus = task.gstInactive_finalReturnStatus; // Use the new key for final return status
+            const approvalDate = new Date(task?.gstInactive_dateOfApproval); // Use the new key for approval date
+            const finalReturnStatus = task?.gstInactive_finalReturnStatus; // Use the new key for final return status
 
             // Calculate the dates for priority updates
             const sixtyDaysLater = new Date(approvalDate);
