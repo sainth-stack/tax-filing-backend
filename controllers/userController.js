@@ -1,4 +1,5 @@
 import User from "../models/employeeModel.js";
+import { comparePassword, hashPassword } from "../utils/HassPass.js";
 import { signToken } from "./../middlewares/auth.js";
 
 export const createUser = async (req, res) => {
@@ -16,8 +17,21 @@ export const createUser = async (req, res) => {
       whatsappNumber,
       company,
       role,
+      password,
       agency,
     } = req.body;
+
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).send({
+        message: "User already exists with this email.",
+      });
+    }
+
+
+    const hashedPassword = await hashPassword(password);
+
 
     const user = new User({
       firstName,
@@ -32,11 +46,17 @@ export const createUser = async (req, res) => {
       whatsappNumber,
       company,
       role,
+      password: hashedPassword,
+
       agency,
     });
 
+
+
+
     await user.save();
 
+    console.log("new user cretead ; ", user)
     return res.send({
       success: true,
       message: "User created successfully",
@@ -152,16 +172,27 @@ export const deleteUser = async (req, res) => {
 };
 
 export const loginUser = async (req, res) => {
-  const { email } = req.body;
+  const { email, password } = req.body;
   try {
     const user = await User.findOne({
       email,
     });
-    console.log("User model user checking", user);
+
 
     if (!user) {
       return res.status(401).send({
         message: "Your Account Is Not Verified",
+      });
+    }
+
+    console.log("users deails", user)
+
+
+    const isPasswordMatch = await comparePassword(password, user.password);
+
+    if (!isPasswordMatch) {
+      return res.status(401).send({
+        message: "Invalid Credentials",
       });
     }
 
