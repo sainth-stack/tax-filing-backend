@@ -138,6 +138,11 @@ export const getUserById = async (req, res) => {
 // Update a user by ID
 export const updateUser = async (req, res) => {
   try {
+    if (req.body.password) {
+
+      const hashedPassword = await hashPassword(req.body.password);
+      req.body.password = hashedPassword;
+    }
     const user = await User.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
     });
