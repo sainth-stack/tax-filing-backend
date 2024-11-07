@@ -7,6 +7,9 @@ const userSchema = new mongoose.Schema({
   lastName: {
     type: String,
   },
+  password: {
+    type: String,
+  },
   hireDate: {
     type: String,
   },
