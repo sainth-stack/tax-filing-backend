@@ -237,17 +237,17 @@ export const updateTask = async (req, res) => {
     }
 
     // Update the task
-    const updatedTask = await taskModel.findByIdAndUpdate(req.params.id, taskData, {
-      new: true,
-    });
+
 
     // Check if assignedTo is updated
     console.log(body.assignedTo)
     if (body.assignedTo && body.assignedTo !== existingTask.assignedTo) {
+
       // Fetch the new assigned user details
       const user = await User.findOne({ _id: body.assignedTo });
       console.log(user)
       if (user) {
+        taskData.assignedName = user.firstName;
         // Fetch notification settings for the user's agency
         const notificationSettings = await NotificationModel.findOne({ agency: user.agency });
 
@@ -261,6 +261,10 @@ export const updateTask = async (req, res) => {
         }
       }
     }
+
+    const updatedTask = await taskModel.findByIdAndUpdate(req.params.id, taskData, {
+      new: true,
+    });
 
     // Update company GST status based on task fields
     if (body.dateOfApproval) {

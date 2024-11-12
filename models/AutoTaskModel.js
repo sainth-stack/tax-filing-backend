@@ -126,7 +126,7 @@ const AutoTaskSchema = new Schema({
   gstMonthly_taxAmount: {
     type: String,
   },
-  gstMonthly_fileDate: {
+  gstMonthly_filedate: {
     type: String,
   },
   gstMonthly_monthlyarn: {
@@ -184,7 +184,7 @@ const AutoTaskSchema = new Schema({
   pfMonthly_currentStatus: {
     type: String,
   },
-  pfMonthly_fileDate: {
+  pfMonthly_filedate: {
     type: Date,
   },
 

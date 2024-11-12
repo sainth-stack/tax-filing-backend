@@ -241,25 +241,16 @@ export const updateAutoTask = async (req, res) => {
 
     const AutoTaskData = { ...body };
     if (fileLink) {
-      taskData.attachment = fileLink;
+      AutoTaskData.attachment = fileLink;
     }
 
-    // Update the task
-    const updatedAutoTask = await AutoTaskModel.findByIdAndUpdate(
-      req.params.id,
-      AutoTaskData,
-      {
-        new: true,
-      }
-    );
 
-    // Check if assignedTo is updated
-    console.log(body.assignedTo);
+
     if (body.assignedTo && body.assignedTo !== existingAutoTask.assignedTo) {
       // Fetch the new assigned user details
       const user = await User.findOne({ _id: body.assignedTo });
-      console.log(user);
       if (user) {
+        AutoTaskData.assignedName = user.firstName;
         // Fetch notification settings for the user's agency
         const notificationSettings = await NotificationModel.findOne({
           agency: user.agency,
@@ -304,10 +295,19 @@ export const updateAutoTask = async (req, res) => {
       );
     }
 
+    // Update the task
+    const updatedAutoTask = await AutoTaskModel.findByIdAndUpdate(
+      req.params.id,
+      AutoTaskData,
+      {
+        new: true,
+      }
+    );
+
     res.status(200).json({
       success: true,
       message: "Task updated successfully",
-      task: updateAutoTask,
+      task: updatedAutoTask,
     });
   } catch (error) {
     console.error("Error updating task:", error);
