@@ -133,7 +133,6 @@ export const getAutoTasks = async (req, res) => {
       filter.company = { $regex: company, $options: "i" };
     }
 
-    // Date filtering logic for effectiveFrom and effectiveTo
     if (effectiveFrom && effectiveTo) {
       filter.startDate = { $gte: new Date(effectiveFrom) };
       filter.dueDate = { $lte: new Date(effectiveTo) };
@@ -150,12 +149,23 @@ export const getAutoTasks = async (req, res) => {
 
     // Filter by application sub-status
     if (applicationSubStatus) {
-      filter.applicationSubStatus = applicationSubStatus;
+      filter.gstMonthly_gstType = applicationSubStatus;
     }
 
-    // Filter by status
-    if (status) {
-      filter.applicationStatus = status;
+    if (status === 'filed') {
+      // For "filed", at least one date field must be present
+      filter.$or = [
+        { pfMonthly_filedate: { $ne: null } },
+        { esi_fileDate: { $ne: null } },
+        { pft_fileDate: { $ne: null } },
+        { gstMonthly_filedate: { $ne: null } }
+      ];
+    } else if (status === 'notFiled') {
+      // For "not filed", all date fields must be null
+      filter.pfMonthly_filedate = null;
+      filter.esi_fileDate = null;
+      filter.pft_fileDate = null;
+      filter.gstMonthly_filedate = null;
     }
 
     // Filter by task type

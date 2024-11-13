@@ -30,7 +30,7 @@ export const createUser = async (req, res) => {
     }
 
 
-    const hashedPassword = await hashPassword(password);
+    // const hashedPassword = await hashPassword(password);
 
 
     const user = new User({
@@ -46,8 +46,7 @@ export const createUser = async (req, res) => {
       whatsappNumber,
       company,
       role,
-      password: hashedPassword,
-
+      password: password,
       agency,
     });
 
@@ -140,8 +139,8 @@ export const updateUser = async (req, res) => {
   try {
     if (req.body.password) {
 
-      const hashedPassword = await hashPassword(req.body.password);
-      req.body.password = hashedPassword;
+      // const hashedPassword = await hashPassword(req.body.password);
+      // req.body.password = hashedPassword;
     }
     const user = await User.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
