@@ -28,7 +28,6 @@ export const getServiceCalendars = async (req, res) => {
 export const updateServiceCalendar = async (req, res) => {
   const { id } = req.params;
   const updateData = req.body; // Contains updated data
-
   try {
     const updatedTask = await ServiceCalendarModel.findByIdAndUpdate(
       id,

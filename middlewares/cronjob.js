@@ -4,7 +4,7 @@ import Company from '../models/companyModel.js';
 import ServiceCalendarModel from '../models/ServiceCalendar.js';
 import connectDB from '../config/db.js';
 
-cron.schedule('0 0 1 * *', async () => { 
+cron.schedule('* * 1 * *', async () => { 
   try {
     console.log('Starting GST filing process on the 1st of the month...');
 
@@ -13,29 +13,24 @@ cron.schedule('0 0 1 * *', async () => {
     const companies = await Company.find({});
     const now = new Date();
     const startDate = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-
-    // Fetch all service tasks
     const serviceTasks = await ServiceCalendarModel.find({}); // Fetch all service tasks, not limited to today
-
-    // Get valid task IDs
     const validTaskIds = serviceTasks.map((task) => task.taskId);
 
-    // Default filing data template
     const defaultFilingDataTemplate = [
-      { taskId: "1", taskName: "gstMonthly", taskType: "gst", priority: "high", gstMonthly_gstType: 'gstr1' },
-      { taskId: "2", taskName: "gstMonthly", taskType: "gst", priority: "high", gstMonthly_gstType: 'gstr3b' },
-      { taskId: "3", taskName: "pfMonthly", taskType: "providentFund", priority: "high" },
-      { taskId: "4", taskName: "tdsTcsMonthly", taskType: "tds", priority: "high" },
-      { taskId: "5", taskName: "esiRegularMonthlyActivity", taskType: "esi", priority: "high" },
-      { taskId: "6", taskName: "professionalTaxRegularMonthlyActivity", taskType: "professionalTax", priority: "high" },
+      { taskId: "gstMonthly-gstr1", taskName: "gstMonthly", taskType: "gst", priority: "high", gstMonthly_gstType: 'gstr1' },
+      { taskId: "gstMonthly-gstr3b", taskName: "gstMonthly", taskType: "gst", priority: "high", gstMonthly_gstType: 'gstr3b' },
+      { taskId: "pfMonthly", taskName: "pfMonthly", taskType: "providentFund", priority: "high" },
+      { taskId: "tdsTcsMonthly", taskName: "tdsTcsMonthly", taskType: "tds", priority: "high" },
+      { taskId: "esiRegularMonthlyActivity", taskName: "esiRegularMonthlyActivity", taskType: "esi", priority: "high" },
+      { taskId: "professionalTaxRegularMonthlyActivity", taskName: "professionalTaxRegularMonthlyActivity", taskType: "professionalTax", priority: "high" },
     ];
 
     // Map filtered filing data with due dates from service tasks
     const filteredFilingData = defaultFilingDataTemplate
-      .filter(filing => validTaskIds.includes(filing.taskName)) // Filter based on taskId
+      .filter(filing => validTaskIds.includes(filing.taskId)) // Filter based on taskId
       .flatMap(filing => {
         // Get all matching service tasks for this filing
-        const matchingServiceTasks = serviceTasks.filter(task => task.taskId === filing.taskName);
+        const matchingServiceTasks = serviceTasks.filter(task => task.taskId === filing.taskId);
 
         // Map each matching service task to create separate filings
         return matchingServiceTasks.map(serviceTask => ({

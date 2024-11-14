@@ -7,17 +7,16 @@ import path from "path";
 import mongoose from "mongoose";
 
 import taskModel from '../models/AutoTaskModel.js';
+import ServiceCalendarModel from "../models/ServiceCalendar.js";
 
-// Default filing data template for tasks
 const defaultFilingDataTemplate = [
-  { taskId: "1", taskName: "gstMonthly", taskType: "gst", priority: "high", gstMonthly_gstType: 'gstr1' },
-  { taskId: "2", taskName: "gstMonthly", taskType: "gst", priority: "high", gstMonthly_gstType: 'gstr3b' },
-  { taskId: "3", taskName: "pfMonthly", taskType: "providentFund", priority: "high" },
-  { taskId: "4", taskName: "tdsTcsMonthly", taskType: "tds", priority: "high" },
-  { taskId: "5", taskName: "esiRegularMonthlyActivity", taskType: "esi", priority: "high" },
-  { taskId: "6", taskName: "professionalTaxRegularMonthlyActivity", taskType: "professionalTax", priority: "high" },
+  { taskId: "gstMonthly-gstr1", taskName: "gstMonthly", taskType: "gst", priority: "high", gstMonthly_gstType: 'gstr1' },
+  { taskId: "gstMonthly-gstr3b", taskName: "gstMonthly", taskType: "gst", priority: "high", gstMonthly_gstType: 'gstr3b' },
+  { taskId: "pfMonthly", taskName: "pfMonthly", taskType: "providentFund", priority: "high" },
+  { taskId: "tdsTcsMonthly", taskName: "tdsTcsMonthly", taskType: "tds", priority: "high" },
+  { taskId: "esiRegularMonthlyActivity", taskName: "esiRegularMonthlyActivity", taskType: "esi", priority: "high" },
+  { taskId: "professionalTaxRegularMonthlyActivity", taskName: "professionalTaxRegularMonthlyActivity", taskType: "professionalTax", priority: "high" },
 ];
-// Create company controller
 export const createCompany = async (req, res) => {
   try {
     const { companyDetails, ...remainingData } = req.body;
@@ -52,12 +51,13 @@ export const createCompany = async (req, res) => {
   }
 };
 
-// Function to create tasks for the new company based on active services
 const createTasksForCompany = async (companyId, servicesData) => {
   try {
+    // Fetch all service tasks
+    const serviceTasks = await ServiceCalendarModel.find({});
     const tasksToCreate = [];
 
-    const createRecurringTasks = (serviceData, taskType) => {
+    const createRecurringTasks = async (serviceData, taskType) => {
       if (serviceData && serviceData.status === "active") {
         let effectiveDate = new Date(serviceData.effectiveFrom);
         const today = new Date();
@@ -65,32 +65,56 @@ const createTasksForCompany = async (companyId, servicesData) => {
         // Get all tasks of the specified taskType
         const tasksOfType = defaultFilingDataTemplate.filter(task => task.taskType === taskType);
 
-        // Create a task for each month from effective date up to the current month
+        // Loop through months starting from the effective date
         while (effectiveDate <= today) {
-          tasksOfType.forEach(taskTemplate => {
-            tasksToCreate.push({
-              ...taskTemplate,
-              effectiveFrom: new Date(effectiveDate) // Clone effective date for this task
-            });
-          });
+          const currentMonthStart = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth(), 1);
+          const nextMonthStart = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth() + 1, 1);
 
-          effectiveDate.setMonth(effectiveDate.getMonth() + 1); // Move to the next month
+          for (const taskTemplate of tasksOfType) {
+            const matchingServiceTask = serviceTasks.find(task => task.taskId === taskTemplate.taskId);
+            const dueDate = matchingServiceTask ? new Date(matchingServiceTask?.date) : null;
+
+            // Check if a task already exists for the current month
+            const existingTask = await taskModel.findOne({
+              company: companyId,
+              taskName: taskTemplate?.taskId.split('-')[0],
+              gstMonthly_gstType: taskTemplate.taskId.split('-')?.length > 1 ? taskTemplate.taskId.split('-')[1] : '',
+              startDate: {
+                $gte: currentMonthStart,
+                $lt: nextMonthStart,
+              }
+            });
+
+            // If no existing task found, add it to tasksToCreate
+            if (!existingTask) {
+              // Use a new Date instance for taskEffectiveDate to avoid mutation issues
+              const taskEffectiveDate = new Date(effectiveDate);
+
+              tasksToCreate.push({
+                ...taskTemplate,
+                effectiveFrom: taskEffectiveDate, // Use a copy of the effective date for this task
+                dueDate: dueDate // Default dueDate if not found
+              });
+            }
+          }
+
+          // Increment effectiveDate to the next month
+          effectiveDate.setMonth(effectiveDate.getMonth() + 1);
         }
       }
     };
 
     // Check each service and create recurring tasks
-    createRecurringTasks(servicesData.gst, "gst");
-    createRecurringTasks(servicesData.esi, "esi");
-    createRecurringTasks(servicesData.providentFund, "providentFund");
-    createRecurringTasks(servicesData.tds, "tds");
-    createRecurringTasks(servicesData.professionalTax, "professionalTax");
+    await createRecurringTasks(servicesData.gst, "gst");
+    await createRecurringTasks(servicesData.esi, "esi");
+    await createRecurringTasks(servicesData.providentFund, "providentFund");
+    await createRecurringTasks(servicesData.tds, "tds");
+    await createRecurringTasks(servicesData.professionalTax, "professionalTax");
 
     // Map tasks and associate them with the company
     const tasks = tasksToCreate.map(task => {
       const startDate = new Date(task.effectiveFrom);
-      const dueDate = new Date(startDate);
-      dueDate.setDate(startDate.getDate() + 5); // Add 5 days to the start date
+      const dueDate = task.dueDate || new Date(startDate.setDate(startDate.getDate() + 5));
 
       return {
         ...task,
@@ -101,9 +125,10 @@ const createTasksForCompany = async (companyId, servicesData) => {
       };
     });
 
-    // Insert tasks into the task collection
-    await taskModel.insertMany(tasks);
-    console.log("Tasks created successfully for company ID:", companyId);
+    // Insert tasks into the task collection only if there are tasks to create
+    if (tasks.length > 0) {
+      await taskModel.insertMany(tasks);
+    }
   } catch (error) {
     console.error("Error creating tasks:", error);
   }
@@ -280,9 +305,7 @@ export const updateCompany = async (req, res) => {
 
       if (
         currentService &&
-        currentService.status === "active" &&
-        (!previousService || previousService.status !== "active")
-      ) {
+        currentService.status === "active") {
         newlyEnabledServices[serviceKey] = currentService;
       }
     };
