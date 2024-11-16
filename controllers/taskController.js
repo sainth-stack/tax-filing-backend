@@ -29,7 +29,7 @@ export const createTask = async (req, res) => {
       // Fetch user based on the assignedTo string (assuming it is some identifier)
       const user = await User.findOne({ _id: assignedTo }).select("firstName email agency");
       if (user) {
-        body.assignedName = user.firstName;
+        body.assignedName = user.firstName + " "+ user?.lastName;
 
         // Fetch notification settings for the user's agency
         const notificationSettings = await NotificationModel.findOne({ agency: user.agency });
@@ -247,7 +247,7 @@ export const updateTask = async (req, res) => {
       const user = await User.findOne({ _id: body.assignedTo });
       console.log(user)
       if (user) {
-        taskData.assignedName = user.firstName;
+        taskData.assignedName = user.firstName + " " + user?.lastName;
         // Fetch notification settings for the user's agency
         const notificationSettings = await NotificationModel.findOne({ agency: user.agency });
 

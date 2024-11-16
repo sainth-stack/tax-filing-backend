@@ -30,7 +30,7 @@ export const createAutoTask = async (req, res) => {
         "firstName email agency"
       );
       if (user) {
-        body.assignedName = user.firstName;
+        body.assignedName = user.firstName + " " + user?.lastName;
 
         // Fetch notification settings for the user's agency
         const notificationSettings = await NotificationModel.findOne({
@@ -260,7 +260,7 @@ export const updateAutoTask = async (req, res) => {
       // Fetch the new assigned user details
       const user = await User.findOne({ _id: body.assignedTo });
       if (user) {
-        AutoTaskData.assignedName = user.firstName;
+        AutoTaskData.assignedName = user.firstName + " " + user?.lastName;
         // Fetch notification settings for the user's agency
         const notificationSettings = await NotificationModel.findOne({
           agency: user.agency,
