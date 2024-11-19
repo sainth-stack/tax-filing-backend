@@ -24,25 +24,68 @@ export const getServiceCalendars = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-// Update a service calendar entry by ID
+
+
 export const updateServiceCalendar = async (req, res) => {
   const { id } = req.params;
-  const updateData = req.body; // Contains updated data
+  const updateData = req.body;
+
   try {
-    const updatedTask = await ServiceCalendarModel.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true }
-    );
+    const updatedTask = await ServiceCalendarModel.findById(id);
+
     if (!updatedTask) {
       return res.status(404).json({ message: "Task not found" });
     }
+
+    const { date, name } = updateData;
+
+    if (date && name) {
+      const newDate = new Date(date);
+
+      let prevDatesEntry = updatedTask.prevDates.find((entry) => entry.name === name);
+
+      if (!prevDatesEntry) {
+        prevDatesEntry = { name, history: [] };
+        updatedTask.prevDates.push(prevDatesEntry);
+      }
+
+      const existingIndex = prevDatesEntry.history.findIndex((historyDate) => {
+        const historyDateObj = new Date(historyDate);
+        return (
+          historyDateObj.getFullYear() === newDate.getFullYear() &&
+          historyDateObj.getMonth() === newDate.getMonth()
+        );
+      });
+
+      if (existingIndex > -1) {
+        prevDatesEntry.history[existingIndex] = newDate.toISOString();
+      } else {
+        prevDatesEntry.history.push(newDate.toISOString());
+      }
+
+      prevDatesEntry.history.sort((a, b) => new Date(a) - new Date(b));
+    }
+
+    // Explicitly set prevDates to ensure it is recognized during the save
+    updatedTask.prevDates = updatedTask.prevDates.map((entry) =>
+      entry.name === name ? { ...entry, history: [...entry.history] } : entry
+    );
+
+    updatedTask.date = new Date(date);
+    if (updateData.taskId) updatedTask.taskId = updateData.taskId;
+    if (updateData.name) updatedTask.name = updateData.name;
+    console.log(updatedTask.prevDates)
+    await updatedTask.save();
+
     res.status(200).json(updatedTask);
   } catch (error) {
     console.error("Error updating calendar entry:", error.message);
     res.status(400).json({ message: error.message });
   }
 };
+
+
+
 
 export const deleteAllServiceCalendarEntries = async (req, res) => {
   try {

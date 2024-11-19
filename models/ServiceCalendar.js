@@ -13,7 +13,13 @@ const ServiceCalendar = new mongoose.Schema(
     },
     taskId: {
       type: String
-    }
+    },
+    prevDates: [
+      {
+        name: { type: String },
+        history: [{ type: String }] // Array of date strings
+      }
+    ]
   },
   { timestamps: true }
 );

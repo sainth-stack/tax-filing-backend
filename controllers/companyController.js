@@ -61,20 +61,21 @@ const createTasksForCompany = async (companyId, servicesData) => {
       if (serviceData && serviceData.status === "active") {
         let effectiveDate = new Date(serviceData.effectiveFrom);
         const today = new Date();
-
-        // Get all tasks of the specified taskType
+    
         const tasksOfType = defaultFilingDataTemplate.filter(task => task.taskType === taskType);
-
-        // Loop through months starting from the effective date
+    
         while (effectiveDate <= today) {
           const currentMonthStart = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth(), 1);
           const nextMonthStart = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth() + 1, 1);
-
+    
           for (const taskTemplate of tasksOfType) {
             const matchingServiceTask = serviceTasks.find(task => task.taskId === taskTemplate.taskId);
-            const dueDate = matchingServiceTask ? new Date(matchingServiceTask?.date) : null;
-
-            // Check if a task already exists for the current month
+            let dueDate = matchingServiceTask ? new Date(matchingServiceTask.date) : null;
+    
+            if (dueDate) {
+              dueDate = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth(), dueDate.getDate());
+            }
+    
             const existingTask = await taskModel.findOne({
               company: companyId,
               taskName: taskTemplate?.taskId.split('-')[0],
@@ -84,26 +85,23 @@ const createTasksForCompany = async (companyId, servicesData) => {
                 $lt: nextMonthStart,
               }
             });
-
-            // If no existing task found, add it to tasksToCreate
+    
             if (!existingTask) {
-              // Use a new Date instance for taskEffectiveDate to avoid mutation issues
               const taskEffectiveDate = new Date(effectiveDate);
-
+    
               tasksToCreate.push({
                 ...taskTemplate,
-                effectiveFrom: taskEffectiveDate, // Use a copy of the effective date for this task
-                dueDate: dueDate // Default dueDate if not found
+                effectiveFrom: taskEffectiveDate,
+                dueDate: dueDate
               });
             }
           }
-
-          // Increment effectiveDate to the next month
+    
           effectiveDate.setMonth(effectiveDate.getMonth() + 1);
         }
       }
     };
-
+    
     // Check each service and create recurring tasks
     await createRecurringTasks(servicesData.gst, "gst");
     await createRecurringTasks(servicesData.esi, "esi");
