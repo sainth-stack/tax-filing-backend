@@ -16,21 +16,18 @@ const auditMiddleware = (model) => async (req, res, next) => {
           ? res.locals.companyId // For POST, document ID is from created company
           : req.params.id || req.body.companyId; // For PUT/DELETE, from params or body
 
-      console.log("documentId in audit middleware:", documentId);
 
       if (!documentId || !mongoose.Types.ObjectId.isValid(documentId)) {
         console.error("Invalid Document ID:", documentId);
         return;
       }
 
-      console.log("user chaecking", req.user);
       const user = req.user ? req.user.name : "Anonymous";
       const authorisedPerson = "Unknown";
 
       try {
         const existingDocument = await model.findById(documentId);
         if (!existingDocument) {
-          console.error("Document not found for audit logging");
           return;
         }
 
@@ -44,7 +41,6 @@ const auditMiddleware = (model) => async (req, res, next) => {
         });
 
         await auditLog.save();
-        console.log("Audit log created successfully:", auditLog);
       } catch (error) {
         console.error("Failed to create audit log:", error.message);
       }

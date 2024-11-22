@@ -123,6 +123,7 @@ export const getAutoTasks = async (req, res) => {
     taskType,
     year,
     month,
+    user
   } = req.body;
 
   try {
@@ -145,6 +146,14 @@ export const getAutoTasks = async (req, res) => {
     // Filter by assignedTo directly as a string
     if (assignedTo) {
       filter.assignedTo = assignedTo;
+    }
+    if (user) {
+      filter.$or = [
+        { assignedTo: user }, // Fetch data assigned to the user
+        { assignedTo: "" }, // Include records where `assignedTo` is an empty string
+        { assignedTo: null }, // Include records where `assignedTo` is explicitly null
+        { assignedTo: { $exists: false } } // Include records where `assignedTo` is not present
+      ];
     }
 
     // Filter by application sub-status
@@ -199,7 +208,6 @@ export const getAutoTasks = async (req, res) => {
       };
     }
 
-    console.log("filter", filter);
     // Retrieve tasks based on the filter
     const AutoTasks = await AutoTaskModel.find(filter);
 
@@ -238,7 +246,7 @@ export const updateAutoTask = async (req, res) => {
     if (file) {
       const filePath = path.join(file.destination, file.filename); // Full path to the file
       const uploadResponse = await uploadFileToDrive(filePath);
-      fileLink = uploadResponse.webViewLink;
+      fileLink = uploadResponse.url;
       fs.unlinkSync(filePath); // Clean up temp file
     }
 
@@ -253,7 +261,6 @@ export const updateAutoTask = async (req, res) => {
     if (fileLink) {
       AutoTaskData.attachment = fileLink;
     }
-
 
 
     if (body.assignedTo && body.assignedTo !== existingAutoTask.assignedTo) {
@@ -339,7 +346,6 @@ export const deleteAutoTask = async (req, res) => {
 };
 
 export const uploadFiles = async (req, res) => {
-  console.log(req.files); // Log the uploaded files
   try {
     const files = req.files; // Access the files from req.files
     const fileLinks = {};
@@ -352,7 +358,6 @@ export const uploadFiles = async (req, res) => {
       fs.unlinkSync(filePath); // Clean up temp file
     }
 
-    console.log(fileLinks);
 
     const task = await AutoTaskModel.findById(req.body.taskId);
     if (!task) {

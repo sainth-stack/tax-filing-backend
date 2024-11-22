@@ -20,14 +20,14 @@ const defaultFilingDataTemplate = [
 export const createCompany = async (req, res) => {
   try {
     const { companyDetails, ...remainingData } = req.body;
-    const { companyName } = companyDetails; // Extract company name
+    const { companyName,pan } = companyDetails; // Extract company name
 
     const existingCompany = await companyModel.findOne({
-      "companyDetails.companyName": companyName,
+      "companyDetails.pan": pan,
     });
 
     if (existingCompany) {
-      return res.status(400).json({ message: "Company already exists" });
+      return res.status(400).json({ message: "Pan already exists" });
     }
 
     const companyData = {

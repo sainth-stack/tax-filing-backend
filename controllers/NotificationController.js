@@ -53,7 +53,6 @@ export const getNotificationById = async (req, res) => {
       agency: req.params.id,
     });
 
-    console.log("notification", req.params.id);
     if (!notification)
       return res.status(404).json({ message: "Notification not found" });
     res.status(200).json(notification);

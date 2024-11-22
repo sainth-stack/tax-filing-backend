@@ -3,7 +3,6 @@
 import ServiceCalendarModel from "../models/ServiceCalendar.js";
 
 export const createServiceCalendar = async (req, res) => {
-  console.log("Request Body:", req.body); // This shows what you're sending
 
   // Assuming req.body is an array of tasks
   try {
@@ -74,7 +73,6 @@ export const updateServiceCalendar = async (req, res) => {
     updatedTask.date = new Date(date);
     if (updateData.taskId) updatedTask.taskId = updateData.taskId;
     if (updateData.name) updatedTask.name = updateData.name;
-    console.log(updatedTask.prevDates)
     await updatedTask.save();
 
     res.status(200).json(updatedTask);

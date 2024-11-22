@@ -116,6 +116,7 @@ export const getTasks = async (req, res) => {
     taskType,
     year,
     month,
+    user
   } = req.body;
 
   try {
@@ -139,6 +140,15 @@ export const getTasks = async (req, res) => {
     // Filter by assignedTo directly as a string
     if (assignedTo) {
       filter.assignedTo = assignedTo;
+    }
+
+    if (user) {
+      filter.$or = [
+        { assignedTo: user }, // Fetch data assigned to the user
+        { assignedTo: "" }, // Include records where `assignedTo` is an empty string
+        { assignedTo: null }, // Include records where `assignedTo` is explicitly null
+        { assignedTo: { $exists: false } } // Include records where `assignedTo` is not present
+      ];
     }
 
     // Filter by application sub-status
@@ -182,7 +192,6 @@ export const getTasks = async (req, res) => {
       };
     }
 
-    console.log("filter", filter);
     // Retrieve tasks based on the filter
     const tasks = await taskModel.find(filter);
 
@@ -240,12 +249,10 @@ export const updateTask = async (req, res) => {
 
 
     // Check if assignedTo is updated
-    console.log(body.assignedTo)
     if (body.assignedTo && body.assignedTo !== existingTask.assignedTo) {
 
       // Fetch the new assigned user details
       const user = await User.findOne({ _id: body.assignedTo });
-      console.log(user)
       if (user) {
         taskData.assignedName = user.firstName + " " + user?.lastName;
         // Fetch notification settings for the user's agency
@@ -314,7 +321,6 @@ export const deleteTask = async (req, res) => {
 };
 
 export const uploadFiles = async (req, res) => {
-  console.log(req.files); // Log the uploaded files
   try {
     const files = req.files; // Access the files from req.files
     const fileLinks = {};
@@ -326,8 +332,6 @@ export const uploadFiles = async (req, res) => {
       fileLinks[file.fieldname] = uploadResponse.webViewLink;
       fs.unlinkSync(filePath); // Clean up temp file
     }
-
-    console.log(fileLinks);
 
     const task = await taskModel.findById(req.body.taskId);
     if (!task) {

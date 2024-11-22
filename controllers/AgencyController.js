@@ -8,7 +8,6 @@ export const createAgency = async (req, res) => {
 
         const existingAgency = await AgencyModel.findOne({ agencyName });
 
-        console.log("first", existingAgency);
         if (existingAgency) {
             return res.status(400).json({ message: "Agency already exists" });
         }
@@ -105,8 +104,6 @@ export const getFilterAgencies = async (req, res) => {
         if (effectiveTo) {
             filter["effectiveTo"] = { $lte: new Date(effectiveTo) };
         }
-
-        console.log("filter", filter);
 
         const agencies = await AgencyModel.find(filter);
         res.status(200).send(agencies);
