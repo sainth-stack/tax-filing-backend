@@ -55,14 +55,12 @@ export const createUser = async (req, res) => {
 
     await user.save();
 
-    console.log("new user cretead ; ", user)
     return res.send({
       success: true,
       message: "User created successfully",
       user,
     });
   } catch (error) {
-    console.log(error);
     if (error.code === 11000) {
       res.status(400).json({ error: "Email address already exists" });
     } else {
@@ -188,8 +186,6 @@ export const loginUser = async (req, res) => {
         message: "Your Account Is Not Verified",
       });
     }
-
-    console.log("users deails", user)
 
 
     const isPasswordMatch = await comparePassword(password, user.password);
