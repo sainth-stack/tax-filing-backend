@@ -36,9 +36,17 @@ const userSchema = new mongoose.Schema({
   whatsappNumber: {
     type: Number,
   },
-  company: {
-    type: String,
-  },
+  company: [{
+    _id: {
+      type: String,
+    },
+    label: {
+      type: String,
+    },
+    value: {
+      type: String,
+    }
+  }],
   role: {
     type: String,
   },
