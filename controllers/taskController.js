@@ -168,11 +168,12 @@ export const getTasks = async (req, res) => {
 
     // Year and Month Filtering based on getCompanies logic
     if (year && month) {
-      // Convert year and month into start and end dates
-      const startOfMonth = new Date(`${year}-${month}-01`); // First day of the month
-      const endOfMonth = new Date(year, month, 0); // Last day of the month
+      const adjustedDate = new Date(year, month); // month is already 0-indexed when coming from JavaScript Date
+      const adjustedYear = adjustedDate.getFullYear();
+      const adjustedMonth = adjustedDate.getMonth() + 1; // +1 to convert to 1-indexed month
 
-      // Filter tasks where startDate is before the end of the month and dueDate is after the start of the month
+      const startOfMonth = new Date(`${adjustedYear}-${String(adjustedMonth).padStart(2, '0')}-01`);
+      const endOfMonth = new Date(adjustedYear, adjustedMonth, 0); // Last day of the adjusted month
       filter.startDate = {
         $lte: endOfMonth.toISOString(),
       };

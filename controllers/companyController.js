@@ -8,6 +8,7 @@ import mongoose from "mongoose";
 
 import taskModel from '../models/AutoTaskModel.js';
 import ServiceCalendarModel from "../models/ServiceCalendar.js";
+import UserModel from "../models/employeeModel.js";
 
 const defaultFilingDataTemplate = [
   { taskId: "gstMonthly-gstr1", taskName: "gstMonthly", taskType: "gst", priority: "high", gstMonthly_gstType: 'gstr1' },
@@ -20,7 +21,7 @@ const defaultFilingDataTemplate = [
 export const createCompany = async (req, res) => {
   try {
     const { companyDetails, ...remainingData } = req.body;
-    const { companyName,pan } = companyDetails; // Extract company name
+    const { companyName, pan } = companyDetails; // Extract company name
 
     const existingCompany = await companyModel.findOne({
       "companyDetails.pan": pan,
@@ -61,21 +62,21 @@ const createTasksForCompany = async (companyId, servicesData) => {
       if (serviceData && serviceData.status === "active") {
         let effectiveDate = new Date(serviceData.effectiveFrom);
         const today = new Date();
-    
+
         const tasksOfType = defaultFilingDataTemplate.filter(task => task.taskType === taskType);
-    
+
         while (effectiveDate <= today) {
           const currentMonthStart = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth(), 1);
           const nextMonthStart = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth() + 1, 1);
-    
+
           for (const taskTemplate of tasksOfType) {
             const matchingServiceTask = serviceTasks.find(task => task.taskId === taskTemplate.taskId);
             let dueDate = matchingServiceTask ? new Date(matchingServiceTask.date) : null;
-    
+
             if (dueDate) {
               dueDate = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth(), dueDate.getDate());
             }
-    
+
             const existingTask = await taskModel.findOne({
               company: companyId,
               taskName: taskTemplate?.taskId.split('-')[0],
@@ -85,10 +86,10 @@ const createTasksForCompany = async (companyId, servicesData) => {
                 $lt: nextMonthStart,
               }
             });
-    
+
             if (!existingTask) {
               const taskEffectiveDate = new Date(effectiveDate);
-    
+
               tasksToCreate.push({
                 ...taskTemplate,
                 effectiveFrom: taskEffectiveDate,
@@ -96,12 +97,12 @@ const createTasksForCompany = async (companyId, servicesData) => {
               });
             }
           }
-    
+
           effectiveDate.setMonth(effectiveDate.getMonth() + 1);
         }
       }
     };
-    
+
     // Check each service and create recurring tasks
     await createRecurringTasks(servicesData.gst, "gst");
     await createRecurringTasks(servicesData.esi, "esi");
@@ -195,53 +196,62 @@ export const getAllCompanies = async (req, res) => {
 
 // Get filter companies
 export const getFilterCompanies = async (req, res) => {
-  const { name, status, year, month } = req.body;
+  const { name, status, year, month, userId } = req.body;
 
   try {
-    // Build the filter criteria based on the provided company name, client status, year, and month
+    // Build the filter criteria
     const filter = {};
+    if (name || status || (year && month)) {
+      filter.$and = [];
+    }
 
-    // Filter by company name (case-insensitive)
+    // Only get user's companies if userId is provided
+    if (userId) {
+      const userRecord = await UserModel.findById(userId).lean().exec();
+      if (!userRecord) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      const userCompanyIds = userRecord.company?.map(comp => comp._id) || [];
+      filter._id = { $in: userCompanyIds };
+    }
+
+    // Add additional filters
     if (name) {
-      filter["companyDetails.companyName"] = { $regex: name, $options: "i" };
+      filter.$and.push({ "companyDetails.companyName": { $regex: name, $options: "i" } });
     }
 
-    // Filter by client status
     if (status) {
-      filter["companyDetails.clientStatus"] = status;
+      filter.$and.push({ "companyDetails.clientStatus": status });
     }
 
-    // Filter by year and month (if provided)
     if (year && month) {
-      // Convert year and month into a start and end date
-      const startOfMonth = new Date(`${year}-${month}-01`); // First day of the month
-      const endOfMonth = new Date(year, month, 0); // Last day of the month
+      const startOfMonth = new Date(`${year}-${month}-01`);
+      const endOfMonth = new Date(year, month, 0);
 
-      // Handle effectiveFrom and effectiveTo based on conditions
-      filter.$or = [
-        // Case 1: Both effectiveFrom and effectiveTo exist
-        {
-          "companyDetails.effectiveFrom": {
-            $exists: true,
-            $lte: endOfMonth.toISOString(), // effectiveFrom is before or on the last day of the month
+      filter.$and.push({
+        $or: [
+          {
+            "companyDetails.effectiveFrom": {
+              $exists: true,
+              $lte: endOfMonth.toISOString(),
+            },
+            "companyDetails.effectiveTo": {
+              $exists: true,
+              $gte: startOfMonth.toISOString(),
+            },
           },
-          "companyDetails.effectiveTo": {
-            $exists: true,
-            $gte: startOfMonth.toISOString(), // effectiveTo is after or on the first day of the month
+          {
+            "companyDetails.effectiveFrom": {
+              $exists: true,
+              $lte: endOfMonth.toISOString(),
+            },
+            $or: [
+              { "companyDetails.effectiveTo": { $exists: false } },
+              { "companyDetails.effectiveTo": "" },
+            ],
           },
-        },
-        // Case 2: Only effectiveFrom exists or effectiveTo is an empty string
-        {
-          "companyDetails.effectiveFrom": {
-            $exists: true,
-            $lte: endOfMonth.toISOString(), // effectiveFrom must be in or before the current month
-          },
-          $or: [
-            { "companyDetails.effectiveTo": { $exists: false } }, // effectiveTo does not exist
-            { "companyDetails.effectiveTo": "" }, // effectiveTo is an empty string
-          ],
-        },
-      ];
+        ]
+      });
     }
 
     // Fetch companies based on the filter criteria

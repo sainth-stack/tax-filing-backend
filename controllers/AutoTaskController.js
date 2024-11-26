@@ -184,15 +184,13 @@ export const getAutoTasks = async (req, res) => {
 
     // Year and Month Filtering based on getCompanies logic
     if (year && month) {
-      // Adjust the month to one month earlier
-      const adjustedDate = new Date(year, month - 2); // Subtract 2 because months are 0-indexed
-      const adjustedYear = adjustedDate.getFullYear(); // Updated year if month underflows
-      const adjustedMonth = adjustedDate.getMonth() + 1; // +1 to convert back to 1-indexed month
+      // No need to subtract months - we want the next month
+      const adjustedDate = new Date(year, month); // month is already 0-indexed when coming from JavaScript Date
+      const adjustedYear = adjustedDate.getFullYear();
+      const adjustedMonth = adjustedDate.getMonth() + 1; // +1 to convert to 1-indexed month
 
-      // Convert the adjusted year and month into start and end dates
       const startOfMonth = new Date(`${adjustedYear}-${String(adjustedMonth).padStart(2, '0')}-01`);
       const endOfMonth = new Date(adjustedYear, adjustedMonth, 0); // Last day of the adjusted month
-      // Filter tasks where startDate is before the end of the month and dueDate is after the start of the month
       filter.startDate = {
         $lte: endOfMonth.toISOString(),
       };
