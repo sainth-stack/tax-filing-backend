@@ -123,11 +123,23 @@ export const getAutoTasks = async (req, res) => {
     taskType,
     year,
     month,
-    user
+    user,
+    list
   } = req.body;
 
   try {
     const filter = {};
+
+    // If list (userId) is provided, get user's companies and filter tasks
+    if (list) {
+      const userRecord = await User.findById(list).lean().exec();
+      console.log("userRecord", userRecord)
+      if (!userRecord) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      const userCompanies = userRecord.company?.map(comp => comp?.label) || [];
+      filter.company = { $in: userCompanies };
+    }
 
     // Filter by company name using case-insensitive partial matching
     if (company) {

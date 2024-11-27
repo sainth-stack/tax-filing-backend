@@ -29,7 +29,7 @@ export const createTask = async (req, res) => {
       // Fetch user based on the assignedTo string (assuming it is some identifier)
       const user = await User.findOne({ _id: assignedTo }).select("firstName email agency");
       if (user) {
-        body.assignedName = user.firstName + " "+ user?.lastName;
+        body.assignedName = user.firstName + " " + user?.lastName;
 
         // Fetch notification settings for the user's agency
         const notificationSettings = await NotificationModel.findOne({ agency: user.agency });
@@ -116,11 +116,22 @@ export const getTasks = async (req, res) => {
     taskType,
     year,
     month,
-    user
+    user,
+    list
   } = req.body;
 
   try {
     const filter = {};
+
+    if (list) {
+      const userRecord = await User.findById(list).lean().exec();
+      console.log("userRecord", userRecord)
+      if (!userRecord) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      const userCompanies = userRecord.company?.map(comp => comp?.label) || [];
+      filter.company = { $in: userCompanies };
+    }
 
     // Filter by company name using case-insensitive partial matching
     if (company) {
