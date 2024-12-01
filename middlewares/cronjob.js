@@ -4,7 +4,7 @@ import Company from '../models/companyModel.js';
 import ServiceCalendarModel from '../models/ServiceCalendar.js';
 import connectDB from '../config/db.js';
 
-cron.schedule('* * 1 * *', async () => {
+cron.schedule('0 0 1 * *', async () => {
   try {
     console.log('Starting GST filing process on the 1st of the month...');
 
