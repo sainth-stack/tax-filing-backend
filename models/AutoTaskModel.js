@@ -412,7 +412,7 @@ const AutoTaskSchema = new Schema({
   pft_inactive_dateOfApproval: {
     type: Date,
   },
-});
+}, { timestamps: true });
 
 const AutoTaskModel = mongoose.model("AutoTask", AutoTaskSchema);
 

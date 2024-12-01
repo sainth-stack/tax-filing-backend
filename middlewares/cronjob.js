@@ -4,7 +4,7 @@ import Company from '../models/companyModel.js';
 import ServiceCalendarModel from '../models/ServiceCalendar.js';
 import connectDB from '../config/db.js';
 
-cron.schedule('* * 1 * *', async () => { 
+cron.schedule('* * 1 * *', async () => {
   try {
     console.log('Starting GST filing process on the 1st of the month...');
 
@@ -42,10 +42,28 @@ cron.schedule('* * 1 * *', async () => {
 
     // Loop through each company and save the filing data
     for (const company of companies) {
-      const companyFilingData = filteredFilingData.map(filing => ({
+      // Filter filing data based on active services in the company
+      const FilingData = filteredFilingData.filter(filing => {
+        // Check the status of the corresponding service
+        switch (filing.taskType) {
+          case 'gst':
+            return company.gst?.status?.toLowerCase() === 'active';
+          case 'providentFund':
+            return company.providentFund?.status?.toLowerCase() === 'active';
+          case 'tds':
+            return company.tds?.status?.toLowerCase() === 'active';
+          case 'esi':
+            return company.esi?.status?.toLowerCase() === 'active';
+          case 'professionalTax':
+            return company.professionalTax?.status?.toLowerCase() === 'active';
+          default:
+            return false;
+        }
+      });
+      const companyFilingData = FilingData.map(filing => ({
         ...filing,
         company: company.companyDetails.companyName,
-      }));
+      }))
 
       for (const filingData of companyFilingData) {
         const newFiling = new GstFiling(filingData);
