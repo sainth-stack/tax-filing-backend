@@ -30,7 +30,7 @@ export const createAutoTask = async (req, res) => {
         "firstName email agency"
       );
       if (user) {
-        body.assignedName = user.firstName + " " + user?.lastName;
+        body.assignedName = user.firstName + " " + (user?.lastName || '');
 
         // Fetch notification settings for the user's agency
         const notificationSettings = await NotificationModel.findOne({
@@ -133,12 +133,19 @@ export const getAutoTasks = async (req, res) => {
     // If list (userId) is provided, get user's companies and filter tasks
     if (list) {
       const userRecord = await User.findById(list).lean().exec();
-      console.log("userRecord", userRecord)
       if (!userRecord) {
         return res.status(404).json({ error: "User not found" });
       }
       const userCompanies = userRecord.company?.map(comp => comp?.label) || [];
       filter.company = { $in: userCompanies };
+
+      // Update filter to include tasks with matching assignedTo or no assignedTo
+      filter.$or = [
+        { assignedTo: list }, // Match assignedTo
+        { assignedTo: "" },   // No assignedTo (empty string)
+        { assignedTo: null }, // No assignedTo (null)
+        { assignedTo: { $exists: false } } // No assignedTo field
+      ];
     }
 
     // Filter by company name using case-insensitive partial matching
@@ -159,18 +166,20 @@ export const getAutoTasks = async (req, res) => {
     if (assignedTo) {
       filter.assignedTo = assignedTo;
     }
-    if (user) {
-      filter.$or = [
-        { assignedTo: user }, // Fetch data assigned to the user
-        { assignedTo: "" }, // Include records where `assignedTo` is an empty string
-        { assignedTo: null }, // Include records where `assignedTo` is explicitly null
-        { assignedTo: { $exists: false } } // Include records where `assignedTo` is not present
-      ];
-    }
+    // if (user) {
+    //   filter.$or = [
+    //     { assignedTo: user }, // Fetch data assigned to the user
+    //     { assignedTo: "" }, // Include records where `assignedTo` is an empty string
+    //     { assignedTo: null }, // Include records where `assignedTo` is explicitly null
+    //     { assignedTo: { $exists: false } } // Include records where `assignedTo` is not present
+    //   ];
+    // }
 
-    // Filter by application sub-status
-    if (applicationSubStatus) {
+    if (applicationSubStatus == 'gstr3b' || applicationSubStatus == 'gstr1') {
       filter.gstMonthly_gstType = applicationSubStatus;
+    }
+    else if (applicationSubStatus) {
+      filter.taskName = applicationSubStatus;
     }
 
     if (status === 'filed') {
@@ -196,21 +205,17 @@ export const getAutoTasks = async (req, res) => {
 
     // Year and Month Filtering based on getCompanies logic
     if (year && month) {
-      // No need to subtract months - we want the next month
-      const adjustedDate = new Date(year, month); // month is already 0-indexed when coming from JavaScript Date
-      const adjustedYear = adjustedDate.getFullYear();
-      const adjustedMonth = adjustedDate.getMonth() + 1; // +1 to convert to 1-indexed month
+      // Since month is 0-based (0-11), we can use it directly
+      // For month=4 (May), we want tasks starting in May
+      const startDate = new Date(year, month, 1);  // First day of target month
+      const endDate = new Date(year, month, 31);   // Last possible day of target month
 
-      const startOfMonth = new Date(`${adjustedYear}-${String(adjustedMonth).padStart(2, '0')}-01`);
-      const endOfMonth = new Date(adjustedYear, adjustedMonth, 0); // Last day of the adjusted month
+      // Match tasks where startDate falls within the target month
       filter.startDate = {
-        $lte: endOfMonth.toISOString(),
+        $gte: startDate,
+        $lte: endDate
       };
-      filter.dueDate = {
-        $gte: startOfMonth.toISOString(),
-      };
-    }
-    else if (year) {
+    } else if (year) {
       // Filter by entire year if only year is provided
       const startOfYear = new Date(`${year}-01-01`);
       const endOfYear = new Date(`${year}-12-31`);
@@ -282,7 +287,7 @@ export const updateAutoTask = async (req, res) => {
       // Fetch the new assigned user details
       const user = await User.findOne({ _id: body.assignedTo });
       if (user) {
-        AutoTaskData.assignedName = user.firstName + " " + user?.lastName;
+        AutoTaskData.assignedName = user.firstName + " " + (user?.lastName || '');
         // Fetch notification settings for the user's agency
         const notificationSettings = await NotificationModel.findOne({
           agency: user.agency,

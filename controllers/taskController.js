@@ -29,7 +29,7 @@ export const createTask = async (req, res) => {
       // Fetch user based on the assignedTo string (assuming it is some identifier)
       const user = await User.findOne({ _id: assignedTo }).select("firstName email agency");
       if (user) {
-        body.assignedName = user.firstName + " " + user?.lastName;
+        body.assignedName = user.firstName + " " + (user?.lastName || '');
 
         // Fetch notification settings for the user's agency
         const notificationSettings = await NotificationModel.findOne({ agency: user.agency });
@@ -125,7 +125,6 @@ export const getTasks = async (req, res) => {
 
     if (list) {
       const userRecord = await User.findById(list).lean().exec();
-      console.log("userRecord", userRecord)
       if (!userRecord) {
         return res.status(404).json({ error: "User not found" });
       }
@@ -162,9 +161,11 @@ export const getTasks = async (req, res) => {
       ];
     }
 
-    // Filter by application sub-status
-    if (applicationSubStatus) {
-      filter.applicationSubStatus = applicationSubStatus;
+    if (applicationSubStatus == 'gstr3b' || applicationSubStatus == 'gstr1') {
+      filter.gstMonthly_gstType = applicationSubStatus;
+    }
+    else if (applicationSubStatus) {
+      filter.taskName = applicationSubStatus;
     }
 
     // Filter by status
@@ -173,23 +174,22 @@ export const getTasks = async (req, res) => {
     }
 
     // Filter by task type
+
     if (taskType) {
       filter.taskType = taskType;
     }
 
     // Year and Month Filtering based on getCompanies logic
     if (year && month) {
-      const adjustedDate = new Date(year, month); // month is already 0-indexed when coming from JavaScript Date
-      const adjustedYear = adjustedDate.getFullYear();
-      const adjustedMonth = adjustedDate.getMonth() + 1; // +1 to convert to 1-indexed month
+      // Since month is 0-based (0-11), we can use it directly
+      // For month=4 (May), we want tasks starting in May
+      const startDate = new Date(year, month, 1);  // First day of target month
+      const endDate = new Date(year, month, 31);   // Last possible day of target month
 
-      const startOfMonth = new Date(`${adjustedYear}-${String(adjustedMonth).padStart(2, '0')}-01`);
-      const endOfMonth = new Date(adjustedYear, adjustedMonth, 0); // Last day of the adjusted month
+      // Match tasks where startDate falls within the target month
       filter.startDate = {
-        $lte: endOfMonth.toISOString(),
-      };
-      filter.dueDate = {
-        $gte: startOfMonth.toISOString(),
+        $gte: startDate,
+        $lte: endDate
       };
     } else if (year) {
       // Filter by entire year if only year is provided
@@ -266,7 +266,7 @@ export const updateTask = async (req, res) => {
       // Fetch the new assigned user details
       const user = await User.findOne({ _id: body.assignedTo });
       if (user) {
-        taskData.assignedName = user.firstName + " " + user?.lastName;
+        taskData.assignedName = user.firstName + " " + (user?.lastName || '');
         // Fetch notification settings for the user's agency
         const notificationSettings = await NotificationModel.findOne({ agency: user.agency });
 
