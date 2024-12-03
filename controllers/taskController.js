@@ -181,10 +181,10 @@ export const getTasks = async (req, res) => {
 
     // Year and Month Filtering based on getCompanies logic
     if (year && month) {
-      // Since month is 0-based (0-11), we can use it directly
-      // For month=4 (May), we want tasks starting in May
-      const startDate = new Date(year, month, 1);  // First day of target month
-      const endDate = new Date(year, month, 31);   // Last possible day of target month
+      // Create dates with explicit UTC time
+      const startDate = new Date(Date.UTC(year, month - 1, 1));  // First day of target month at 00:00:00 UTC
+      const endDate = new Date(Date.UTC(year, month, 0));   // Last day of target month at 00:00:00 UTC
+      endDate.setUTCHours(23, 59, 59, 999);  // Set to end of day
 
       // Match tasks where startDate falls within the target month
       filter.startDate = {
