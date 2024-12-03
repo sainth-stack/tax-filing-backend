@@ -196,7 +196,7 @@ export const getAllCompanies = async (req, res) => {
 
 // Get filter companies
 export const getFilterCompanies = async (req, res) => {
-  const { name, status, year, month, userId } = req.body;
+  const { name, status, year, month, userId, taskType } = req.body;
 
   try {
     // Build the filter criteria
@@ -222,6 +222,11 @@ export const getFilterCompanies = async (req, res) => {
 
     if (status) {
       filter.$and.push({ "companyDetails.clientStatus": status });
+    }
+
+    if (taskType) {
+      console.log(taskType, 'taskType')
+      filter[`${taskType}.status`] = "active";
     }
 
     if (year && month) {
