@@ -129,8 +129,6 @@ export const getAutoTasks = async (req, res) => {
 
   try {
     const filter = {};
-
-    // If list (userId) is provided, get user's companies and filter tasks
     if (list) {
       const userRecord = await User.findById(list).lean().exec();
       if (!userRecord) {
@@ -139,18 +137,24 @@ export const getAutoTasks = async (req, res) => {
       const userCompanies = userRecord.company?.map(comp => comp?.label) || [];
       filter.company = { $in: userCompanies };
 
-      // Update filter to include tasks with matching assignedTo or no assignedTo
       filter.$or = [
-        { assignedTo: list }, // Match assignedTo
-        { assignedTo: "" },   // No assignedTo (empty string)
-        { assignedTo: null }, // No assignedTo (null)
-        { assignedTo: { $exists: false } } // No assignedTo field
+        { assignedTo: list },
+        { assignedTo: "" },
+        { assignedTo: null },
+        { assignedTo: { $exists: false } }
       ];
     }
 
-    // Filter by company name using case-insensitive partial matching
     if (company) {
-      filter.company = { $regex: company, $options: "i" };
+      if (filter.company) {
+        filter.company = {
+          $in: filter.company.$in,
+          $regex: company,
+          $options: "i"
+        };
+      } else {
+        filter.company = { $regex: company, $options: "i" };
+      }
     }
 
     if (effectiveFrom && effectiveTo) {
@@ -162,18 +166,10 @@ export const getAutoTasks = async (req, res) => {
       filter.dueDate = { $lte: new Date(effectiveTo) };
     }
 
-    // Filter by assignedTo directly as a string
     if (assignedTo) {
       filter.assignedTo = assignedTo;
     }
-    // if (user) {
-    //   filter.$or = [
-    //     { assignedTo: user }, // Fetch data assigned to the user
-    //     { assignedTo: "" }, // Include records where `assignedTo` is an empty string
-    //     { assignedTo: null }, // Include records where `assignedTo` is explicitly null
-    //     { assignedTo: { $exists: false } } // Include records where `assignedTo` is not present
-    //   ];
-    // }
+
 
     if (applicationSubStatus == 'gstr3b' || applicationSubStatus == 'gstr1') {
       filter.gstMonthly_gstType = applicationSubStatus;
@@ -183,7 +179,6 @@ export const getAutoTasks = async (req, res) => {
     }
 
     if (status === 'filed') {
-      // For "filed", at least one date field must be present
       filter.$or = [
         { pfMonthly_filedate: { $ne: null } },
         { esi_fileDate: { $ne: null } },
@@ -191,22 +186,19 @@ export const getAutoTasks = async (req, res) => {
         { gstMonthly_filedate: { $ne: null } }
       ];
     } else if (status === 'notFiled') {
-      // For "not filed", all date fields must be null
       filter.pfMonthly_filedate = null;
       filter.esi_fileDate = null;
       filter.pft_fileDate = null;
       filter.gstMonthly_filedate = null;
     }
 
-    // Filter by task type
     if (taskType) {
       filter.taskType = taskType;
     }
 
-    // Year and Month Filtering based on getCompanies logic
     if (year && month) {
       // Create dates with explicit UTC time
-      const startDate = new Date(Date.UTC(year, month-1, 1));  // First day of target month at 00:00:00 UTC
+      const startDate = new Date(Date.UTC(year, month - 1, 1));  // First day of target month at 00:00:00 UTC
       const endDate = new Date(Date.UTC(year, month, 0));   // Last day of target month at 00:00:00 UTC
       endDate.setUTCHours(23, 59, 59, 999);  // Set to end of day
 
@@ -216,7 +208,6 @@ export const getAutoTasks = async (req, res) => {
         $lte: endDate
       };
     } else if (year) {
-      // Filter by entire year if only year is provided
       const startOfYear = new Date(`${year}-01-01`);
       const endOfYear = new Date(`${year}-12-31`);
 
@@ -227,6 +218,7 @@ export const getAutoTasks = async (req, res) => {
         $gte: startOfYear.toISOString(),
       };
     }
+    console.log(filter)
 
     // Retrieve tasks based on the filter
     const AutoTasks = await AutoTaskModel.find(filter);

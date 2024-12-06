@@ -192,7 +192,6 @@ export const getTasks = async (req, res) => {
         $lte: endDate
       };
     } else if (year) {
-      // Filter by entire year if only year is provided
       const startOfYear = new Date(`${year}-01-01`);
       const endOfYear = new Date(`${year}-12-31`);
 
