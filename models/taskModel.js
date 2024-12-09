@@ -9,6 +9,9 @@ const taskSchema = new Schema({
     type: String,
     //required: true,
   },
+  pan: {
+    type: String,
+  },
   assignedTo: {
     type: String,
   },
