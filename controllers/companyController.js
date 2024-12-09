@@ -179,12 +179,23 @@ export const uploadFiles = async (req, res) => {
 // get alll companies
 export const getAllCompanies = async (req, res) => {
   try {
-    const companies = await companyModel.find();
+     const page = parseInt(req.query.page) || 1; // Default to page 1
+     const pageSize = parseInt(req.query.pageSize) || 10; // Default to 10 items per page
 
-    res.status(200).json({
-      success: true,
-      data: companies,
-    });
+    console.log("page : ", page)
+    console.log("pagesize",pageSize)
+     // Calculate the number of items to skip
+     const skip = (page - 1) * pageSize;
+    const companies = await companyModel.find().skip(skip).limit(pageSize);
+const totalCompanies = await companyModel.countDocuments();
+
+     res.status(200).json({
+       success: true,
+       data: companies,
+       page,
+       pageSize,
+      
+     });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -196,11 +207,22 @@ export const getAllCompanies = async (req, res) => {
 
 // Get filter companies
 export const getFilterCompanies = async (req, res) => {
-  const { name, status, year, month, userId, taskType } = req.body;
+  const {
+    name,
+    status,
+    year,
+    month,
+    userId,
+    taskType,
+    page = 1, // Default page 1 if not provided
+    pageSize = 10, // Default pageSize 10 if not provided
+  } = req.body;
 
   try {
     // Build the filter criteria
     const filter = {};
+
+    // Check if any of the conditions for the $and clause are set
     if (name || status || (year && month)) {
       filter.$and = [];
     }
@@ -211,13 +233,15 @@ export const getFilterCompanies = async (req, res) => {
       if (!userRecord) {
         return res.status(404).json({ error: "User not found" });
       }
-      const userCompanyIds = userRecord.company?.map(comp => comp._id) || [];
+      const userCompanyIds = userRecord?.company?.map((comp) => comp._id) || [];
       filter._id = { $in: userCompanyIds };
     }
 
-    // Add additional filters
+    // Add additional filters based on conditions
     if (name) {
-      filter.$and.push({ "companyDetails.companyName": { $regex: name, $options: "i" } });
+      filter.$and.push({
+        "companyDetails.companyName": { $regex: name, $options: "i" },
+      });
     }
 
     if (status) {
@@ -225,13 +249,14 @@ export const getFilterCompanies = async (req, res) => {
     }
 
     if (taskType) {
-      console.log(taskType, 'taskType')
+      // Assuming taskType is a valid field in your schema
       filter[`${taskType}.status`] = "active";
     }
 
+    // Add year and month filtering logic
     if (year && month) {
-      const startOfMonth = new Date(`${year}-${month}-01`);
-      const endOfMonth = new Date(year, month, 0);
+      const startOfMonth = new Date(`${year}-${month}-01`); // Start of the month
+      const endOfMonth = new Date(year, month, 0); // Last day of the month
 
       filter.$and.push({
         $or: [
@@ -255,17 +280,36 @@ export const getFilterCompanies = async (req, res) => {
               { "companyDetails.effectiveTo": "" },
             ],
           },
-        ]
+        ],
       });
     }
 
-    // Fetch companies based on the filter criteria
-    const companies = await companyModel.find(filter);
-    res.status(200).send(companies);
+    // Apply pagination
+    const skip = (page - 1) * pageSize;
+
+    console.log("filter pagination", page,pageSize, skip);
+
+    // Fetch total count of companies
+    const totalCount = await companyModel.countDocuments(filter);
+
+    // Fetch paginated data based on filter
+    const companies = await companyModel
+      .find(filter)
+      .skip(skip)
+      .limit(pageSize) // Ensure pageSize is converted to an integer
+      .exec();
+
+    // Send the response with data and total count
+    res.status(200).json({
+      data: companies,
+      totalCount: totalCount, // Add total count for pagination
+      totalPages: Math.ceil(totalCount / pageSize), // Calculate total pages
+    });
   } catch (error) {
     res.status(500).send({ error: error.message });
   }
 };
+
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 

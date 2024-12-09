@@ -40,7 +40,7 @@ export const updateServiceCalendar = async (req, res) => {
 
     if (date && name) {
       const newDate = new Date(date);
-
+      
       let prevDatesEntry = updatedTask.prevDates.find((entry) => entry.name === name);
 
       if (!prevDatesEntry) {

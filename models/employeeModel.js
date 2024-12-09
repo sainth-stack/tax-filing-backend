@@ -36,6 +36,8 @@ const userSchema = new mongoose.Schema({
   whatsappNumber: {
     type: Number,
   },
+
+ 
   company: [{
     _id: {
       type: String,

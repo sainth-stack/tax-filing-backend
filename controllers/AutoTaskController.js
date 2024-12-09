@@ -60,6 +60,7 @@ export const createAutoTask = async (req, res) => {
       ...body,
       ...fileLinks,
     };
+    
 
     const AutoTask = await AutoTaskModel.create(taskData);
     await AutoTask.save();
@@ -111,6 +112,10 @@ export const getAllAutoTasks = async (req, res) => {
     });
   }
 };
+
+
+
+
 
 export const getAutoTasks = async (req, res) => {
   const {
