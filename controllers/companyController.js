@@ -214,8 +214,8 @@ export const getFilterCompanies = async (req, res) => {
     month,
     userId,
     taskType,
-    page = 1, // Default page 1 if not provided
-    pageSize = 10, // Default pageSize 10 if not provided
+    page, 
+    pageSize, 
   } = req.body;
 
   try {
@@ -284,27 +284,44 @@ export const getFilterCompanies = async (req, res) => {
       });
     }
 
-    // Apply pagination
-    const skip = (page - 1) * pageSize;
-
-    console.log("filter pagination", page,pageSize, skip);
-
     // Fetch total count of companies
-    const totalCount = await companyModel.countDocuments(filter);
 
-    // Fetch paginated data based on filter
-    const companies = await companyModel
-      .find(filter)
-      .skip(skip)
-      .limit(pageSize) // Ensure pageSize is converted to an integer
-      .exec();
+    // Apply pagination logic only if page and pageSize are provided
+   let companies;
+   let totalCount = 0; // Initialize totalCount
 
-    // Send the response with data and total count
-    res.status(200).json({
-      data: companies,
-      totalCount: totalCount, // Add total count for pagination
-      totalPages: Math.ceil(totalCount / pageSize), // Calculate total pages
-    });
+   if (page && pageSize) {
+     // Parse page and pageSize safely
+     const currentPage = parseInt(page, 10);
+     const currentPageSize = parseInt(pageSize, 10);
+
+     // Calculate skip for pagination
+     const skip = (currentPage - 1) * currentPageSize;
+
+     // Fetch paginated data
+     companies = await companyModel
+       .find(filter)
+       .skip(skip)
+       .limit(currentPageSize)
+       .exec();
+
+     // Fetch total count for pagination
+     totalCount = await companyModel.countDocuments(filter);
+   } else {
+     // Fetch all matching data without pagination
+     companies = await companyModel.find(filter).exec();
+
+     // Fetch total count for consistency
+     totalCount = companies.length;
+   }
+
+   // Send the response with data and total count
+   res.status(200).json({
+     data: companies,
+     totalCount, // Include the total count of records
+     totalPages: pageSize ? Math.ceil(totalCount / pageSize) : 1, // Calculate total pages if applicable
+   });
+
   } catch (error) {
     res.status(500).send({ error: error.message });
   }
