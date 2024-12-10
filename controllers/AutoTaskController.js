@@ -97,13 +97,31 @@ export const createAutoTask = async (req, res) => {
 };
 // get all tasks
 export const getAllAutoTasks = async (req, res) => {
-  try {
-    const AutoTasks = await AutoTaskModel.find();
+  try { 
+     const page = parseInt(req.query.page); // Default to page 1 if not provided
+     const pageSize = parseInt(req.query.pageSize); // Default to 10 tasks per page if not provided
 
-    res.status(200).json({
-      success: true,
-      data: AutoTasks,
-    });
+    console.log("auto task page ,pagesize",page,pageSize)
+     let tasks;
+     let totalTasks;
+
+   if (page && pageSize) {
+     const skips = (page - 1) * pageSize;
+     tasks = await AutoTaskModel.find().skip(skips).limit(pageSize);
+     totalTasks = await AutoTaskModel.countDocuments(); // Get total count of tasks
+   } else {
+     // If pagination values are not provided, return all tasks
+     tasks = await AutoTaskModel.find();
+     totalTasks = tasks.length; // Return the total number of tasks in this case
+   }
+
+  //  console.log("Fetched tasks: ", tasks);
+   res.status(200).json({
+     success: true,
+     data: tasks,
+     totalTasks,
+     totalPages: pageSize ? Math.ceil(totalTasks / pageSize) : 1, // Calculate total pages
+   });
   } catch (error) {
     res.status(500).json({
       success: false,

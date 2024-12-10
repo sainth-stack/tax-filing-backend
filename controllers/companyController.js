@@ -179,11 +179,11 @@ export const uploadFiles = async (req, res) => {
 // get alll companies
 export const getAllCompanies = async (req, res) => {
   try {
-     const page = parseInt(req.query.page) || 1; // Default to page 1
-     const pageSize = parseInt(req.query.pageSize) || 10; // Default to 10 items per page
+     const page = parseInt(req.query.page)  // Default to page 1
+     const pageSize = parseInt(req.query.pageSize)  // Default to 10 items per page
 
-    console.log("page : ", page)
-    console.log("pagesize",pageSize)
+    // console.log("page : ", page)
+    // console.log("pagesize",pageSize)
      // Calculate the number of items to skip
      const skip = (page - 1) * pageSize;
     const companies = await companyModel.find().skip(skip).limit(pageSize);

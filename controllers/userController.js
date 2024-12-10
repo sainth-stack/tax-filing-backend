@@ -72,12 +72,28 @@ export const createUser = async (req, res) => {
 // Get all users
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find();
 
-    res.status(200).json({
-      success: true,
-      data: users,
-    });
+     const page = parseInt(req.query);
+     const pageSize = parseInt(req.query);
+
+     let users;
+    let totalUsers;
+    
+    if (page && pageSize) {
+      const skips = (page - 1) * pageSize;
+      users = await User.find().skip(skips).limit(pageSize);
+      totalUsers = await User.countDocuments();
+    } else {
+      users = await User.find();
+      totalUsers =await  users.length; // Total count of fetched users
+    }
+
+     res.status(200).json({
+       success: true,
+       data: users,
+       totalUsers,
+       totalPages: pageSize ? Math.ceil(totalUsers / pageSize) : 1, // Calculate total pages if applicable
+     });
   } catch (error) {
     res.status(500).json({
       success: false,
