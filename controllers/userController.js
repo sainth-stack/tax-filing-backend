@@ -106,7 +106,7 @@ export const getAllUsers = async (req, res) => {
 // Get users by filter users
 
 export const getUsers = async (req, res) => {
-  const { name, agency } = req.body;
+  const { name, agency, page, pageSize } = req.body;
 
   try {
     // Initialize an empty filter object
@@ -125,9 +125,36 @@ export const getUsers = async (req, res) => {
       filter.agency = { $regex: agency, $options: "i" }; // Case-insensitive match for agency
     }
 
-    // Fetch users based on the filter criteria (if any)
-    const users = await User.find(filter);
-    res.status(200).json(users);
+  let users;
+  let totalCount = 0;
+     if (page && pageSize) {
+       // Parse page and pageSize safely
+       const Page = parseInt(page);
+       const PageSize = parseInt(pageSize);
+
+       console.log("from user conteoller",page,pageSize)
+       // Calculate skip for pagination
+       const skip = (Page - 1) * PageSize;
+
+       // Fetch paginated data
+       users = await User.find(filter).skip(skip).limit(PageSize).exec();
+
+       // Fetch total count for pagination
+       totalCount = await User.countDocuments(filter);
+     } else {
+       // Fetch all matching data without pagination
+       users = await User.find(filter).exec();
+
+       // Fetch total count for consistency
+       totalCount = users.length;
+     }
+
+     // Send the response with data and total count
+     res.status(200).json({
+       data: users,
+       totalCount, // Total number of records
+       totalPages: pageSize ? Math.ceil(totalCount / pageSize) : 1, // Calculate total pages if applicable
+     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
