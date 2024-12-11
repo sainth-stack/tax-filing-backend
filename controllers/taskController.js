@@ -138,7 +138,9 @@ export const getTasks = async (req, res) => {
     year,
     month,
     user,
-    list
+    list,
+    page,
+    pageSize
   } = req.body;
 
   try {
@@ -224,11 +226,30 @@ export const getTasks = async (req, res) => {
       };
     }
 
-    // Retrieve tasks based on the filter
-    const tasks = await taskModel.find(filter);
+    let tasks;
+    let totalTasks;
 
-    // Send the tasks in the response
-    return res.status(200).send(tasks);
+    // If page and pageSize are provided, apply pagination
+    if (page && pageSize) {
+      const skip = (page - 1) * pageSize;
+      tasks = await taskModel.find(filter)
+        .skip(skip)
+        .limit(pageSize);
+      totalTasks = await taskModel.countDocuments(filter);
+    } else {
+      // If no pagination parameters, return all tasks
+      tasks = await taskModel.find(filter);
+      totalTasks = tasks.length;
+    }
+
+    // Send the tasks in the response with pagination metadata
+    return res.status(200).json({
+      success: true,
+      data: tasks,
+      totalTasks,
+      totalPages: pageSize ? Math.ceil(totalTasks / pageSize) : 1,
+      currentPage: page || 1
+    });
   } catch (error) {
     console.error("Error fetching tasks:", error);
     res.status(500).json({ error: "An error occurred while fetching tasks." });

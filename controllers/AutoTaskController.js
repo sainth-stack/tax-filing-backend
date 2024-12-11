@@ -147,7 +147,9 @@ export const getAutoTasks = async (req, res) => {
     year,
     month,
     user,
-    list
+    list,
+    page,
+    pageSize
   } = req.body;
 
   try {
@@ -243,11 +245,27 @@ export const getAutoTasks = async (req, res) => {
     }
     console.log(filter)
 
-    // Retrieve tasks based on the filter
-    const AutoTasks = await AutoTaskModel.find(filter);
+    // Retrieve tasks based on the filter with pagination
+    let AutoTasks;
+    let totalTasks;
 
-    // Send the tasks in the response
-    return res.status(200).send(AutoTasks);
+    if (page && pageSize) {
+      const skip = (page - 1) * pageSize;
+      AutoTasks = await AutoTaskModel.find(filter)
+        .skip(skip)
+        .limit(pageSize);
+      totalTasks = await AutoTaskModel.countDocuments(filter);
+    } else {
+      AutoTasks = await AutoTaskModel.find(filter);
+      totalTasks = AutoTasks.length;
+    }
+
+    // Send the tasks in the response with pagination info
+    return res.status(200).json({
+      tasks: AutoTasks,
+      totalTasks,
+      totalPages: pageSize ? Math.ceil(totalTasks / pageSize) : 1
+    });
   } catch (error) {
     console.error("Error fetching tasks:", error);
     res.status(500).json({ error: "An error occurred while fetching tasks." });
