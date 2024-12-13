@@ -18,7 +18,7 @@ const auditMiddleware = (model) => async (req, res, next) => {
 
 
       if (!documentId || !mongoose.Types.ObjectId.isValid(documentId)) {
-        console.error("Invalid Document ID:", documentId);
+        // console.error("Invalid Document ID:", documentId);
         return;
       }
 

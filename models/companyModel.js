@@ -5,172 +5,228 @@ const companySchema = new mongoose.Schema(
     companyDetails: {
       companyName: {
         type: String,
+        required: [true, "Company name is required"],
       },
-      constitution: { type: String },
-      subConstitution: { type: String },
-      clientStatus: { type: String },
-      authorisedPerson: { type: String },
-      phone: { type: String },
-      mailId: { type: String },
-      pan: { type: String },
+      
+      constitution: {
+        type: String,
+        required: [true, "Constitution  is required"],
+      },
+      subConstitution: {
+        type: String,
+        required: [true, "SubConstitution  is required"],
+      },
+      clientStatus: {
+        type: String,
+        required: [true, "ClientStatus  is required"],
+      },
+      authorisedPerson: {
+        type: String,
+        required: [true, "AuthorisedPerson  is required"],
+      },
+      phone: { type: String, required: [true, "Phone  is required"] },
+      mailId: { type: String, required: [true, "MailId  is required"] },
+      pan: { type: String, required: [true, "Pan  is required"] },
       companyAddress: { type: String },
-      effectiveFrom: { type: String },
-      effectiveTo: { type: String },
+      effectiveFrom: {
+        type: String,
+        required: [true, "EffectiveFrom  is required"],
+      },
+      effectiveTo: {
+        type: String,
+        required: [true, "EffectiveTo  is required"],
+      },
     },
 
     incomeTax: {
-      incomeTaxPassword: { type: String },
-      incomeTraceTaxUsername: { type: String },
-      incomeTraceTaxPassword: { type: String },
-      status: { type: String },
-      effectiveFrom: { type: String },
-      effectiveTo: { type: String },
+      incomeTaxPassword: {
+        type: String,
+        required: [true, "Income TaxPassword is required"],
+      },
+      incomeTraceTaxUsername: {
+        type: String,
+        required: [true, "Income TraceTax Username is required"],
+      },
+      incomeTraceTaxPassword: {
+        type: String,
+        required: [true, "Income TraceTax Password is required"],
+      },
+      status: { type: String, required: [true, "Status is required"] },
+      effectiveFrom: {
+        type: String,
+        required: [true, "EffectiveFrom is required"],
+      },
+      effectiveTo: {
+        type: String,
+        required: [true, "EffectiveTo is required"],
+      },
       approvalCertificate: {
         type: String,
-        default: ""
+        default: "",
       },
     },
 
     gst: {
-      gstin: { type: String },
-      gstUserName: { type: String },
-      gstPassword: { type: String },
-      status: { type: String },
-      eWayBillUsername: { type: String },
-      eWayBillPassword: { type: String },
-      effectiveFrom: { type: String },
-      effectiveTo: { type: String },
-      typeOfGstFiling: { type: String },
+      gstin: { type: String, required: [true, "GSTIN is required"] },
+      gstUserName: {
+        type: String,
+        required: [true, "GST UserName is required"],
+      },
+      gstPassword: {
+        type: String,
+        required: [true, "GST Password is required"],
+      },
+      status: { type: String, required: [true, "Status is required"] },
+      eWayBillUsername: {
+        type: String,
+        required: [true, "EWayBill Username is required"],
+      },
+      eWayBillPassword: {
+        type: String,
+        required: [true, "EWayBill Password is required"],
+      },
+      effectiveFrom: {
+        type: String,
+        required: [true, "EffectiveFrom is required"],
+      },
+      effectiveTo: {
+        type: String,
+        required: [true, "EffectiveTo is required"],
+      },
+      typeOfGstFiling: {
+        type: String,
+        required: [true, "TypeOfGstFiling is required"],
+      },
       dueDateReturn: { type: String },
       approvalCertificate: {
         type: String,
-        default: ""
+        default: "",
       },
     },
 
     esi: {
-      esiNumber: { type: String },
-      esiUserId: { type: String },
-      esiPassword: { type: String },
-      status: { type: String },
-      effectiveFrom: { type: String },
-      effectiveTo: { type: String },
+      esiNumber: { type: String, required: [true, "Esi Number is required"] },
+      esiUserId: { type: String, required: [true, "Esi UserId is required"] },
+      esiPassword: { type: String, required: [true, "Esi Password is required"] },
+      status: { type: String, required: [true, "Status is required"] },
+      effectiveFrom: { type: String, required: [true, "EffectiveFrom is required"] },
+      effectiveTo: { type: String, required: [true, "EffectiveTo is required"] },
       approvalCertificate: {
         type: String,
-        default: ""
+        default: "",
       },
     },
 
     providentFund: {
-      pfNumber: { type: String },
-      pfUserId: { type: String },
-      pfPassword: { type: String },
-      status: { type: String },
-      effectiveFrom: { type: String },
-      effectiveTo: { type: String },
+      pfNumber: { type: String, required: [true, "PF Number is required"] },
+      pfUserId: { type: String,required: [true, "PF UserId is required"] },
+      pfPassword: { type: String,required: [true, "PF Password is required"] },
+      status: { type: String,required: [true, "Status is required"] },
+      effectiveFrom: { type: String,required: [true, "EffectiveFrom is required"] },
+      effectiveTo: { type: String,required: [true, "EffectiveTo is required"] },
       approvalCertificate: {
         type: String,
-        default: ""
+        default: "",
       },
     },
 
     professionalTax: {
-      ptEcNumber: { type: String },
-      ptUsername: { type: String },
+      ptEcNumber: { type: String, required: [true, "PT EC Number is required"] },
+      ptUsername: { type: String, required: [true, "PT Username is required"] },
 
-      ptPassword: { type: String },
-      ptEcUsername: { type: String },
-      ptEcPassword: { type: String },
+      ptPassword: { type: String, required: [true, "PT Password is required"] },
+      ptEcUsername: { type: String, required: [true, "PT EC Username is required"] },
+      ptEcPassword: { type: String, required: [true, "PT EC Password is required"] },
 
-      ptNumber: { type: String },
-      status: { type: String },
-      effectiveFrom: { type: String },
-      effectiveTo: { type: String },
+      ptNumber: { type: String, required: [true, "PT Number is required"] },
+      status: { type: String, required: [true, "Status is required"] },
+      effectiveFrom: { type: String, required: [true, "EffectiveFrom is required"] },
+      effectiveTo: { type: String, required: [true, "EffectiveTo is required"] },
       approvalCertificate: {
         type: String,
-        default: ""
+        default: "",
       },
     },
 
     tds: {
-      tan: { type: String },
-      tanPassword: { type: String },
-      tracesUsername: { type: String },
-      tracesPassword: { type: String },
-      status: { type: String },
-      effectiveFrom: { type: String },
-      effectiveTo: { type: String },
+      tan: { type: String, required: [true, "TAN is required"] },
+      tanPassword: { type: String, required: [true, "TAN Password is required"] },
+      tracesUsername: { type: String, required: [true, "Traces Username is required"] },
+      tracesPassword: { type: String, required: [true, "Traces Password is required"] },
+      status: { type: String, required: [true, "Status is required"] },
+      effectiveFrom: { type: String, required: [true, "EffectiveFrom is required"] },
+      effectiveTo: { type: String, required: [true, "EffectiveTo is required"] },
       approvalCertificate: {
         type: String,
-        default: ""
+        default: "",
       },
     },
 
     shopCommercialEstablishment: {
-      seNumber: { type: String },
-      seUsername: { type: String },
-      sePassword: { type: String },
-      seRenewalDate: { type: String },
-      status: { type: String },
-      effectiveFrom: { type: String },
-      effectiveTo: { type: String },
+      seNumber: { type: String, required: [true, "SE Number is required"] },
+      seUsername: { type: String, required: [true, "SE Username is required"] },
+      sePassword: { type: String, required: [true, "SE Password is required"] },
+      seRenewalDate: { type: String, required: [true, "SE Renewal Date is required"] },
+      status: { type: String, required: [true, "Status is required"] },
+      effectiveFrom: { type: String, required: [true, "EffectiveFrom is required"] },
+      effectiveTo: { type: String, required: [true, "EffectiveTo is required"] },
       approvalCertificate: {
         type: String,
-        default: ""
+        default: "",
       },
     },
 
     msme: {
-      msmeNumber: { type: String },
-      status: { type: String },
-      effectiveFrom: { type: String },
-      effectiveTo: { type: String },
+      msmeNumber: { type: String, required: [true, "MSME Number is required"] },
+      status: { type: String, required: [true, "Status is required"] },
+      effectiveFrom: { type: String, required: [true, "EffectiveFrom is required"] },
+      effectiveTo: { type: String, required: [true, "EffectiveTo is required"] },
       approvalCertificate: {
         type: String,
-        default: ""
+        default: "",
       },
     },
 
     fssai: {
-      fssaiNumber: { type: String },
-      fssaiUsername: { type: String },
-      fssaiPassword: { type: String },
-      fssaiRenewalDate: { type: String },
-      status: { type: String },
-      effectiveFrom: { type: String },
-      effectiveTo: { type: String },
+      fssaiNumber: { type: String, required: [true, "FSSAI Number is required"] },
+      fssaiUsername: { type: String, required: [true, "FSSAI Username is required"] },
+      fssaiPassword: { type: String, required: [true, "FSSAI Password is required"] },
+      fssaiRenewalDate: { type: String, required: [true, "FSSAI Renewal Date is required"] },
+      status: { type: String, required: [true, "Status is required"] },
+      effectiveFrom: { type: String, required: [true, "EffectiveFrom is required"] },
+      effectiveTo: { type: String, required: [true, "EffectiveTo is required"] },
       approvalCertificate: {
         type: String,
-        default: ""
+        default: "",
       },
     },
 
     factoryLicense: {
-      flNumber: { type: String },
-      flUsername: { type: String },
-      flPassword: { type: String },
-      flRenewalDate: { type: String },
-      status: { type: String },
-      effectiveFrom: { type: String },
-      effectiveTo: { type: String },
+      flNumber: { type: String, required: [true, "FL Number is required"] },
+      flUsername: { type: String, required: [true, "FL Username is required"] },
+      flPassword: { type: String, required: [true, "FL Password is required"] },
+      flRenewalDate: { type: String, required: [true, "FL Renewal Date is required"] },
+      status: { type: String, required: [true, "Status is required"] },
+      effectiveFrom: { type: String, required: [true, "EffectiveFrom is required"] },
+      effectiveTo: { type: String, required: [true, "EffectiveTo is required"] },
       approvalCertificate: {
         type: String,
-        default: ""
+        default: "",
       },
     },
 
     importExport: {
-      iecNumber: { type: String },
-      dgftUsername: { type: String },
-      dgftPassword: { type: String },
-      icegateUsername: { type: String },
-      icegatePassword: { type: String },
-      status: { type: String },
-      effectiveFrom: { type: String },
-      effectiveTo: { type: String },
+      iecNumber: { type: String, required: [true, "IEC Number is required"] },
+      dgftUsername: { type: String, required: [true, "DGFT Username is required"] },
+      dgftPassword: { type: String, required: [true, "DGFT Password is required"] },
+      icegateUsername: { type: String, required: [true, "ICEGATE Username is required"] },
+      icegatePassword: { type: String, required: [true, "ICEGATE Password is required"] },
+      status: { type: String, required: [true, "Status is required"] },
+      effectiveFrom: { type: String, required: [true, "EffectiveFrom is required"] },
+      effectiveTo: { type: String, required: [true, "EffectiveTo is required"] },
       approvalCertificate: {
         type: String,
-        default: ""
+        default: "",
       },
     },
 
@@ -181,7 +237,7 @@ const companySchema = new mongoose.Schema(
       effectiveTo: { type: String },
       approvalCertificate: {
         type: String,
-        default: ""
+        default: "",
       },
     },
 
@@ -194,7 +250,7 @@ const companySchema = new mongoose.Schema(
       effectiveTo: { type: String },
       approvalCertificate: {
         type: String,
-        default: ""
+        default: "",
       },
     },
 
@@ -208,7 +264,7 @@ const companySchema = new mongoose.Schema(
       effectiveTo: { type: String },
       approvalCertificate: {
         type: String,
-        default: ""
+        default: "",
       },
     },
 

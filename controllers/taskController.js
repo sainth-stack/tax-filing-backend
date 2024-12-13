@@ -108,7 +108,7 @@ export const getAllTasks = async (req, res) => {
       totalTasks = tasks.length; // Return the total number of tasks in this case
     }
 
-    // console.log("Fetched tasks: ", tasks);
+     console.log("Fetched tasks: ", page,pageSize);
     res.status(200).json({
       success: true,
       data: tasks,

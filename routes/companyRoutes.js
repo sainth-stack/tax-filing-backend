@@ -18,6 +18,7 @@ import { isAuth } from "../middlewares/auth.js";
 const router = express.Router();
 
 router.post("/companies", isAuth, auditMiddleware(companyModel), createCompany);
+
 router.put(
   "/companies/:id",
   isAuth,

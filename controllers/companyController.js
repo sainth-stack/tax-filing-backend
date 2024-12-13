@@ -239,8 +239,11 @@ export const getFilterCompanies = async (req, res) => {
 
     // Add additional filters based on conditions
     if (name) {
-      filter.$and.push({
-        "companyDetails.companyName": { $regex: name, $options: "i" },
+        const trimmedCompanyName = name.trim();
+      filter.$and.push({        
+        "companyDetails.companyName": {
+          $regex: new RegExp(trimmedCompanyName, "i"),
+        },
       });
     }
 
