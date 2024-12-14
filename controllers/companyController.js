@@ -21,15 +21,34 @@ const defaultFilingDataTemplate = [
 export const createCompany = async (req, res) => {
   try {
     const { companyDetails, ...remainingData } = req.body;
+
+     const fieldDisplayNames = {
+       companyName: "Company Name",
+       mailId: "Email",
+       pan: "PAN",
+     };
+     const requiredFields = ["companyName", "mailId", "pan"];
+     const missingFields = requiredFields.filter(
+       (field) => !companyDetails?.[field]
+     );
+     if (missingFields.length > 0) {
+       const missingFieldNames = missingFields.map(
+         (field) => fieldDisplayNames[field]
+       );
+       return res.status(400).json({
+         message: `Missing Required Fields: ${missingFieldNames.join(", ")}`,
+       });
+     }
+    
     const { companyName, pan } = companyDetails; // Extract company name
 
-    const existingCompany = await companyModel.findOne({
-      "companyDetails.pan": pan,
-    });
+   const existingCompany = await companyModel.findOne({
+     "companyDetails.pan": pan,
+   });
 
-    if (existingCompany) {
-      return res.status(400).json({ message: "Pan already exists" });
-    }
+   if (existingCompany) {
+     return res.status(400).json({ message: "Pan already exists." });
+   }
 
     const companyData = {
       companyDetails: {
