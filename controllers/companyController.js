@@ -80,6 +80,7 @@ const createTasksForCompany = async (companyId, servicesData) => {
     const createRecurringTasks = async (serviceData, taskType) => {
       if (serviceData && serviceData.status === "active") {
         let effectiveDate = new Date(serviceData.effectiveFrom);
+        effectiveDate.setMonth(effectiveDate.getMonth() + 1);
         const today = new Date();
 
         const tasksOfType = defaultFilingDataTemplate.filter(task => task.taskType === taskType);

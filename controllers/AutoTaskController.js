@@ -222,10 +222,10 @@ export const getAutoTasks = async (req, res) => {
     if (year && month) {
       const startDate = new Date(Date.UTC(year, month, 1));
       const nextYear = (parseInt(month) + 1) > 12 ? (parseInt(year) + 1) : parseInt(year);
-      const nextMonth = (parseInt(month) + 1) > 12 ? 0 : (parseInt(month)  + 1);
+      const nextMonth = (parseInt(month) + 1) > 12 ? 1 : (parseInt(month) + 1);
       const endDate = new Date(Date.UTC(nextYear, nextMonth, 1));
-      console.log('End date:', startDate,endDate);
-
+      endDate.setUTCDate(endDate.getUTCDate() - 1);
+      
       filter.startDate = {
         $gte: startDate,
         $lte: endDate,
