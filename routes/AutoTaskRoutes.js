@@ -5,6 +5,7 @@ import upload from "../middlewares/multer.js";
 import {
   createAutoTask,
   deleteAutoTask,
+  exportAutoTasks,
   getAllAutoTasks,
   getAutoTaskById,
   getAutoTasks,
@@ -15,11 +16,12 @@ const router = express.Router();
 
 // Routes
 router.get("/tasks/auto/all", getAllAutoTasks);
-
+router.get("/tasks/auto/export", exportAutoTasks);
 router.post("/tasks/auto", upload.any(), createAutoTask);
 router.post("/tasks/auto/filter", getAutoTasks);
 router.get("/tasks/auto/:id", getAutoTaskById);
 router.put("/tasks/auto/:id", upload.any(), updateAutoTask);
 router.delete("/tasks/auto/:id", deleteAutoTask);
+
 
 export default router;

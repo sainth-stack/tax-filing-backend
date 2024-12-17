@@ -8,6 +8,7 @@ import path from "path";
 import emailTemplates from "../templates/emailTemplates.js";
 import sendEmail from "../middlewares/sendEmail.js";
 import NotificationModel from "../models/NotificationModel.js";
+import json2csv from 'json2csv'; // Import json2csv for converting JSON to CSV
 
 export const createAutoTask = async (req, res) => {
   try {
@@ -425,5 +426,20 @@ export const uploadFiles = async (req, res) => {
   } catch (error) {
     console.error("Error creating task:", error);
     res.status(400).json({ error: error.message });
+  }
+};
+
+// New API endpoint for exporting tasks
+export const exportAutoTasks = async (req, res) => {
+  try {
+    const tasks = await AutoTaskModel.find({}).select('company startDate taskName taskType gstMonthly_gstType dueDate applicationStatus assignedName applicationSubStatus'); // Fetch only the specified fields
+    const csv = json2csv.parse(tasks.map(task => task.toObject())); // Convert Mongoose documents to plain objects
+
+    res.header('Content-Type', 'text/csv');
+    res.attachment('auto_tasks.csv'); // Set the file name for download
+    res.send(csv); // Send the CSV file
+  } catch (error) {
+    console.error("Error exporting tasks:", error);
+    res.status(500).json({ error: "An error occurred while exporting tasks." });
   }
 };
