@@ -81,6 +81,7 @@ const createTasksForCompany = async (companyId, servicesData) => {
       if (serviceData && serviceData.status === "active") {
         let effectiveDate = new Date(serviceData.effectiveFrom);
         effectiveDate.setMonth(effectiveDate.getMonth() + 1);
+        effectiveDate.setDate(1);
         const today = new Date();
 
         const tasksOfType = defaultFilingDataTemplate.filter(task => task.taskType === taskType);
@@ -161,40 +162,45 @@ export const uploadFiles = async (req, res) => {
     /* getting files from input */
     const files = req.files;
     const fileLinks = {};
-
     const { companyId } = req.body;
+
     const company = await companyModel.findById(companyId);
+    if (!company) {
+      return res.status(404).json({ error: "Company not found" });
+    }
+
+    const updates = {};
 
     for (const file of files) {
-      const fileName = file.filename; // File name on disk
+      const fileName = file.filename;
       const filePath = path.join(file.destination, file.filename); // Full path to the file
       const uploadResponse = await uploadFileToDrive(filePath);
+
       const fields = file?.fieldname?.split(".");
       if (fields?.length > 1) {
-        company[fields[0]][fields[1]] = uploadResponse?.url;
+        updates[`${fields[0]}.${fields[1]}`] = uploadResponse?.url;
       } else {
         fileLinks[file.fieldname] = uploadResponse?.url;
         fs.unlinkSync(filePath);
       }
     }
 
-    if (!company) {
-      return res.status(404).json({ error: "Company not found" });
-    }
-
-    company.attachments = {
+    updates.attachments = {
       ...company.attachments,
       ...fileLinks,
     };
-    await company.save();
-    res.locals.companyId = company._id;
 
-    res.status(201).json(company);
+    await companyModel.updateOne({ _id: companyId }, { $set: updates });
+
+    res.locals.companyId = companyId;
+    const updatedCompany = await companyModel.findById(companyId);
+    res.status(201).json(updatedCompany);
   } catch (error) {
     console.error("Error creating company:", error);
     res.status(400).json({ error: error.message });
   }
 };
+
 
 // get alll companies
 export const getAllCompanies = async (req, res) => {
