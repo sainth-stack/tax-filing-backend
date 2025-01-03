@@ -95,6 +95,10 @@ const companySchema = new mongoose.Schema(
         type: String,
         // required: [true, "Status is required"]
       },
+      state: {
+        type: String,
+        // required: [true, "State is required"],
+      },
       eWayBillUsername: {
         type: String,
         // required: [true, "EWayBill Username is required"],

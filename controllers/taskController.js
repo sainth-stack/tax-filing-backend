@@ -133,6 +133,7 @@ export const getTasks = async (req, res) => {
     effectiveTo,
     assignedTo,
     status,
+    filedStatus,
     applicationSubStatus,
     taskType,
     year,
@@ -143,6 +144,8 @@ export const getTasks = async (req, res) => {
     pageSize
   } = req.body;
 
+
+  console.log("cheking filedstatus", req.body);
   try {
     const filter = {};
 
@@ -156,7 +159,7 @@ export const getTasks = async (req, res) => {
     }
 
     // Filter by company name using case-insensitive partial matching
-    if (company) {
+    if (company && company.trim() !== "") {
       filter.company = { $regex: company, $options: "i" };
     }
 
@@ -171,7 +174,7 @@ export const getTasks = async (req, res) => {
     }
 
     // Filter by assignedTo directly as a string
-    if (assignedTo) {
+    if (assignedTo !== undefined && assignedTo !== null) {
       filter.assignedTo = assignedTo;
     }
 
@@ -195,6 +198,12 @@ export const getTasks = async (req, res) => {
     if (status) {
       filter.applicationStatus = status;
     }
+
+
+     if (filedStatus) {
+       filter.gstMonthly_filingStatus =
+         filedStatus === "filed" ? "filed" : "notFiled";
+     }
 
     // Filter by task type
 

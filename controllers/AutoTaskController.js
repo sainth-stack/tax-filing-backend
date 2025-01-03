@@ -140,6 +140,7 @@ export const getAutoTasks = async (req, res) => {
     effectiveFrom,
     effectiveTo,
     assignedTo,
+    filedStatus,
     status,
     applicationSubStatus,
     taskType,
@@ -153,6 +154,8 @@ export const getAutoTasks = async (req, res) => {
 
   try {
     const filter = {};
+
+    console.log("at auto task filed status",filedStatus)
     if (list) {
       const userRecord = await User.findById(list).lean().exec();
       if (!userRecord) {
@@ -190,10 +193,9 @@ export const getAutoTasks = async (req, res) => {
       filter.dueDate = { $lte: new Date(effectiveTo) };
     }
 
-    if (assignedTo) {
-      filter.assignedTo = assignedTo;
-    }
-
+   if (assignedTo !== undefined && assignedTo !== null) {
+     filter.assignedTo = assignedTo;
+   }
 
     if (applicationSubStatus == 'gstr3b' || applicationSubStatus == 'gstr1') {
       filter.gstMonthly_gstType = applicationSubStatus;
@@ -201,6 +203,12 @@ export const getAutoTasks = async (req, res) => {
     else if (applicationSubStatus) {
       filter.taskName = applicationSubStatus;
     }
+
+     if (filedStatus) {
+       filter.gstMonthly_filingStatus =
+         filedStatus === "filed" ? "filed" : "notFiled";
+    }
+    
 
     if (status === 'filed') {
       filter.$or = [
