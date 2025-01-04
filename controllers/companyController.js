@@ -18,38 +18,60 @@ const defaultFilingDataTemplate = [
   { taskId: "esiRegularMonthlyActivity", taskName: "esiRegularMonthlyActivity", taskType: "esi", priority: "high" },
   { taskId: "professionalTaxRegularMonthlyActivity", taskName: "professionalTaxRegularMonthlyActivity", taskType: "professionalTax", priority: "high" },
 ];
+
 export const createCompany = async (req, res) => {
   try {
     const { companyDetails, ...remainingData } = req.body;
 
-     const fieldDisplayNames = {
-       companyName: "Company Name",
-       mailId: "Email",
-       pan: "PAN",
-     };
-     const requiredFields = ["companyName", "mailId", "pan"];
-     const missingFields = requiredFields.filter(
-       (field) => !companyDetails?.[field]
-     );
-     if (missingFields.length > 0) {
-       const missingFieldNames = missingFields.map(
-         (field) => fieldDisplayNames[field]
-       );
-       return res.status(400).json({
-         message: `Missing Required Fields: ${missingFieldNames.join(", ")}`,
-       });
-     }
-    
-    const { companyName, pan } = companyDetails; // Extract company name
+    // Define required fields and their display names
+    const fieldDisplayNames = {
+      companyName: "Company Name",
+      mailId: "Email",
+      pan: "PAN",
+    };
+    const requiredFields = ["companyName", "mailId", "pan"];
+    const missingFields = requiredFields.filter(
+      (field) => !companyDetails?.[field]
+    );
+    if (missingFields.length > 0) {
+      const missingFieldNames = missingFields.map(
+        (field) => fieldDisplayNames[field]
+      );
+      return res.status(400).json({
+        message: `Missing Required Fields: ${missingFieldNames.join(", ")}`,
+      });
+    }
 
-   const existingCompany = await companyModel.findOne({
-     "companyDetails.pan": pan,
-   });
+    const { companyName, pan } = companyDetails;
 
-   if (existingCompany) {
-     return res.status(400).json({ message: "Pan already exists." });
-   }
+    // Check if a company with the same PAN already exists
+    const existingCompany = await companyModel.findOne({
+      "companyDetails.pan": pan,
+    });
 
+    if (existingCompany) {
+      return res.status(400).json({ message: "PAN already exists." });
+    }
+
+    // Prepare sections that allow duplicates as arrays
+    const sectionsAllowingDuplicates = [
+      "gst",
+      "professionalTax",
+      "fssai",
+      "shopCommercialEstablishment",
+      "factoryLicense",
+    ];
+
+    sectionsAllowingDuplicates.forEach((section) => {
+      if (remainingData[section]) {
+        // Ensure the section is an array
+        if (!Array.isArray(remainingData[section])) {
+          remainingData[section] = [remainingData[section]];
+        }
+      }
+    });
+
+    // Prepare the company data
     const companyData = {
       companyDetails: {
         companyName,
@@ -58,6 +80,7 @@ export const createCompany = async (req, res) => {
       ...remainingData,
     };
 
+    // Save the company
     const company = new companyModel(companyData);
     await company.save();
 
@@ -70,6 +93,8 @@ export const createCompany = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+
 
 const createTasksForCompany = async (companyId, servicesData) => {
   try {

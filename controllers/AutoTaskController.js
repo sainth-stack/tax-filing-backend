@@ -206,7 +206,7 @@ export const getAutoTasks = async (req, res) => {
 
      if (filedStatus) {
        filter.gstMonthly_filingStatus =
-         filedStatus === "filed" ? "filed" : "notFiled";
+         filedStatus === "filed" ? "filed" : "notfiled";
     }
     
 
@@ -217,7 +217,7 @@ export const getAutoTasks = async (req, res) => {
         { pft_fileDate: { $ne: null } },
         { gstMonthly_filedate: { $ne: null } }
       ];
-    } else if (status === 'notFiled') {
+    } else if (status === "notfiled") {
       filter.pfMonthly_filedate = null;
       filter.esi_fileDate = null;
       filter.pft_fileDate = null;
