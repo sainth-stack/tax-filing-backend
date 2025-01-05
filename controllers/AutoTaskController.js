@@ -140,7 +140,6 @@ export const getAutoTasks = async (req, res) => {
     effectiveFrom,
     effectiveTo,
     assignedTo,
-    filedStatus,
     status,
     applicationSubStatus,
     taskType,
@@ -149,13 +148,13 @@ export const getAutoTasks = async (req, res) => {
     user,
     list,
     page,
-    pageSize
+    pageSize,
+    reason
   } = req.body;
 
   try {
     const filter = {};
 
-    console.log("at auto task filed status",filedStatus)
     if (list) {
       const userRecord = await User.findById(list).lean().exec();
       if (!userRecord) {
@@ -184,6 +183,10 @@ export const getAutoTasks = async (req, res) => {
       }
     }
 
+    if (reason) {
+        filter.gstMonthly_previousMonth = { $regex: reason, $options: "i" };
+    }
+
     if (effectiveFrom && effectiveTo) {
       filter.startDate = { $gte: new Date(effectiveFrom) };
       filter.dueDate = { $lte: new Date(effectiveTo) };
@@ -193,7 +196,7 @@ export const getAutoTasks = async (req, res) => {
       filter.dueDate = { $lte: new Date(effectiveTo) };
     }
 
-   if (assignedTo !== undefined && assignedTo !== null) {
+   if (assignedTo) {
      filter.assignedTo = assignedTo;
    }
 
@@ -204,12 +207,6 @@ export const getAutoTasks = async (req, res) => {
       filter.taskName = applicationSubStatus;
     }
 
-     if (filedStatus) {
-       filter.gstMonthly_filingStatus =
-         filedStatus === "filed" ? "filed" : "notfiled";
-    }
-    
-
     if (status === 'filed') {
       filter.$or = [
         { pfMonthly_filedate: { $ne: null } },
@@ -217,7 +214,7 @@ export const getAutoTasks = async (req, res) => {
         { pft_fileDate: { $ne: null } },
         { gstMonthly_filedate: { $ne: null } }
       ];
-    } else if (status === "notfiled") {
+    } else if (status === "notFiled") {
       filter.pfMonthly_filedate = null;
       filter.esi_fileDate = null;
       filter.pft_fileDate = null;
