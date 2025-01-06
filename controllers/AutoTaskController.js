@@ -297,17 +297,22 @@ export const getAutoTaskById = async (req, res) => {
 
 export const updateAutoTask = async (req, res) => {
   try {
-    const { body, files } = req;
-    const file = files[0]; // Access the single file from req.files
+    const { body } = req;
+    const files = req.files; // Access the multiple files from req.files
 
-    let fileLink = null;
-    if (file) {
+    let fileLinks = {}; // Object to store file URLs
+    
+    // Handle file uploads
+    for (const file of files) {
       const filePath = path.join(file.destination, file.filename); // Full path to the file
       const uploadResponse = await uploadFileToDrive(filePath);
-      fileLink = uploadResponse.url;
+      
+      if (uploadResponse && uploadResponse.url) {
+        fileLinks[file.fieldname] = uploadResponse.url; // Store the file URL using the field name
+      }
+    
       fs.unlinkSync(filePath); // Clean up temp file
     }
-
     // Fetch the existing task to check if 'assignedTo' has changed
     const existingAutoTask = await AutoTaskModel.findById(req.params.id);
 
@@ -316,9 +321,18 @@ export const updateAutoTask = async (req, res) => {
     }
 
     const AutoTaskData = { ...body };
-    if (fileLink) {
-      AutoTaskData.attachment = fileLink;
+    if (fileLinks.attachment) {
+      AutoTaskData.attachment = fileLinks.attachment;
     }
+
+    if (fileLinks?.acknowledgement) {
+      AutoTaskData.acknowledgement = fileLinks?.acknowledgement;
+    }
+
+    if (fileLinks?.challan) {
+      AutoTaskData.challan = fileLinks?.challan;
+    }
+
 
 
     if (body.assignedTo && body.assignedTo !== existingAutoTask.assignedTo) {
