@@ -185,7 +185,6 @@ const companySchema = new mongoose.Schema(
     professionalTax:[ {
       ptEcNumber: {
         type: String,
-        // required: [true, "PT EC Number is required"],
       },
       ptUsername: {
         type: String,
