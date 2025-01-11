@@ -33,6 +33,9 @@ const taskSchema = new Schema({
     type: String,
   },
 
+  suspensionReason: {
+    type:String
+  },
   
   taskName: {
     type: String,

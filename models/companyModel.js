@@ -78,7 +78,7 @@ const companySchema = new mongoose.Schema(
       },
     },
 
-    gst:[ {
+    gst: {
       gstin: {
         type: String,
         // required: [true, "GSTIN is required"]
@@ -124,7 +124,7 @@ const companySchema = new mongoose.Schema(
         type: String,
         default: "",
       },
-    }],
+    },
 
     esi: {
       esiNumber: { type: String,
@@ -182,7 +182,7 @@ const companySchema = new mongoose.Schema(
       },
     },
 
-    professionalTax:[ {
+    professionalTax: {
       ptEcNumber: {
         type: String,
       },
@@ -224,7 +224,7 @@ const companySchema = new mongoose.Schema(
         type: String,
         default: "",
       },
-    }],
+    },
 
     tds: {
       tan: {
@@ -261,7 +261,7 @@ const companySchema = new mongoose.Schema(
       },
     },
 
-    shopCommercialEstablishment: [{
+    shopCommercialEstablishment: {
       seNumber: {
         type: String,
         // required: [true, "SE Number is required"]
@@ -295,7 +295,7 @@ const companySchema = new mongoose.Schema(
         type: String,
         default: "",
       },
-    }],
+    },
 
     msme: {
       msmeNumber: {
@@ -320,7 +320,7 @@ const companySchema = new mongoose.Schema(
       },
     },
 
-    fssai:[ {
+    fssai: {
       fssaiNumber: {
         type: String,
         // required: [true, "FSSAI Number is required"],
@@ -353,9 +353,9 @@ const companySchema = new mongoose.Schema(
         type: String,
         default: "",
       },
-    }],
+    },
 
-    factoryLicense:[ {
+    factoryLicense: {
       flNumber: { type: String, 
         // required: [true, "FL Number is required"] 
       },
@@ -385,7 +385,7 @@ const companySchema = new mongoose.Schema(
         type: String,
         default: "",
       },
-    }],
+    },
 
     importExport: {
       iecNumber: {

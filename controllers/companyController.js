@@ -54,22 +54,22 @@ export const createCompany = async (req, res) => {
     }
 
     // Prepare sections that allow duplicates as arrays
-    const sectionsAllowingDuplicates = [
-      "gst",
-      "professionalTax",
-      "fssai",
-      "shopCommercialEstablishment",
-      "factoryLicense",
-    ];
+    // const sectionsAllowingDuplicates = [
+    //   "gst",
+    //   "professionalTax",
+    //   "fssai",
+    //   "shopCommercialEstablishment",
+    //   "factoryLicense",
+    // ];
 
-    sectionsAllowingDuplicates.forEach((section) => {
+   /*  sectionsAllowingDuplicates.forEach((section) => {
       if (remainingData[section]) {
-        // Ensure the section is an array
+     
         if (!Array.isArray(remainingData[section])) {
           remainingData[section] = [remainingData[section]];
         }
       }
-    });
+    }); */
 
     // Prepare the company data
     const companyData = {
