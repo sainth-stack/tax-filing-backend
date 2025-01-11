@@ -224,8 +224,9 @@ export const getTasks = async (req, res) => {
         $lte: endDate
       };
     } else if (year) {
-      const startOfYear = new Date(`${year}-01-01`);
-      const endOfYear = new Date(`${year}-12-31`);
+      const startOfYear = new Date(`${year}-02-01`);
+      const endOfYear = new Date(`${year}-01-01`);
+      endOfYear.setFullYear(endOfYear.getFullYear() + 1);   
 
       filter.startDate = {
         $lte: endOfYear.toISOString(),

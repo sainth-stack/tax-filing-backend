@@ -96,7 +96,7 @@ export const createAutoTask = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
-// get all tasks
+
 export const getAllAutoTasks = async (req, res) => {
   try {
     const page = parseInt(req.query.page); // Default to page 1 if not provided
@@ -129,10 +129,6 @@ export const getAllAutoTasks = async (req, res) => {
     });
   }
 };
-
-
-
-
 
 export const getAutoTasks = async (req, res) => {
   const {
@@ -239,8 +235,9 @@ export const getAutoTasks = async (req, res) => {
     }
 
     else if (year) {
-      const startOfYear = new Date(`${year}-01-01`);
-      const endOfYear = new Date(`${year}-12-31`);
+      const startOfYear = new Date(`${year}-02-01`);
+      const endOfYear = new Date(`${year}-01-01`);
+      endOfYear.setFullYear(endOfYear.getFullYear() + 1);   
 
       filter.startDate = {
         $lte: endOfYear.toISOString(),
@@ -277,7 +274,6 @@ export const getAutoTasks = async (req, res) => {
   }
 };
 
-// Get a single task by ID
 export const getAutoTaskById = async (req, res) => {
   try {
     // Find the task by ID and populate the 'company' field with the Company document
@@ -404,7 +400,6 @@ export const updateAutoTask = async (req, res) => {
   }
 };
 
-// Delete a task by ID
 export const deleteAutoTask = async (req, res) => {
   try {
     const AutoTask = await AutoTaskModel.findByIdAndDelete(req.params.id);
