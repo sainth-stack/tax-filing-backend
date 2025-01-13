@@ -34,9 +34,9 @@ const taskSchema = new Schema({
   },
 
   suspensionReason: {
-    type:String
+    type: String,
   },
-  
+
   taskName: {
     type: String,
   },
@@ -70,6 +70,10 @@ const taskSchema = new Schema({
     type: String,
   },
   date_of_approval: {
+    type: String,
+  },
+
+  companygstin: {
     type: String,
   },
 

@@ -8,7 +8,7 @@ import path from "path";
 import emailTemplates from "../templates/emailTemplates.js";
 import sendEmail from "../middlewares/sendEmail.js";
 import NotificationModel from "../models/NotificationModel.js";
-import { tasks } from 'googleapis/build/src/apis/tasks/index.js';
+import { tasks } from "googleapis/build/src/apis/tasks/index.js";
 
 export const createTask = async (req, res) => {
   try {
@@ -28,16 +28,24 @@ export const createTask = async (req, res) => {
 
     if (assignedTo) {
       // Fetch user based on the assignedTo string (assuming it is some identifier)
-      const user = await User.findOne({ _id: assignedTo }).select("firstName email agency");
+      const user = await User.findOne({ _id: assignedTo }).select(
+        "firstName email agency"
+      );
       if (user) {
-        body.assignedName = user.firstName + " " + (user?.lastName || '');
+        body.assignedName = user.firstName + " " + (user?.lastName || "");
 
         // Fetch notification settings for the user's agency
-        const notificationSettings = await NotificationModel.findOne({ agency: user.agency });
+        const notificationSettings = await NotificationModel.findOne({
+          agency: user.agency,
+        });
         // Check if the assignNewTask notification is enabled
         if (notificationSettings && notificationSettings.assignNewTask.status) {
-          const subject = notificationSettings.assignNewTask.roleData.subject || emailTemplates.assignTask(taskName, user.firstName).subject;
-          const bodyContent = notificationSettings.assignNewTask.roleData.message || emailTemplates.assignTask(taskName, user.firstName).body;
+          const subject =
+            notificationSettings.assignNewTask.roleData.subject ||
+            emailTemplates.assignTask(taskName, user.firstName).subject;
+          const bodyContent =
+            notificationSettings.assignNewTask.roleData.message ||
+            emailTemplates.assignTask(taskName, user.firstName).body;
 
           // Send email to the assigned user
           sendEmail(user.email, subject, bodyContent);
@@ -61,9 +69,13 @@ export const createTask = async (req, res) => {
     // Update company GST status and approvalCertificate based on task fields
     const updateData = {};
 
-    if (body.dateOfApproval) {
+    if (body.dateOfApproval || body?.companygstin) {
       updateData["gst.status"] =
         body.taskName === "gstNewRegistration" ? "active" : "inactive";
+    }
+
+    if(body?.companygstin){
+      updateData["gst.gstin"] = body.companygstin;
     }
 
     if (fileLinks.approvalCertificate) {
@@ -91,8 +103,8 @@ export const createTask = async (req, res) => {
 // get all tasks
 export const getAllTasks = async (req, res) => {
   try {
-    const page = parseInt(req.query.page)  // Default to page 1 if not provided
-    const pageSize = parseInt(req.query.pageSize)  // Default to 10 tasks per page if not provided
+    const page = parseInt(req.query.page); // Default to page 1 if not provided
+    const pageSize = parseInt(req.query.pageSize); // Default to 10 tasks per page if not provided
 
     let tasks;
     let totalTasks;
@@ -108,7 +120,7 @@ export const getAllTasks = async (req, res) => {
       totalTasks = tasks.length; // Return the total number of tasks in this case
     }
 
-     console.log("Fetched tasks: ", page,pageSize);
+    console.log("Fetched tasks: ", page, pageSize);
     res.status(200).json({
       success: true,
       data: tasks,
@@ -125,7 +137,6 @@ export const getAllTasks = async (req, res) => {
   }
 };
 
-
 export const getTasks = async (req, res) => {
   const {
     company,
@@ -141,9 +152,8 @@ export const getTasks = async (req, res) => {
     user,
     list,
     page,
-    pageSize
+    pageSize,
   } = req.body;
-
 
   console.log("cheking filedstatus", req.body);
   try {
@@ -154,16 +164,29 @@ export const getTasks = async (req, res) => {
       if (!userRecord) {
         return res.status(404).json({ error: "User not found" });
       }
-      const userCompanies = userRecord.company?.map(comp => comp?.label) || [];
+      const userCompanies =
+        userRecord.company?.map((comp) => comp?.label) || [];
       filter.company = { $in: userCompanies };
+
+      filter.$or = [
+        { assignedTo: list },
+        { assignedTo: "" },
+        { assignedTo: null },
+        { assignedTo: { $exists: false } },
+      ];
     }
 
-    // Filter by company name using case-insensitive partial matching
-    if (company && company.trim() !== "") {
-      filter.company = { $regex: company, $options: "i" };
+    if (company) {
+      if (filter.company) {
+        filter.company = {
+          $in: filter.company.$in,
+          $regex: company,
+          $options: "i",
+        };
+      } else {
+        filter.company = { $regex: company, $options: "i" };
+      }
     }
-
-    // Date filtering logic for effectiveFrom and effectiveTo
     if (effectiveFrom && effectiveTo) {
       filter.startDate = { $gte: new Date(effectiveFrom) };
       filter.dueDate = { $lte: new Date(effectiveTo) };
@@ -173,60 +196,50 @@ export const getTasks = async (req, res) => {
       filter.dueDate = { $lte: new Date(effectiveTo) };
     }
 
-    // Filter by assignedTo directly as a string
-    if (assignedTo !== undefined && assignedTo !== null) {
+    if (assignedTo) {
       filter.assignedTo = assignedTo;
     }
 
-    if (user) {
-      filter.$or = [
-        { assignedTo: user }, // Fetch data assigned to the user
-        { assignedTo: "" }, // Include records where `assignedTo` is an empty string
-        { assignedTo: null }, // Include records where `assignedTo` is explicitly null
-        { assignedTo: { $exists: false } } // Include records where `assignedTo` is not present
-      ];
-    }
-
-    if (applicationSubStatus == 'gstr3b' || applicationSubStatus == 'gstr1') {
+    if (applicationSubStatus == "gstr3b" || applicationSubStatus == "gstr1") {
       filter.gstMonthly_gstType = applicationSubStatus;
-    }
-    else if (applicationSubStatus) {
+    } else if (applicationSubStatus) {
       filter.taskName = applicationSubStatus;
     }
 
-    // Filter by status
-    if (status) {
-      filter.applicationStatus = status;
+    if (status === "filed") {
+      filter.$or = [
+        { pfMonthly_filedate: { $ne: null } },
+        { esi_fileDate: { $ne: null } },
+        { pft_fileDate: { $ne: null } },
+        { gstMonthly_filedate: { $ne: null } },
+      ];
+    } else if (status === "notFiled") {
+      filter.pfMonthly_filedate = null;
+      filter.esi_fileDate = null;
+      filter.pft_fileDate = null;
+      filter.gstMonthly_filedate = null;
     }
-
-
-     if (filedStatus) {
-       filter.gstMonthly_filingStatus =
-         filedStatus === "filed" ? "filed" : "notFiled";
-     }
-
-    // Filter by task type
 
     if (taskType) {
       filter.taskType = taskType;
     }
 
-    // Year and Month Filtering based on getCompanies logic
     if (year && month) {
-      // Create dates with explicit UTC time
-      const startDate = new Date(Date.UTC(year, month - 1, 1));  // First day of target month at 00:00:00 UTC
-      const endDate = new Date(Date.UTC(year, month, 0));   // Last day of target month at 00:00:00 UTC
-      endDate.setUTCHours(23, 59, 59, 999);  // Set to end of day
+      const startDate = new Date(Date.UTC(year, month, 1));
+      const nextYear =
+        parseInt(month) + 1 > 12 ? parseInt(year) + 1 : parseInt(year);
+      const nextMonth = parseInt(month) + 1 > 12 ? 1 : parseInt(month) + 1;
+      const endDate = new Date(Date.UTC(nextYear, nextMonth, 1));
+      endDate.setUTCDate(endDate.getUTCDate() - 1);
 
-      // Match tasks where startDate falls within the target month
       filter.startDate = {
         $gte: startDate,
-        $lte: endDate
+        $lte: endDate,
       };
     } else if (year) {
       const startOfYear = new Date(`${year}-02-01`);
       const endOfYear = new Date(`${year}-01-01`);
-      endOfYear.setFullYear(endOfYear.getFullYear() + 1);   
+      endOfYear.setFullYear(endOfYear.getFullYear() + 1);
 
       filter.startDate = {
         $lte: endOfYear.toISOString(),
@@ -242,9 +255,7 @@ export const getTasks = async (req, res) => {
     // If page and pageSize are provided, apply pagination
     if (page && pageSize) {
       const skip = (page - 1) * pageSize;
-      tasks = await taskModel.find(filter)
-        .skip(skip)
-        .limit(pageSize);
+      tasks = await taskModel.find(filter).skip(skip).limit(pageSize);
       totalTasks = await taskModel.countDocuments(filter);
     } else {
       // If no pagination parameters, return all tasks
@@ -258,14 +269,13 @@ export const getTasks = async (req, res) => {
       data: tasks,
       totalTasks,
       totalPages: pageSize ? Math.ceil(totalTasks / pageSize) : 1,
-      currentPage: page || 1
+      currentPage: page || 1,
     });
   } catch (error) {
     console.error("Error fetching tasks:", error);
     res.status(500).json({ error: "An error occurred while fetching tasks." });
   }
 };
-
 
 // Get a single task by ID
 export const getTaskById = async (req, res) => {
@@ -277,7 +287,6 @@ export const getTaskById = async (req, res) => {
       return res.status(404).json({ error: "Task not found" });
     }
 
-    
     res.status(200).json(task);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -311,21 +320,27 @@ export const updateTask = async (req, res) => {
 
     // Update the task
 
-
     // Check if assignedTo is updated
     if (body.assignedTo && body.assignedTo !== existingTask.assignedTo) {
-
       // Fetch the new assigned user details
       const user = await User.findOne({ _id: body.assignedTo });
       if (user) {
-        taskData.assignedName = user.firstName + " " + (user?.lastName || '');
+        taskData.assignedName = user.firstName + " " + (user?.lastName || "");
         // Fetch notification settings for the user's agency
-        const notificationSettings = await NotificationModel.findOne({ agency: user.agency });
+        const notificationSettings = await NotificationModel.findOne({
+          agency: user.agency,
+        });
 
         // Check if assignNewTask notification is enabled
         if (notificationSettings && notificationSettings.assignNewTask.status) {
-          const subject = notificationSettings.assignNewTask.roleData.subject || emailTemplates.assignTask(updatedTask.taskName, user.firstName).subject;
-          const bodyContent = notificationSettings.assignNewTask.roleData.message || emailTemplates.assignTask(updatedTask.taskName, user.firstName).body;
+          const subject =
+            notificationSettings.assignNewTask.roleData.subject ||
+            emailTemplates.assignTask(updatedTask.taskName, user.firstName)
+              .subject;
+          const bodyContent =
+            notificationSettings.assignNewTask.roleData.message ||
+            emailTemplates.assignTask(updatedTask.taskName, user.firstName)
+              .body;
 
           // Send email notification to the new assignee
           sendEmail(user.email, subject, bodyContent);
@@ -333,9 +348,13 @@ export const updateTask = async (req, res) => {
       }
     }
 
-    const updatedTask = await taskModel.findByIdAndUpdate(req.params.id, taskData, {
-      new: true,
-    });
+    const updatedTask = await taskModel.findByIdAndUpdate(
+      req.params.id,
+      taskData,
+      {
+        new: true,
+      }
+    );
 
     // Update company GST status based on task fields
     if (body.dateOfApproval) {
@@ -369,7 +388,6 @@ export const updateTask = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
-
 
 // Delete a task by ID
 export const deleteTask = async (req, res) => {
