@@ -348,9 +348,10 @@ export const getFilterCompanies = async (req, res) => {
     // Add additional filters based on conditions
     if (name) {
       const trimmedCompanyName = name.trim();
+      const escapedCompany = trimmedCompanyName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       filter.$and.push({
         "companyDetails.companyName": {
-          $regex: new RegExp(trimmedCompanyName, "i"),
+          $regex: new RegExp(escapedCompany, "i"),
         },
       });
     }
