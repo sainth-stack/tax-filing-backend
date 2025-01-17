@@ -1,9 +1,9 @@
 // controllers/taskController.js
 
 import ServiceCalendarModel from "../models/ServiceCalendar.js";
+import AutoTaskModel from "./../models/AutoTaskModel.js";
 
 export const createServiceCalendar = async (req, res) => {
-
   // Assuming req.body is an array of tasks
   try {
     const savedEntries = await ServiceCalendarModel.insertMany(req.body);
@@ -24,11 +24,57 @@ export const getServiceCalendars = async (req, res) => {
   }
 };
 
+const updateTasks = async (date,taskId) => {
+  console.log(date,taskId)
+  if (!date) {
+    console.error("Date is required for the update");
+    return;
+  }
 
+  try {
+    const inputDate = new Date(date);
+    if (isNaN(inputDate)) {
+      throw new Error("Invalid date provided");
+    }
+
+    // Increment the month by 1
+    inputDate.setMonth(inputDate.getMonth() + 1);
+    const updatedMonth = inputDate.getMonth() + 1; // `getMonth` is 0-based
+    const updatedYear = inputDate.getFullYear();
+    const updatedDay = inputDate.getDate(); // Day from the new date
+    const gstMonthly_gstType = taskId.split('-').length > 1 ? taskId.split('-')[1] : "";
+    const query = {
+      dueDate: { $exists: true }, // Ensure dueDate exists
+      $expr: {
+        $and: [
+          { $eq: [{ $month: "$dueDate" }, updatedMonth] },
+          { $eq: [{ $year: "$dueDate" }, updatedYear] },
+        ],
+      },
+    };
+    
+    // Conditionally add gstMonthly_gstType if it exists
+    if (gstMonthly_gstType) {
+      query.gstMonthly_gstType = gstMonthly_gstType;
+    }
+    const result = await AutoTaskModel.updateMany(
+   query,
+      {
+        $set: {
+          dueDate: new Date(updatedYear, updatedMonth - 1, updatedDay), // Update `dueDate` to the new day
+          updatedAt: new Date(), // Update the `updatedAt` timestamp
+        },
+      }
+    );
+
+    console.log(`Updated ${result.modifiedCount} tasks.`);
+  } catch (error) {
+    console.error("Error updating tasks:", error.message);
+  }
+};
 export const updateServiceCalendar = async (req, res) => {
   const { id } = req.params;
   const updateData = req.body;
-
   try {
     const updatedTask = await ServiceCalendarModel.findById(id);
 
@@ -40,8 +86,10 @@ export const updateServiceCalendar = async (req, res) => {
 
     if (date && name) {
       const newDate = new Date(date);
-      
-      let prevDatesEntry = updatedTask.prevDates.find((entry) => entry.name === name);
+
+      let prevDatesEntry = updatedTask.prevDates.find(
+        (entry) => entry.name === name
+      );
 
       if (!prevDatesEntry) {
         prevDatesEntry = { name, history: [] };
@@ -65,6 +113,7 @@ export const updateServiceCalendar = async (req, res) => {
       prevDatesEntry.history.sort((a, b) => new Date(a) - new Date(b));
     }
 
+    updateTasks(date,updateData?.taskId);
     // Explicitly set prevDates to ensure it is recognized during the save
     updatedTask.prevDates = updatedTask.prevDates.map((entry) =>
       entry.name === name ? { ...entry, history: [...entry.history] } : entry
@@ -81,9 +130,6 @@ export const updateServiceCalendar = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
-
-
-
 
 export const deleteAllServiceCalendarEntries = async (req, res) => {
   try {
