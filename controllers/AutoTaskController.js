@@ -168,14 +168,16 @@ export const getAutoTasks = async (req, res) => {
     }
 
     if (company) {
+      const escapedCompany = company.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
       if (filter.company) {
         filter.company = {
           $in: filter.company.$in,
-          $regex: company,
+          $regex: escapedCompany,
           $options: "i"
         };
       } else {
-        filter.company = { $regex: company, $options: "i" };
+        filter.company = { $regex: escapedCompany, $options: "i" };
       }
     }
 
@@ -246,7 +248,6 @@ export const getAutoTasks = async (req, res) => {
         $gte: startOfYear.toISOString(),
       };
     }
-
     // Retrieve tasks based on the filter with pagination
     let AutoTasks;
     let totalTasks;
