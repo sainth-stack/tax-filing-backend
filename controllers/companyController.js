@@ -7,6 +7,8 @@ import path from "path";
 import mongoose from "mongoose";
 
 import taskModel from "../models/AutoTaskModel.js";
+import maualTaskModel from "../models/taskModel.js";
+
 import ServiceCalendarModel from "../models/ServiceCalendar.js";
 import UserModel from "../models/employeeModel.js";
 
@@ -138,9 +140,11 @@ const createTasksForCompany = async (companyId, servicesData) => {
         let effectiveTo = serviceData.effectiveTo
           ? new Date(serviceData.effectiveTo)
           : new Date();
+    
         effectiveDate.setMonth(effectiveDate.getMonth() + 1);
-        effectiveTo.setMonth(effectiveTo.getMonth() + 1);
-
+        if(serviceData.effectiveTo){
+          effectiveTo.setMonth(effectiveTo.getMonth() + 1);
+        }
         const tasksOfType = defaultFilingDataTemplate.filter(
           (task) => task.taskType === taskType
         );
@@ -514,19 +518,33 @@ export const updateCompany = async (req, res) => {
   }
 };
 
-// Delete a company by ID
 export const deleteCompany = async (req, res) => {
   try {
-    const company = await companyModel.findByIdAndDelete(req.params.id);
+    console.log('heyy')
+    const { id } = req.params;
+    // Check if the company exists
+    const company = await companyModel.findById(id);
     if (!company) {
       return res.status(404).json({ error: "Company not found" });
     }
-    res.locals.companyId = company._id;
-    res.status(200).json({ message: "Company deleted" });
+
+    // Check for tasks associated with the company name
+    const associatedTasks = await taskModel.find({ company: company?.companyDetails?.companyName });
+    if (associatedTasks.length > 0) {
+      return res.status(400).json({
+        error: "Please delete all associated tasks before deleting the company",
+        tasks: associatedTasks,
+      });
+    }
+
+    await companyModel.findByIdAndDelete(id);
+    res.locals.companyId = id;
+    res.status(200).json({ message: "Company deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 //filter company by PAN
 export const getCompanyByPan = async (req, res) => {
