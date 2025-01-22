@@ -37,9 +37,8 @@ const updateTasks = async (date,taskId) => {
       throw new Error("Invalid date provided");
     }
 
-    // Increment the month by 1
     inputDate.setMonth(inputDate.getMonth() + 1);
-    const updatedMonth = inputDate.getMonth() + 1; // `getMonth` is 0-based
+    const updatedMonth = inputDate.getMonth(); // `getMonth` is 0-based
     const updatedYear = inputDate.getFullYear();
     const updatedDay = inputDate.getDate(); // Day from the new date
     const gstMonthly_gstType = taskId.split('-').length > 1 ? taskId.split('-')[1] : "";
