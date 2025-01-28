@@ -76,7 +76,7 @@ export const createCompany = async (req, res) => {
       });
     }
 
-    const { companyName, pan,agencyName } = companyDetails;
+    const { companyName, pan, agencyName } = companyDetails;
 
     // Check if a company with the same PAN already exists
     const existingCompany = await companyModel.findOne({
@@ -119,7 +119,11 @@ export const createCompany = async (req, res) => {
     await company.save();
 
     // Create tasks for active services
-    await createTasksForCompany(company?.companyDetails?.companyName, req.body,agencyName);
+    await createTasksForCompany(
+      company?.companyDetails?.companyName,
+      req.body,
+      agencyName
+    );
 
     res.locals.companyId = company._id;
     res.send(company);
@@ -128,7 +132,7 @@ export const createCompany = async (req, res) => {
   }
 };
 
-const createTasksForCompany = async (companyId, servicesData,agencyName) => {
+const createTasksForCompany = async (companyId, servicesData, agencyName) => {
   try {
     // Fetch all service tasks
     const serviceTasks = await ServiceCalendarModel.find({});
@@ -206,7 +210,7 @@ const createTasksForCompany = async (companyId, servicesData,agencyName) => {
                 ...taskTemplate,
                 effectiveFrom: taskEffectiveDate,
                 dueDate: dueDate,
-                agencyName:agencyName,
+                agencyName: agencyName,
               });
             }
           }
@@ -302,12 +306,30 @@ export const getAllCompanies = async (req, res) => {
   try {
     const page = parseInt(req.query.page); // Default to page 1
     const pageSize = parseInt(req.query.pageSize); // Default to 10 items per page
-
+    const agency = req.query.agency; // Default to 10 items per page
     // console.log("page : ", page)
     // console.log("pagesize",pageSize)
     // Calculate the number of items to skip
     const skip = (page - 1) * pageSize;
-    const companies = await companyModel.find().skip(skip).limit(pageSize);
+    const filter = {
+      $and: []
+    };
+    
+    if (agency) {
+      console.log(agency);
+      filter.$and.push({
+        "companyDetails.agencyName": {
+          $regex: new RegExp(agency, "i"), // Case-insensitive regex
+        },
+      });
+    }
+    
+    // If no filters are applied, remove the $and key to avoid an unnecessary empty condition
+    if (filter.$and.length === 0) {
+      delete filter.$and;
+    }
+        
+    const companies = await companyModel.find(filter).skip(skip).limit(pageSize);
     const totalCompanies = await companyModel.countDocuments();
 
     res.status(200).json({
