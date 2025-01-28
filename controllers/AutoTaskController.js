@@ -8,7 +8,7 @@ import path from "path";
 import emailTemplates from "../templates/emailTemplates.js";
 import sendEmail from "../middlewares/sendEmail.js";
 import NotificationModel from "../models/NotificationModel.js";
-import json2csv from 'json2csv'; // Import json2csv for converting JSON to CSV
+import json2csv from "json2csv"; // Import json2csv for converting JSON to CSV
 
 export const createAutoTask = async (req, res) => {
   try {
@@ -31,7 +31,7 @@ export const createAutoTask = async (req, res) => {
         "firstName email agency"
       );
       if (user) {
-        body.assignedName = user.firstName + " " + (user?.lastName || '');
+        body.assignedName = user.firstName + " " + (user?.lastName || "");
 
         // Fetch notification settings for the user's agency
         const notificationSettings = await NotificationModel.findOne({
@@ -61,7 +61,6 @@ export const createAutoTask = async (req, res) => {
       ...body,
       ...fileLinks,
     };
-
 
     const AutoTask = await AutoTaskModel.create(taskData);
     await AutoTask.save();
@@ -145,9 +144,10 @@ export const getAutoTasks = async (req, res) => {
     list,
     page,
     pageSize,
-    reason
+    reason,
+    agency,
   } = req.body;
-
+console.log(agency)
   try {
     const filter = {};
 
@@ -156,25 +156,26 @@ export const getAutoTasks = async (req, res) => {
       if (!userRecord) {
         return res.status(404).json({ error: "User not found" });
       }
-      const userCompanies = userRecord.company?.map(comp => comp?.label) || [];
+      const userCompanies =
+        userRecord.company?.map((comp) => comp?.label) || [];
       filter.company = { $in: userCompanies };
 
       filter.$or = [
         { assignedTo: list },
         { assignedTo: "" },
         { assignedTo: null },
-        { assignedTo: { $exists: false } }
+        { assignedTo: { $exists: false } },
       ];
     }
 
     if (company) {
-      const escapedCompany = company.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escapedCompany = company.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
       if (filter.company) {
         filter.company = {
           $in: filter.company.$in,
           $regex: escapedCompany,
-          $options: "i"
+          $options: "i",
         };
       } else {
         filter.company = { $regex: escapedCompany, $options: "i" };
@@ -182,7 +183,7 @@ export const getAutoTasks = async (req, res) => {
     }
 
     if (reason) {
-        filter.gstMonthly_previousMonth = { $regex: reason, $options: "i" };
+      filter.gstMonthly_previousMonth = { $regex: reason, $options: "i" };
     }
 
     if (effectiveFrom && effectiveTo) {
@@ -194,23 +195,27 @@ export const getAutoTasks = async (req, res) => {
       filter.dueDate = { $lte: new Date(effectiveTo) };
     }
 
-   if (assignedTo) {
-     filter.assignedTo = assignedTo;
-   }
-
-    if (applicationSubStatus == 'gstr3b' || applicationSubStatus == 'gstr1') {
-      filter.gstMonthly_gstType = applicationSubStatus;
+    if (assignedTo) {
+      filter.assignedTo = assignedTo;
     }
-    else if (applicationSubStatus) {
+
+    if (agency) {
+      filter.agencyName = { $regex: agency, $options: "i" };
+
+    }
+
+    if (applicationSubStatus == "gstr3b" || applicationSubStatus == "gstr1") {
+      filter.gstMonthly_gstType = applicationSubStatus;
+    } else if (applicationSubStatus) {
       filter.taskName = applicationSubStatus;
     }
 
-    if (status === 'filed') {
+    if (status === "filed") {
       filter.$or = [
         { pfMonthly_filedate: { $ne: null } },
         { esi_fileDate: { $ne: null } },
         { pft_fileDate: { $ne: null } },
-        { gstMonthly_filedate: { $ne: null } }
+        { gstMonthly_filedate: { $ne: null } },
       ];
     } else if (status === "notFiled") {
       filter.pfMonthly_filedate = null;
@@ -225,21 +230,20 @@ export const getAutoTasks = async (req, res) => {
 
     if (year && month) {
       const startDate = new Date(Date.UTC(year, month, 1));
-      const nextYear = (parseInt(month) + 1) > 12 ? (parseInt(year) + 1) : parseInt(year);
-      const nextMonth = (parseInt(month) + 1) > 12 ? 1 : (parseInt(month) + 1);
+      const nextYear =
+        parseInt(month) + 1 > 12 ? parseInt(year) + 1 : parseInt(year);
+      const nextMonth = parseInt(month) + 1 > 12 ? 1 : parseInt(month) + 1;
       const endDate = new Date(Date.UTC(nextYear, nextMonth, 1));
       endDate.setUTCDate(endDate.getUTCDate() - 1);
-      
+
       filter.startDate = {
         $gte: startDate,
         $lte: endDate,
       };
-    }
-
-    else if (year) {
+    } else if (year) {
       const startOfYear = new Date(`${year}-02-01`);
       const endOfYear = new Date(`${year}-01-01`);
-      endOfYear.setFullYear(endOfYear.getFullYear() + 1);   
+      endOfYear.setFullYear(endOfYear.getFullYear() + 1);
 
       filter.startDate = {
         $lte: endOfYear.toISOString(),
@@ -254,9 +258,7 @@ export const getAutoTasks = async (req, res) => {
 
     if (page && pageSize) {
       const skip = (page - 1) * pageSize;
-      AutoTasks = await AutoTaskModel.find(filter)
-        .skip(skip)
-        .limit(pageSize);
+      AutoTasks = await AutoTaskModel.find(filter).skip(skip).limit(pageSize);
       totalTasks = await AutoTaskModel.countDocuments(filter);
     } else {
       AutoTasks = await AutoTaskModel.find(filter);
@@ -267,7 +269,7 @@ export const getAutoTasks = async (req, res) => {
     return res.status(200).json({
       tasks: AutoTasks,
       totalTasks,
-      totalPages: pageSize ? Math.ceil(totalTasks / pageSize) : 1
+      totalPages: pageSize ? Math.ceil(totalTasks / pageSize) : 1,
     });
   } catch (error) {
     console.error("Error fetching tasks:", error);
@@ -298,16 +300,16 @@ export const updateAutoTask = async (req, res) => {
     const files = req.files; // Access the multiple files from req.files
 
     let fileLinks = {}; // Object to store file URLs
-    
+
     // Handle file uploads
     for (const file of files) {
       const filePath = path.join(file.destination, file.filename); // Full path to the file
       const uploadResponse = await uploadFileToDrive(filePath);
-      
+
       if (uploadResponse && uploadResponse.url) {
         fileLinks[file.fieldname] = uploadResponse.url; // Store the file URL using the field name
       }
-    
+
       fs.unlinkSync(filePath); // Clean up temp file
     }
     // Fetch the existing task to check if 'assignedTo' has changed
@@ -330,13 +332,12 @@ export const updateAutoTask = async (req, res) => {
       AutoTaskData.challan = fileLinks?.challan;
     }
 
-
-
     if (body.assignedTo && body.assignedTo !== existingAutoTask.assignedTo) {
       // Fetch the new assigned user details
       const user = await User.findOne({ _id: body.assignedTo });
       if (user) {
-        AutoTaskData.assignedName = user.firstName + " " + (user?.lastName || '');
+        AutoTaskData.assignedName =
+          user.firstName + " " + (user?.lastName || "");
         // Fetch notification settings for the user's agency
         const notificationSettings = await NotificationModel.findOne({
           agency: user.agency,
@@ -426,7 +427,6 @@ export const uploadFiles = async (req, res) => {
       fs.unlinkSync(filePath); // Clean up temp file
     }
 
-
     const task = await AutoTaskModel.findById(req.body.taskId);
     if (!task) {
       return res.status(404).json({ error: "Task not found" });
@@ -447,11 +447,13 @@ export const uploadFiles = async (req, res) => {
 // New API endpoint for exporting tasks
 export const exportAutoTasks = async (req, res) => {
   try {
-    const tasks = await AutoTaskModel.find({}).select('company startDate taskName taskType gstMonthly_gstType dueDate applicationStatus assignedName applicationSubStatus'); // Fetch only the specified fields
-    const csv = json2csv.parse(tasks.map(task => task.toObject())); // Convert Mongoose documents to plain objects
+    const tasks = await AutoTaskModel.find({}).select(
+      "company startDate taskName taskType gstMonthly_gstType dueDate applicationStatus assignedName applicationSubStatus"
+    ); // Fetch only the specified fields
+    const csv = json2csv.parse(tasks.map((task) => task.toObject())); // Convert Mongoose documents to plain objects
 
-    res.header('Content-Type', 'text/csv');
-    res.attachment('auto_tasks.csv'); // Set the file name for download
+    res.header("Content-Type", "text/csv");
+    res.attachment("auto_tasks.csv"); // Set the file name for download
     res.send(csv); // Send the CSV file
   } catch (error) {
     console.error("Error exporting tasks:", error);

@@ -66,6 +66,9 @@ const taskSchema = new Schema({
   arn_date: {
     type: String,
   },
+  agencyName: {
+    type: String,
+  },
   applicationSubStatus: {
     type: String,
   },

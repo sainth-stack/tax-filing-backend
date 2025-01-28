@@ -7,7 +7,10 @@ const companySchema = new mongoose.Schema(
         type: String,
         required: [true, "Company name is required"],
       },
-
+      agencyName: {
+        type: String,
+        required:true
+      },
       constitution: {
         type: String,
         // required: [true, "Constitution  is required"],
@@ -127,10 +130,12 @@ const companySchema = new mongoose.Schema(
     },
 
     esi: {
-      esiNumber: { type: String,
+      esiNumber: {
+        type: String,
         // required: [true, "Esi Number is required"]
       },
-      esiUserId: { type: String,
+      esiUserId: {
+        type: String,
         // required: [true, "Esi UserId is required"]
       },
       esiPassword: {
@@ -156,18 +161,22 @@ const companySchema = new mongoose.Schema(
     },
 
     providentFund: {
-      pfNumber: { type: String, 
+      pfNumber: {
+        type: String,
         // required: [true, "PF Number is required"]
-       },
-      pfUserId: { type: String, 
+      },
+      pfUserId: {
+        type: String,
         // required: [true, "PF UserId is required"]
-       },
-      pfPassword: { type: String,
+      },
+      pfPassword: {
+        type: String,
         //  required: [true, "PF Password is required"]
-         },
-      status: { type: String,
+      },
+      status: {
+        type: String,
         //  required: [true, "Status is required"]
-         },
+      },
       effectiveFrom: {
         type: String,
         // required: [true, "EffectiveFrom is required"],
@@ -284,7 +293,7 @@ const companySchema = new mongoose.Schema(
       },
       effectiveFrom: {
         type: String,
-        
+
         // required: [true, "EffectiveFrom is required"],
       },
       effectiveTo: {
@@ -356,15 +365,18 @@ const companySchema = new mongoose.Schema(
     },
 
     factoryLicense: {
-      flNumber: { type: String, 
-        // required: [true, "FL Number is required"] 
+      flNumber: {
+        type: String,
+        // required: [true, "FL Number is required"]
       },
-      flUsername: { type: String, 
-        // required: [true, "FL Username is required"] 
+      flUsername: {
+        type: String,
+        // required: [true, "FL Username is required"]
       },
-      flPassword: { type: String,
-        //  required: [true, "FL Password is required"] 
-        },
+      flPassword: {
+        type: String,
+        //  required: [true, "FL Password is required"]
+      },
       flRenewalDate: {
         type: String,
         // required: [true, "FL Renewal Date is required"],

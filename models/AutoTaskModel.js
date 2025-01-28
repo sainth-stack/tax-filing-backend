@@ -8,6 +8,9 @@ const AutoTaskSchema = new Schema(
     company: {
       type: String,
     },
+    agencyName:{
+      type: String,
+    },
     pan: {
       type: String,
     },

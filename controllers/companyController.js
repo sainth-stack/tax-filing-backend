@@ -76,7 +76,7 @@ export const createCompany = async (req, res) => {
       });
     }
 
-    const { companyName, pan } = companyDetails;
+    const { companyName, pan,agencyName } = companyDetails;
 
     // Check if a company with the same PAN already exists
     const existingCompany = await companyModel.findOne({
@@ -119,7 +119,7 @@ export const createCompany = async (req, res) => {
     await company.save();
 
     // Create tasks for active services
-    await createTasksForCompany(company?.companyDetails?.companyName, req.body);
+    await createTasksForCompany(company?.companyDetails?.companyName, req.body,agencyName);
 
     res.locals.companyId = company._id;
     res.send(company);
@@ -128,7 +128,7 @@ export const createCompany = async (req, res) => {
   }
 };
 
-const createTasksForCompany = async (companyId, servicesData) => {
+const createTasksForCompany = async (companyId, servicesData,agencyName) => {
   try {
     // Fetch all service tasks
     const serviceTasks = await ServiceCalendarModel.find({});
@@ -140,15 +140,14 @@ const createTasksForCompany = async (companyId, servicesData) => {
         let effectiveTo = serviceData.effectiveTo
           ? new Date(serviceData.effectiveTo)
           : new Date();
-    
+
         effectiveDate.setMonth(effectiveDate.getMonth() + 1);
-        if(serviceData.effectiveTo){
+        if (serviceData.effectiveTo) {
           effectiveTo.setMonth(effectiveTo.getMonth() + 1);
         }
         const tasksOfType = defaultFilingDataTemplate.filter(
           (task) => task.taskType === taskType
         );
-        console.log(companyId, effectiveDate, effectiveTo);
         const deletedTasks = await taskModel.deleteMany({
           company: companyId,
           $or: [
@@ -207,6 +206,7 @@ const createTasksForCompany = async (companyId, servicesData) => {
                 ...taskTemplate,
                 effectiveFrom: taskEffectiveDate,
                 dueDate: dueDate,
+                agencyName:agencyName,
               });
             }
           }
@@ -327,8 +327,17 @@ export const getAllCompanies = async (req, res) => {
 
 // Get filter companies
 export const getFilterCompanies = async (req, res) => {
-  const { name, status, year, month, userId, taskType, page, pageSize } =
-    req.body;
+  const {
+    name,
+    status,
+    year,
+    month,
+    userId,
+    taskType,
+    page,
+    pageSize,
+    agency,
+  } = req.body;
 
   try {
     // Build the filter criteria
@@ -352,14 +361,24 @@ export const getFilterCompanies = async (req, res) => {
     // Add additional filters based on conditions
     if (name) {
       const trimmedCompanyName = name.trim();
-      const escapedCompany = trimmedCompanyName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escapedCompany = trimmedCompanyName.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&"
+      );
       filter.$and.push({
         "companyDetails.companyName": {
           $regex: new RegExp(escapedCompany, "i"),
         },
       });
     }
-
+    if (agency) {
+      if (!filter.$and) filter.$and = [];
+      filter.$and.push({
+        "companyDetails.agencyName": {
+          $regex: new RegExp(agency, "i"),
+        },
+      });
+    }
     if (status) {
       filter.$and.push({ "companyDetails.clientStatus": status });
     }
@@ -507,7 +526,8 @@ export const updateCompany = async (req, res) => {
     if (Object.keys(newlyEnabledServices).length > 0) {
       await createTasksForCompany(
         updatedCompany?.companyDetails?.companyName,
-        newlyEnabledServices
+        newlyEnabledServices,
+        updatedCompany?.companyDetails?.agencyName
       );
     }
 
@@ -520,7 +540,6 @@ export const updateCompany = async (req, res) => {
 
 export const deleteCompany = async (req, res) => {
   try {
-    console.log('heyy')
     const { id } = req.params;
     // Check if the company exists
     const company = await companyModel.findById(id);
@@ -529,7 +548,9 @@ export const deleteCompany = async (req, res) => {
     }
 
     // Check for tasks associated with the company name
-    const associatedTasks = await taskModel.find({ company: company?.companyDetails?.companyName });
+    const associatedTasks = await taskModel.find({
+      company: company?.companyDetails?.companyName,
+    });
     if (associatedTasks.length > 0) {
       return res.status(400).json({
         error: "Please delete all associated tasks before deleting the company",
@@ -544,7 +565,6 @@ export const deleteCompany = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 
 //filter company by PAN
 export const getCompanyByPan = async (req, res) => {

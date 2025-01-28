@@ -74,7 +74,7 @@ export const createTask = async (req, res) => {
         body.taskName === "gstNewRegistration" ? "active" : "inactive";
     }
 
-    if(body?.companygstin){
+    if (body?.companygstin) {
       updateData["gst.gstin"] = body.companygstin;
     }
 
@@ -153,12 +153,14 @@ export const getTasks = async (req, res) => {
     list,
     page,
     pageSize,
+    agency,
   } = req.body;
 
-  console.log("cheking filedstatus", req.body);
   try {
     const filter = {};
-
+    if (agency) {
+      filter.agencyName = agency;
+    }
     if (list) {
       const userRecord = await User.findById(list).lean().exec();
       if (!userRecord) {
@@ -240,7 +242,6 @@ export const getTasks = async (req, res) => {
       const startOfYear = new Date(`${year}-02-01`);
       const endOfYear = new Date(`${year}-01-01`);
       endOfYear.setFullYear(endOfYear.getFullYear() + 1);
-
       filter.startDate = {
         $lte: endOfYear.toISOString(),
       };
