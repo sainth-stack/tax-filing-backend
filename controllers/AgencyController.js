@@ -103,7 +103,7 @@ export const updateAgency = async (req, res) => {
     // Find and update the agency
     const agency = await AgencyModel.findByIdAndUpdate(
       req.params.id,
-      { agencyName, agencyLocation, effectiveFrom, effectiveTo,firstName, lastName, email },
+      { agencyName, agencyLocation, effectiveFrom, effectiveTo,firstName,password, lastName, email },
       { new: true, session }
     );
 
@@ -115,7 +115,7 @@ export const updateAgency = async (req, res) => {
     // Find and update the user
     const user = await User.findByIdAndUpdate(
       userId,
-      { firstName, lastName, email,agency:agencyName },
+      { firstName, lastName, email,agency:agencyName,password },
       { new: true, session }
     );
 
