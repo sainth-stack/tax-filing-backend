@@ -97,7 +97,7 @@ export const updateAgency = async (req, res) => {
   session.startTransaction(); // Begin the transaction
 
   try {
-    const { agencyName, agencyLocation, effectiveFrom, effectiveTo, firstName, lastName, email,userId } =
+    const { agencyName, agencyLocation, effectiveFrom, effectiveTo, firstName, lastName,password, email,userId } =
       req.body.AgencyDetails;
 
     // Find and update the agency
