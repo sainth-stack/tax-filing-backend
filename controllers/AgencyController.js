@@ -19,14 +19,27 @@ export const createAgency = async (req, res) => {
     } = req.body?.AgencyDetails;
 
     // Check if the agency already exists
-    const existingAgency = await AgencyModel.findOne({ agencyName }).session(
-      session
-    );
+    const existingAgency = await AgencyModel.findOne({ agencyName }).session(session);
     if (existingAgency) {
       return res.status(400).json({ message: "Agency already exists" });
     }
 
-    // Create the new agency
+    // Create the new user first
+    const existingUser = await User.findOne({ email }).session(session);
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists with this email." });
+    }
+
+    const newUser = new User({
+      firstName,
+      lastName,
+      email,
+      password,
+      role: "A", // Role for the user
+    });
+    await newUser.save({ session });
+
+    // Create the new agency and associate the user
     const newAgency = new AgencyModel({
       agencyName,
       agencyLocation,
@@ -36,28 +49,9 @@ export const createAgency = async (req, res) => {
       lastName,
       email,
       password,
+      userId: newUser._id, // Store the user ID in the agency
     });
     await newAgency.save({ session });
-
-    // Check if the user already exists
-    const existingUser = await User.findOne({ email }).session(session);
-    if (existingUser) {
-      await session.abortTransaction(); // Rollback changes if user exists
-      return res
-        .status(400)
-        .json({ message: "User already exists with this email." });
-    }
-
-    // Create the new user
-    const newUser = new User({
-      firstName,
-      lastName,
-      email,
-      password,
-      agency: agencyName,
-      role: "A",
-    });
-    await newUser.save({ session });
 
     // Commit the transaction if everything is successful
     await session.commitTransaction();
@@ -74,6 +68,7 @@ export const createAgency = async (req, res) => {
     session.endSession(); // End the session
   }
 };
+
 
 // Get all agencies
 export const getAgencies = async (req, res) => {
@@ -98,22 +93,49 @@ export const getAgencyById = async (req, res) => {
 
 // Update an agency by ID
 export const updateAgency = async (req, res) => {
+  const session = await mongoose.startSession(); // Start a session
+  session.startTransaction(); // Begin the transaction
+
   try {
-    const { agencyName, agencyLocation, effectiveFrom, effectiveTo } =
+    const { agencyName, agencyLocation, effectiveFrom, effectiveTo, firstName, lastName, email,userId } =
       req.body.AgencyDetails;
 
+    // Find and update the agency
     const agency = await AgencyModel.findByIdAndUpdate(
       req.params.id,
-      { agencyName, agencyLocation, effectiveFrom, effectiveTo },
-      { new: true }
+      { agencyName, agencyLocation, effectiveFrom, effectiveTo,firstName, lastName, email },
+      { new: true, session }
     );
 
-    if (!agency) return res.status(404).json({ message: "Agency not found" });
-    res.send({ message: "Agency updated successfully", agency });
+    if (!agency) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: "Agency not found" });
+    }
+
+    // Find and update the user
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { firstName, lastName, email,agency:agencyName },
+      { new: true, session }
+    );
+
+    if (!user) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Commit the transaction if everything is successful
+    await session.commitTransaction();
+
+    res.json({ message: "Agency and user updated successfully", agency, user });
   } catch (error) {
+    await session.abortTransaction(); // Rollback all changes if an error occurs
     res.status(500).json({ message: error.message });
+  } finally {
+    session.endSession(); // End the session
   }
 };
+
 
 // Delete an agency by ID
 export const deleteAgency = async (req, res) => {
