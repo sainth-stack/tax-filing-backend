@@ -6,17 +6,51 @@ import { uploadFileToDrive } from "../middlewares/drive.js";
 import path from "path";
 import mongoose from "mongoose";
 
-import taskModel from '../models/AutoTaskModel.js';
+import taskModel from "../models/AutoTaskModel.js";
+import maualTaskModel from "../models/taskModel.js";
+
 import ServiceCalendarModel from "../models/ServiceCalendar.js";
 import UserModel from "../models/employeeModel.js";
 
 const defaultFilingDataTemplate = [
-  { taskId: "gstMonthly-gstr1", taskName: "gstMonthly", taskType: "gst", priority: "high", gstMonthly_gstType: 'gstr1' },
-  { taskId: "gstMonthly-gstr3b", taskName: "gstMonthly", taskType: "gst", priority: "high", gstMonthly_gstType: 'gstr3b' },
-  { taskId: "pfMonthly", taskName: "pfMonthly", taskType: "providentFund", priority: "high" },
-  { taskId: "tdsTcsMonthly", taskName: "tdsTcsMonthly", taskType: "tds", priority: "high" },
-  { taskId: "esiRegularMonthlyActivity", taskName: "esiRegularMonthlyActivity", taskType: "esi", priority: "high" },
-  { taskId: "professionalTaxRegularMonthlyActivity", taskName: "professionalTaxRegularMonthlyActivity", taskType: "professionalTax", priority: "high" },
+  {
+    taskId: "gstMonthly-gstr1",
+    taskName: "gstMonthly",
+    taskType: "gst",
+    priority: "high",
+    gstMonthly_gstType: "gstr1",
+  },
+  {
+    taskId: "gstMonthly-gstr3b",
+    taskName: "gstMonthly",
+    taskType: "gst",
+    priority: "high",
+    gstMonthly_gstType: "gstr3b",
+  },
+  {
+    taskId: "pfMonthly",
+    taskName: "pfMonthly",
+    taskType: "providentFund",
+    priority: "high",
+  },
+  {
+    taskId: "tdsTcsMonthly",
+    taskName: "tdsTcsMonthly",
+    taskType: "tds",
+    priority: "high",
+  },
+  {
+    taskId: "esiRegularMonthlyActivity",
+    taskName: "esiRegularMonthlyActivity",
+    taskType: "esi",
+    priority: "high",
+  },
+  {
+    taskId: "professionalTaxRegularMonthlyActivity",
+    taskName: "professionalTaxRegularMonthlyActivity",
+    taskType: "professionalTax",
+    priority: "high",
+  },
 ];
 
 export const createCompany = async (req, res) => {
@@ -42,7 +76,7 @@ export const createCompany = async (req, res) => {
       });
     }
 
-    const { companyName, pan } = companyDetails;
+    const { companyName, pan, agencyName } = companyDetails;
 
     // Check if a company with the same PAN already exists
     const existingCompany = await companyModel.findOne({
@@ -62,7 +96,7 @@ export const createCompany = async (req, res) => {
     //   "factoryLicense",
     // ];
 
-   /*  sectionsAllowingDuplicates.forEach((section) => {
+    /*  sectionsAllowingDuplicates.forEach((section) => {
       if (remainingData[section]) {
      
         if (!Array.isArray(remainingData[section])) {
@@ -85,7 +119,11 @@ export const createCompany = async (req, res) => {
     await company.save();
 
     // Create tasks for active services
-    await createTasksForCompany(company?.companyDetails?.companyName, req.body);
+    await createTasksForCompany(
+      company?.companyDetails?.companyName,
+      req.body,
+      agencyName
+    );
 
     res.locals.companyId = company._id;
     res.send(company);
@@ -94,43 +132,75 @@ export const createCompany = async (req, res) => {
   }
 };
 
-
-
-const createTasksForCompany = async (companyId, servicesData) => {
+const createTasksForCompany = async (companyId, servicesData, agencyName) => {
   try {
     // Fetch all service tasks
     const serviceTasks = await ServiceCalendarModel.find({});
     const tasksToCreate = [];
 
-    const createRecurringTasks = async (serviceData, taskType) => {
+    const createOrUpdateRecurringTasks = async (serviceData, taskType) => {
       if (serviceData && serviceData.status === "active") {
         let effectiveDate = new Date(serviceData.effectiveFrom);
+        let effectiveTo = serviceData.effectiveTo
+          ? new Date(serviceData.effectiveTo)
+          : new Date();
+
         effectiveDate.setMonth(effectiveDate.getMonth() + 1);
-        effectiveDate.setDate(1);
-        const today = new Date();
+        if (serviceData.effectiveTo) {
+          effectiveTo.setMonth(effectiveTo.getMonth() + 1);
+        }
+        const tasksOfType = defaultFilingDataTemplate.filter(
+          (task) => task.taskType === taskType
+        );
+        const deletedTasks = await taskModel.deleteMany({
+          company: companyId,
+          $or: [
+            { startDate: { $lt: effectiveDate } }, // Before effectiveDate
+            { startDate: { $gt: effectiveTo } }, // After effectiveTo
+          ],
+        });
 
-        const tasksOfType = defaultFilingDataTemplate.filter(task => task.taskType === taskType);
+        console.log(`Deleted tasks:`, deletedTasks.deletedCount);
 
-        while (effectiveDate <= today) {
-          const currentMonthStart = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth(), 1);
-          const nextMonthStart = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth() + 1, 1);
+        while (effectiveDate <= effectiveTo) {
+          const currentMonthStart = new Date(
+            effectiveDate.getFullYear(),
+            effectiveDate.getMonth(),
+            1
+          );
+          const nextMonthStart = new Date(
+            effectiveDate.getFullYear(),
+            effectiveDate.getMonth() + 1,
+            1
+          );
 
           for (const taskTemplate of tasksOfType) {
-            const matchingServiceTask = serviceTasks.find(task => task.taskId === taskTemplate.taskId);
-            let dueDate = matchingServiceTask ? new Date(matchingServiceTask.date) : null;
+            const matchingServiceTask = serviceTasks.find(
+              (task) => task.taskId === taskTemplate.taskId
+            );
+            let dueDate = matchingServiceTask
+              ? new Date(matchingServiceTask.date)
+              : null;
 
             if (dueDate) {
-              dueDate = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth(), dueDate.getDate());
+              dueDate = new Date(
+                effectiveDate.getFullYear(),
+                effectiveDate.getMonth(),
+                dueDate.getDate()
+              );
             }
 
             const existingTask = await taskModel.findOne({
               company: companyId,
-              taskName: taskTemplate?.taskId.split('-')[0],
-              gstMonthly_gstType: taskTemplate.taskId.split('-')?.length > 1 ? taskTemplate.taskId.split('-')[1] : '',
+              taskName: taskTemplate?.taskId.split("-")[0],
+              gstMonthly_gstType:
+                taskTemplate.taskId.split("-")?.length > 1
+                  ? taskTemplate.taskId.split("-")[1]
+                  : "",
               startDate: {
                 $gte: currentMonthStart,
                 $lt: nextMonthStart,
-              }
+              },
             });
 
             if (!existingTask) {
@@ -139,7 +209,8 @@ const createTasksForCompany = async (companyId, servicesData) => {
               tasksToCreate.push({
                 ...taskTemplate,
                 effectiveFrom: taskEffectiveDate,
-                dueDate: dueDate
+                dueDate: dueDate,
+                agencyName: agencyName,
               });
             }
           }
@@ -149,27 +220,33 @@ const createTasksForCompany = async (companyId, servicesData) => {
       }
     };
 
-    // Check each service and create recurring tasks
-    await createRecurringTasks(servicesData.gst, "gst");
-    await createRecurringTasks(servicesData.esi, "esi");
-    await createRecurringTasks(servicesData.providentFund, "providentFund");
-    await createRecurringTasks(servicesData.tds, "tds");
-    await createRecurringTasks(servicesData.professionalTax, "professionalTax");
+    // Check each service and create/update recurring tasks
+    await createOrUpdateRecurringTasks(servicesData.gst, "gst");
+    await createOrUpdateRecurringTasks(servicesData.esi, "esi");
+    await createOrUpdateRecurringTasks(
+      servicesData.providentFund,
+      "providentFund"
+    );
+    await createOrUpdateRecurringTasks(servicesData.tds, "tds");
+    await createOrUpdateRecurringTasks(
+      servicesData.professionalTax,
+      "professionalTax"
+    );
 
     // Map tasks and associate them with the company
-    const tasks = tasksToCreate.map(task => {
+    const tasks = tasksToCreate.map((task) => {
       const startDate = new Date(task.effectiveFrom);
-      const dueDate = task.dueDate || new Date(startDate.setDate(startDate.getDate() + 5));
+      const dueDate =
+        task.dueDate || new Date(startDate.setDate(startDate.getDate() + 5));
 
       return {
         ...task,
         company: companyId,
         startDate: task.effectiveFrom,
         dueDate: dueDate.toISOString(),
-        status: 'pending'
+        status: "pending",
       };
     });
-
     // Insert tasks into the task collection only if there are tasks to create
     if (tasks.length > 0) {
       await taskModel.insertMany(tasks);
@@ -178,8 +255,6 @@ const createTasksForCompany = async (companyId, servicesData) => {
     console.error("Error creating tasks:", error);
   }
 };
-
-
 
 /* file upload controller */
 export const uploadFiles = async (req, res) => {
@@ -226,27 +301,43 @@ export const uploadFiles = async (req, res) => {
   }
 };
 
-
 // get alll companies
 export const getAllCompanies = async (req, res) => {
   try {
-     const page = parseInt(req.query.page)  // Default to page 1
-     const pageSize = parseInt(req.query.pageSize)  // Default to 10 items per page
-
+    const page = parseInt(req.query.page); // Default to page 1
+    const pageSize = parseInt(req.query.pageSize); // Default to 10 items per page
+    const agency = req.query.agency; // Default to 10 items per page
     // console.log("page : ", page)
     // console.log("pagesize",pageSize)
-     // Calculate the number of items to skip
-     const skip = (page - 1) * pageSize;
-    const companies = await companyModel.find().skip(skip).limit(pageSize);
-const totalCompanies = await companyModel.countDocuments();
+    // Calculate the number of items to skip
+    const skip = (page - 1) * pageSize;
+    const filter = {
+      $and: []
+    };
+    
+    if (agency) {
+      console.log(agency);
+      filter.$and.push({
+        "companyDetails.agencyName": {
+          $regex: new RegExp(agency, "i"), // Case-insensitive regex
+        },
+      });
+    }
+    
+    // If no filters are applied, remove the $and key to avoid an unnecessary empty condition
+    if (filter.$and.length === 0) {
+      delete filter.$and;
+    }
+        
+    const companies = await companyModel.find(filter).skip(skip).limit(pageSize);
+    const totalCompanies = await companyModel.countDocuments();
 
-     res.status(200).json({
-       success: true,
-       data: companies,
-       page,
-       pageSize,
-      
-     });
+    res.status(200).json({
+      success: true,
+      data: companies,
+      page,
+      pageSize,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -265,8 +356,9 @@ export const getFilterCompanies = async (req, res) => {
     month,
     userId,
     taskType,
-    page, 
-    pageSize, 
+    page,
+    pageSize,
+    agency,
   } = req.body;
 
   try {
@@ -291,14 +383,25 @@ export const getFilterCompanies = async (req, res) => {
 
     // Add additional filters based on conditions
     if (name) {
-        const trimmedCompanyName = name.trim();
-      filter.$and.push({        
+      const trimmedCompanyName = name.trim();
+      const escapedCompany = trimmedCompanyName.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&"
+      );
+      filter.$and.push({
         "companyDetails.companyName": {
-          $regex: new RegExp(trimmedCompanyName, "i"),
+          $regex: new RegExp(escapedCompany, "i"),
         },
       });
     }
-
+    if (agency) {
+      if (!filter.$and) filter.$and = [];
+      filter.$and.push({
+        "companyDetails.agencyName": {
+          $regex: new RegExp(agency, "i"),
+        },
+      });
+    }
     if (status) {
       filter.$and.push({ "companyDetails.clientStatus": status });
     }
@@ -376,46 +479,44 @@ export const getFilterCompanies = async (req, res) => {
     // Fetch total count of companies
 
     // Apply pagination logic only if page and pageSize are provided
-   let companies;
-   let totalCount = 0; // Initialize totalCount
+    let companies;
+    let totalCount = 0; // Initialize totalCount
 
-   if (page && pageSize) {
-     // Parse page and pageSize safely
-     const currentPage = parseInt(page, 10);
-     const currentPageSize = parseInt(pageSize, 10);
+    if (page && pageSize) {
+      // Parse page and pageSize safely
+      const currentPage = parseInt(page, 10);
+      const currentPageSize = parseInt(pageSize, 10);
 
-     // Calculate skip for pagination
-     const skip = (currentPage - 1) * currentPageSize;
+      // Calculate skip for pagination
+      const skip = (currentPage - 1) * currentPageSize;
 
-     // Fetch paginated data
-     companies = await companyModel
-       .find(filter)
-       .skip(skip)
-       .limit(currentPageSize)
-       .exec();
+      // Fetch paginated data
+      companies = await companyModel
+        .find(filter)
+        .skip(skip)
+        .limit(currentPageSize)
+        .exec();
 
-     // Fetch total count for pagination
-     totalCount = await companyModel.countDocuments(filter);
-   } else {
-     // Fetch all matching data without pagination
-     companies = await companyModel.find(filter).exec();
+      // Fetch total count for pagination
+      totalCount = await companyModel.countDocuments(filter);
+    } else {
+      // Fetch all matching data without pagination
+      companies = await companyModel.find(filter).exec();
 
-     // Fetch total count for consistency
-     totalCount = companies.length;
-   }
+      // Fetch total count for consistency
+      totalCount = companies.length;
+    }
 
-   // Send the response with data and total count
-   res.status(200).json({
-     data: companies,
-     totalCount, // Include the total count of records
-     totalPages: pageSize ? Math.ceil(totalCount / pageSize) : 1, // Calculate total pages if applicable
-   });
-
+    // Send the response with data and total count
+    res.status(200).json({
+      data: companies,
+      totalCount, // Include the total count of records
+      totalPages: pageSize ? Math.ceil(totalCount / pageSize) : 1, // Calculate total pages if applicable
+    });
   } catch (error) {
     res.status(500).send({ error: error.message });
   }
 };
-
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -466,9 +567,7 @@ export const updateCompany = async (req, res) => {
       const currentService = servicesData[serviceKey];
       const previousService = existingCompany[serviceKey];
 
-      if (
-        currentService &&
-        currentService.status === "active") {
+      if (currentService && currentService.status === "active") {
         newlyEnabledServices[serviceKey] = currentService;
       }
     };
@@ -482,7 +581,11 @@ export const updateCompany = async (req, res) => {
 
     // Only create tasks if there are newly enabled services
     if (Object.keys(newlyEnabledServices).length > 0) {
-      await createTasksForCompany(updatedCompany?.companyDetails?.companyName, newlyEnabledServices);
+      await createTasksForCompany(
+        updatedCompany?.companyDetails?.companyName,
+        newlyEnabledServices,
+        updatedCompany?.companyDetails?.agencyName
+      );
     }
 
     res.locals.companyId = updatedCompany._id;
@@ -492,16 +595,29 @@ export const updateCompany = async (req, res) => {
   }
 };
 
-
-// Delete a company by ID
 export const deleteCompany = async (req, res) => {
   try {
-    const company = await companyModel.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+    // Check if the company exists
+    const company = await companyModel.findById(id);
     if (!company) {
       return res.status(404).json({ error: "Company not found" });
     }
-    res.locals.companyId = company._id;
-    res.status(200).json({ message: "Company deleted" });
+
+    // Check for tasks associated with the company name
+    const associatedTasks = await taskModel.find({
+      company: company?.companyDetails?.companyName,
+    });
+    if (associatedTasks.length > 0) {
+      return res.status(400).json({
+        error: "Please delete all associated tasks before deleting the company",
+        tasks: associatedTasks,
+      });
+    }
+
+    await companyModel.findByIdAndDelete(id);
+    res.locals.companyId = id;
+    res.status(200).json({ message: "Company deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

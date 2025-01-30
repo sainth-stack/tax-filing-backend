@@ -63,6 +63,7 @@ cron.schedule('0 0 1 * *', async () => {
       const companyFilingData = FilingData.map(filing => ({
         ...filing,
         company: company.companyDetails.companyName,
+        agencyName: company?.companyDetails?.agencyName,
       }))
 
       for (const filingData of companyFilingData) {

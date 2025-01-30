@@ -34,9 +34,9 @@ const taskSchema = new Schema({
   },
 
   suspensionReason: {
-    type:String
+    type: String,
   },
-  
+
   taskName: {
     type: String,
   },
@@ -66,10 +66,17 @@ const taskSchema = new Schema({
   arn_date: {
     type: String,
   },
+  agencyName: {
+    type: String,
+  },
   applicationSubStatus: {
     type: String,
   },
   date_of_approval: {
+    type: String,
+  },
+
+  companygstin: {
     type: String,
   },
 
