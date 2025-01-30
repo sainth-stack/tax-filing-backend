@@ -229,16 +229,16 @@ export const getAutoTasks = async (req, res) => {
       filter.taskType = taskType;
     }
 
-    // Filter by year and month
+    //Filter by year and month
     if (Array.isArray(year) && year.length > 0) {
-      console.log("year as array",year)
+      // console.log("year as array",year)
       const yearFilter = year.map((y) => {
 
         const startOfYear = new Date(`${y}-01-01`);
-        console.log("start of year ",startOfYear)
+        // console.log("start of year ",startOfYear)
         const endOfYear = new Date(`${y}-12-31`);
         endOfYear.setHours(23, 59, 59, 999);
-        console.log("end  of year ", endOfYear);
+        // console.log("end  of year ", endOfYear);
 
 
         return {
@@ -265,6 +265,8 @@ export const getAutoTasks = async (req, res) => {
 
       filter.$or = yearFilter;
     } else if (year && month) {
+
+      console.log("month from auto task ",year,month)
       const startDate = new Date(Date.UTC(year, month - 1, 1));
       const nextYear =
         parseInt(month) + 1 > 12 ? parseInt(year) + 1 : parseInt(year);
@@ -277,6 +279,7 @@ export const getAutoTasks = async (req, res) => {
         $lte: endDate.toISOString(),
       };
     } else if (year) {
+      console.log(":year",year)
       const startOfYear = new Date(`${year}-01-01`);
       const endOfYear = new Date(`${year}-12-31`);
       endOfYear.setHours(23, 59, 59, 999);
