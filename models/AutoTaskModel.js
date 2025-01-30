@@ -8,7 +8,7 @@ const AutoTaskSchema = new Schema(
     company: {
       type: String,
     },
-    agencyName:{
+    agencyName: {
       type: String,
     },
     pan: {
@@ -24,10 +24,10 @@ const AutoTaskSchema = new Schema(
       type: String,
     },
     startDate: {
-      type: Date,
+      type: String,
     },
     dueDate: {
-      type: Date,
+      type: String,
     },
     actualCompletionDate: {
       type: mongoose.Schema.Types.Mixed,

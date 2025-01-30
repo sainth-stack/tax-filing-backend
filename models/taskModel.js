@@ -21,10 +21,10 @@ const taskSchema = new Schema({
     type: String,
   },
   startDate: {
-    type: Date,
+    type: String,
   },
   dueDate: {
-    type: Date,
+    type: String,
   },
   actualCompletionDate: {
     type: mongoose.Schema.Types.Mixed,

@@ -147,10 +147,11 @@ export const getAutoTasks = async (req, res) => {
     reason,
     agency,
   } = req.body;
-console.log(agency)
+
   try {
     const filter = {};
 
+    // Filter by user list (if provided)
     if (list) {
       const userRecord = await User.findById(list).lean().exec();
       if (!userRecord) {
@@ -168,24 +169,20 @@ console.log(agency)
       ];
     }
 
+    // Filter by company
     if (company) {
       const escapedCompany = company.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-      if (filter.company) {
-        filter.company = {
-          $in: filter.company.$in,
-          $regex: escapedCompany,
-          $options: "i",
-        };
-      } else {
-        filter.company = { $regex: escapedCompany, $options: "i" };
-      }
+      filter.company = filter.company
+        ? { $in: filter.company.$in, $regex: escapedCompany, $options: "i" }
+        : { $regex: escapedCompany, $options: "i" };
     }
 
+    // Filter by reason
     if (reason) {
       filter.gstMonthly_previousMonth = { $regex: reason, $options: "i" };
     }
 
+    // Date range filters (effectiveFrom, effectiveTo)
     if (effectiveFrom && effectiveTo) {
       filter.startDate = { $gte: new Date(effectiveFrom) };
       filter.dueDate = { $lte: new Date(effectiveTo) };
@@ -195,21 +192,24 @@ console.log(agency)
       filter.dueDate = { $lte: new Date(effectiveTo) };
     }
 
+    // Filter by assignedTo
     if (assignedTo) {
       filter.assignedTo = assignedTo;
     }
 
+    // Filter by agency
     if (agency) {
       filter.agencyName = { $regex: agency, $options: "i" };
-
     }
 
-    if (applicationSubStatus == "gstr3b" || applicationSubStatus == "gstr1") {
+    // Filter by applicationSubStatus (gstr3b or gstr1)
+    if (applicationSubStatus === "gstr3b" || applicationSubStatus === "gstr1") {
       filter.gstMonthly_gstType = applicationSubStatus;
     } else if (applicationSubStatus) {
       filter.taskName = applicationSubStatus;
     }
 
+    // Filter by status (filed or notFiled)
     if (status === "filed") {
       filter.$or = [
         { pfMonthly_filedate: { $ne: null } },
@@ -224,35 +224,69 @@ console.log(agency)
       filter.gstMonthly_filedate = null;
     }
 
+    // Filter by taskType
     if (taskType) {
       filter.taskType = taskType;
     }
 
-    if (year && month) {
-      const startDate = new Date(Date.UTC(year, month, 1));
+    // Filter by year and month
+    if (Array.isArray(year) && year.length > 0) {
+      console.log("year as array",year)
+      const yearFilter = year.map((y) => {
+
+        const startOfYear = new Date(`${y}-01-01`);
+        console.log("start of year ",startOfYear)
+        const endOfYear = new Date(`${y}-12-31`);
+        endOfYear.setHours(23, 59, 59, 999);
+        console.log("end  of year ", endOfYear);
+
+
+        return {
+          $and: [
+            {
+              "companyDetails.effectiveFrom": {
+                $gte: startOfYear.toISOString(),
+                $lte: endOfYear.toISOString(),
+              },
+            },
+            {
+              $or: [
+                {
+                  "companyDetails.effectiveTo": {
+                    $gte: startOfYear.toISOString(),
+                  },
+                },
+                { "companyDetails.effectiveTo": { $exists: false } },
+              ],
+            },
+          ],
+        };
+      });
+
+      filter.$or = yearFilter;
+    } else if (year && month) {
+      const startDate = new Date(Date.UTC(year, month - 1, 1));
       const nextYear =
         parseInt(month) + 1 > 12 ? parseInt(year) + 1 : parseInt(year);
       const nextMonth = parseInt(month) + 1 > 12 ? 1 : parseInt(month) + 1;
-      const endDate = new Date(Date.UTC(nextYear, nextMonth, 1));
+      const endDate = new Date(Date.UTC(nextYear, nextMonth - 1, 1));
       endDate.setUTCDate(endDate.getUTCDate() - 1);
 
       filter.startDate = {
-        $gte: startDate,
-        $lte: endDate,
+        $gte: startDate.toISOString(),
+        $lte: endDate.toISOString(),
       };
     } else if (year) {
-      const startOfYear = new Date(`${year}-02-01`);
-      const endOfYear = new Date(`${year}-01-01`);
-      endOfYear.setFullYear(endOfYear.getFullYear() + 1);
+      const startOfYear = new Date(`${year}-01-01`);
+      const endOfYear = new Date(`${year}-12-31`);
+      endOfYear.setHours(23, 59, 59, 999);
 
       filter.startDate = {
+        $gte: startOfYear.toISOString(),
         $lte: endOfYear.toISOString(),
       };
-      filter.dueDate = {
-        $gte: startOfYear.toISOString(),
-      };
     }
-    // Retrieve tasks based on the filter with pagination
+
     let AutoTasks;
     let totalTasks;
 
@@ -265,7 +299,7 @@ console.log(agency)
       totalTasks = AutoTasks.length;
     }
 
-    // Send the tasks in the response with pagination info
+    // Respond with the tasks and pagination info
     return res.status(200).json({
       tasks: AutoTasks,
       totalTasks,
@@ -276,6 +310,7 @@ console.log(agency)
     res.status(500).json({ error: "An error occurred while fetching tasks." });
   }
 };
+
 
 export const getAutoTaskById = async (req, res) => {
   try {

@@ -273,7 +273,7 @@ export const uploadFiles = async (req, res) => {
 
     for (const file of files) {
       const fileName = file.filename;
-      const filePath = path.join(file.destination, file.filename); // Full path to the file
+      const filePath = path.join(file.destination, file.filename); 
       const uploadResponse = await uploadFileToDrive(filePath);
 
       const fields = file?.fieldname?.split(".");
@@ -316,7 +316,7 @@ export const getAllCompanies = async (req, res) => {
     };
     
     if (agency) {
-      console.log(agency);
+      // console.log(agency);
       filter.$and.push({
         "companyDetails.agencyName": {
           $regex: new RegExp(agency, "i"), // Case-insensitive regex
@@ -324,7 +324,7 @@ export const getAllCompanies = async (req, res) => {
       });
     }
     
-    // If no filters are applied, remove the $and key to avoid an unnecessary empty condition
+    // If no filters are apcplied, remove the $and key to avoid an unnecessary empty condition
     if (filter.$and.length === 0) {
       delete filter.$and;
     }
@@ -362,16 +362,9 @@ export const getFilterCompanies = async (req, res) => {
   } = req.body;
 
   try {
-    // Build the filter criteria
     const filter = {};
 
-    console.log("year from the company controller",year)
-    // Check if any of the conditions for the $and clause are set
-    if (name || status || (year && month)) {
-      filter.$and = [];
-    }
-
-    // Only get user's companies if userId is provided
+    // Check if userId is provided
     if (userId) {
       const userRecord = await UserModel.findById(userId).lean().exec();
       if (!userRecord) {
@@ -381,142 +374,156 @@ export const getFilterCompanies = async (req, res) => {
       filter._id = { $in: userCompanyIds };
     }
 
-    // Add additional filters based on conditions
+    // Build filter for company name
     if (name) {
       const trimmedCompanyName = name.trim();
       const escapedCompany = trimmedCompanyName.replace(
         /[.*+?^${}()|[\]\\]/g,
         "\\$&"
       );
+      filter.$and = filter.$and || [];
       filter.$and.push({
         "companyDetails.companyName": {
           $regex: new RegExp(escapedCompany, "i"),
         },
       });
     }
+
+    // Build filter for agency
     if (agency) {
-      if (!filter.$and) filter.$and = [];
+      filter.$and = filter.$and || [];
       filter.$and.push({
         "companyDetails.agencyName": {
           $regex: new RegExp(agency, "i"),
         },
       });
     }
+
+    // Build filter for status
     if (status) {
       filter.$and.push({ "companyDetails.clientStatus": status });
     }
 
+    // Build filter for task type
     if (taskType) {
-      // Assuming taskType is a valid field in your schema
       filter[`${taskType}.status`] = "active";
     }
 
-   if (year && month) {
-     const startOfMonth = new Date(`${year}-${month}-01`); // Start of the month
-     const endOfMonth = new Date(year, month, 0); // Last day of the month
+    // Handle year and month filtering
+    if (year && month) {
+      const yearValue = year;
+      const monthValue = parseInt(month, 10);
 
-     filter.$and = filter.$and || [];
-     filter.$and.push({
-       $or: [
-         {
-           "companyDetails.effectiveFrom": {
-             $exists: true,
-             $lte: endOfMonth.toISOString(),
-           },
-           "companyDetails.effectiveTo": {
-             $exists: true,
-             $gte: startOfMonth.toISOString(),
-           },
-         },
-         {
-           "companyDetails.effectiveFrom": {
-             $exists: true,
-             $lte: endOfMonth.toISOString(),
-           },
-           $or: [
-             { "companyDetails.effectiveTo": { $exists: false } },
-             { "companyDetails.effectiveTo": "" },
-           ],
-         },
-       ],
-     });
-   } else if (year) {
-     // Ensure year is an array
-     const years = Array.isArray(year)
-       ? year.map((y) => y.value)
-       : [year.value];
+      if (isNaN(yearValue) || monthValue < 1 || monthValue > 12) {
+        throw new Error("Invalid year or month");
+      }
 
-     if (years.length > 0) {
-       filter.$or = years.map((yr) => {
-         const startOfYear = new Date(`${yr}-01-01`);
-         const endOfYear = new Date(`${yr}-12-31`);
+      const startOfMonth = new Date(
+        `${yearValue}-${monthValue.toString().padStart(2, "0")}-01`
+      );
+      const endOfMonth = new Date(yearValue, monthValue, 0);
 
-         return {
-           $and: [
-             {
-               "companyDetails.effectiveFrom": {
-                 $lte: endOfYear.toISOString(),
-               },
-             },
-             {
-               $or: [
-                 { "companyDetails.effectiveTo": { $exists: false } },
-                 {
-                   "companyDetails.effectiveTo": {
-                     $gte: startOfYear.toISOString(),
-                   },
-                 },
-               ],
-             },
-           ],
-         };
-       });
-     }
-   }
+      // Ensure dates are valid
+      if (isNaN(startOfMonth.getTime()) || isNaN(endOfMonth.getTime())) {
+        throw new Error("Invalid start or end of month date.");
+      }
 
+      filter.$and = filter.$and || [];
+      filter.$and.push({
+        $or: [
+          {
+            "companyDetails.effectiveFrom": {
+              $exists: true,
+              $lte: endOfMonth.toISOString(),
+            },
+            "companyDetails.effectiveTo": {
+              $exists: true,
+              $gte: startOfMonth.toISOString(),
+            },
+          },
+          {
+            "companyDetails.effectiveFrom": {
+              $exists: true,
+              $lte: endOfMonth.toISOString(),
+            },
+            $or: [
+              { "companyDetails.effectiveTo": { $exists: false } },
+              { "companyDetails.effectiveTo": "" },
+            ],
+          },
+        ],
+      });
+    } else if (year) {
+      const years = Array.isArray(year)
+        ? year.map((y) => y.value)
+        : [year.value];
 
+      if (years.length > 0) {
+        filter.$or = years.map((yr) => {
+          const startOfYear = new Date(`${yr}-01-01`);
+          const endOfYear = new Date(`${yr}-12-31`);
 
-    // Fetch total count of companies
+          if (isNaN(startOfYear.getTime()) || isNaN(endOfYear.getTime())) {
+            throw new Error("Invalid year date.");
+          }
 
-    // Apply pagination logic only if page and pageSize are provided
+          return {
+            $and: [
+              {
+                "companyDetails.effectiveFrom": {
+                  $lte: endOfYear.toISOString(),
+                },
+              },
+              {
+                $or: [
+                  { "companyDetails.effectiveTo": { $exists: false } },
+                  {
+                    "companyDetails.effectiveTo": {
+                      $gte: startOfYear.toISOString(),
+                    },
+                  },
+                ],
+              },
+            ],
+          };
+        });
+      }
+    }
+
+    // Pagination logic
     let companies;
-    let totalCount = 0; // Initialize totalCount
+    let totalCount = 0;
 
     if (page && pageSize) {
-      // Parse page and pageSize safely
       const currentPage = parseInt(page, 10);
       const currentPageSize = parseInt(pageSize, 10);
 
-      // Calculate skip for pagination
       const skip = (currentPage - 1) * currentPageSize;
 
-      // Fetch paginated data
       companies = await companyModel
         .find(filter)
         .skip(skip)
         .limit(currentPageSize)
         .exec();
 
-      // Fetch total count for pagination
       totalCount = await companyModel.countDocuments(filter);
     } else {
-      // Fetch all matching data without pagination
       companies = await companyModel.find(filter).exec();
-
-      // Fetch total count for consistency
       totalCount = companies.length;
     }
 
-    // Send the response with data and total count
+    // Return the result
     res.status(200).json({
       data: companies,
-      totalCount, // Include the total count of records
-      totalPages: pageSize ? Math.ceil(totalCount / pageSize) : 1, // Calculate total pages if applicable
+      totalCount,
+      totalPages: pageSize ? Math.ceil(totalCount / pageSize) : 1,
     });
   } catch (error) {
     res.status(500).send({ error: error.message });
   }
 };
+
+
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 

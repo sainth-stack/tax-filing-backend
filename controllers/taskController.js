@@ -156,13 +156,13 @@ export const getTasks = async (req, res) => {
     agency,
   } = req.body;
 
-
-  // console.log("cheking filedstatus", req.body);
   try {
     const filter = {};
+
     if (agency) {
       filter.agencyName = agency;
     }
+
     if (list) {
       const userRecord = await User.findById(list).lean().exec();
       if (!userRecord) {
@@ -191,6 +191,7 @@ export const getTasks = async (req, res) => {
         filter.company = { $regex: company, $options: "i" };
       }
     }
+
     if (effectiveFrom && effectiveTo) {
       filter.startDate = { $gte: new Date(effectiveFrom) };
       filter.dueDate = { $lte: new Date(effectiveTo) };
@@ -204,7 +205,7 @@ export const getTasks = async (req, res) => {
       filter.assignedTo = assignedTo;
     }
 
-    if (applicationSubStatus == "gstr3b" || applicationSubStatus == "gstr1") {
+    if (applicationSubStatus === "gstr3b" || applicationSubStatus === "gstr1") {
       filter.gstMonthly_gstType = applicationSubStatus;
     } else if (applicationSubStatus) {
       filter.taskName = applicationSubStatus;
@@ -228,45 +229,86 @@ export const getTasks = async (req, res) => {
       filter.taskType = taskType;
     }
 
-    if (year && month) {
-      const startDate = new Date(Date.UTC(year, month, 1));
+    // Handling Year and Month Filters
+    // Handling Year and Month Filters
+    if (Array.isArray(year) && year.length > 0) {
+      const yearFilter = year.map((y) => {
+        if (!y?.value || isNaN(y.value)) {
+          throw new Error(`Invalid year: ${y?.value}`);
+        }
+
+        const startOfYear = new Date(`${y.value}-01-01`);
+        const endOfYear = new Date(`${y.value}-12-31`);
+        endOfYear.setHours(23, 59, 59, 999); // Ensure end of the year is the last moment
+
+        return {
+          $and: [
+            {
+              "companyDetails.effectiveFrom": {
+                $gte: startOfYear.toISOString(),
+                $lte: endOfYear.toISOString(),
+              },
+            },
+            {
+              $or: [
+                {
+                  "companyDetails.effectiveTo": {
+                    $gte: startOfYear.toISOString(),
+                  },
+                },
+                { "companyDetails.effectiveTo": { $exists: false } },
+              ],
+            },
+          ],
+        };
+      });
+
+      filter.$or = yearFilter;
+    } else if (year && typeof year === "object" && year.value && month) {
+      if (isNaN(year.value)) {
+        throw new Error(`Invalid year: ${year.value}`);
+      }
+
+      const startDate = new Date(Date.UTC(year.value, month - 1, 1)); // Start of the month (zero-indexed month)
       const nextYear =
-        parseInt(month) + 1 > 12 ? parseInt(year) + 1 : parseInt(year);
-      const nextMonth = parseInt(month) + 1 > 12 ? 1 : parseInt(month) + 1;
-      const endDate = new Date(Date.UTC(nextYear, nextMonth, 1));
-      endDate.setUTCDate(endDate.getUTCDate() - 1);
+        month + 1 > 12 ? parseInt(year.value) + 1 : parseInt(year.value);
+      const nextMonth = month + 1 > 12 ? 1 : month + 1;
+      const endDate = new Date(Date.UTC(nextYear, nextMonth - 1, 1)); // Start of the next month
+      endDate.setUTCDate(endDate.getUTCDate() - 1); // Set to the last day of the month
 
       filter.startDate = {
-        $gte: startDate,
-        $lte: endDate,
+        $gte: startDate.toISOString(),
+        $lte: endDate.toISOString(),
       };
-    } else if (year) {
-      const startOfYear = new Date(`${year}-02-01`);
-      const endOfYear = new Date(`${year}-01-01`);
-      endOfYear.setFullYear(endOfYear.getFullYear() + 1);
+    } else if (year && typeof year === "object" && year.value) {
+      if (isNaN(year.value)) {
+        throw new Error(`Invalid year: ${year.value}`);
+      }
+
+      const startOfYear = new Date(`${year.value}-01-01`);
+      const endOfYear = new Date(`${year.value}-12-31`);
+      endOfYear.setHours(23, 59, 59, 999); // Ensure end of the year is the last moment
+
       filter.startDate = {
-        $lte: endOfYear.toISOString(),
-      };
-      filter.dueDate = {
         $gte: startOfYear.toISOString(),
+        $lte: endOfYear.toISOString(),
       };
     }
 
+
+    // Pagination Handling
     let tasks;
     let totalTasks;
 
-    // If page and pageSize are provided, apply pagination
     if (page && pageSize) {
       const skip = (page - 1) * pageSize;
       tasks = await taskModel.find(filter).skip(skip).limit(pageSize);
       totalTasks = await taskModel.countDocuments(filter);
     } else {
-      // If no pagination parameters, return all tasks
       tasks = await taskModel.find(filter);
       totalTasks = tasks.length;
     }
 
-    // Send the tasks in the response with pagination metadata
     return res.status(200).json({
       success: true,
       data: tasks,
@@ -279,6 +321,7 @@ export const getTasks = async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching tasks." });
   }
 };
+
 
 // Get a single task by ID
 export const getTaskById = async (req, res) => {
