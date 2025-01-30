@@ -273,6 +273,7 @@ export const getFilterCompanies = async (req, res) => {
     // Build the filter criteria
     const filter = {};
 
+    console.log("year from the company controller",year)
     // Check if any of the conditions for the $and clause are set
     if (name || status || (year && month)) {
       filter.$and = [];
@@ -307,36 +308,70 @@ export const getFilterCompanies = async (req, res) => {
       filter[`${taskType}.status`] = "active";
     }
 
-    // Add year and month filtering logic
-    if (year && month) {
-      const startOfMonth = new Date(`${year}-${month}-01`); // Start of the month
-      const endOfMonth = new Date(year, month, 0); // Last day of the month
+   if (year && month) {
+     const startOfMonth = new Date(`${year}-${month}-01`); // Start of the month
+     const endOfMonth = new Date(year, month, 0); // Last day of the month
 
-      filter.$and.push({
-        $or: [
-          {
-            "companyDetails.effectiveFrom": {
-              $exists: true,
-              $lte: endOfMonth.toISOString(),
-            },
-            "companyDetails.effectiveTo": {
-              $exists: true,
-              $gte: startOfMonth.toISOString(),
-            },
-          },
-          {
-            "companyDetails.effectiveFrom": {
-              $exists: true,
-              $lte: endOfMonth.toISOString(),
-            },
-            $or: [
-              { "companyDetails.effectiveTo": { $exists: false } },
-              { "companyDetails.effectiveTo": "" },
-            ],
-          },
-        ],
-      });
-    }
+     filter.$and = filter.$and || [];
+     filter.$and.push({
+       $or: [
+         {
+           "companyDetails.effectiveFrom": {
+             $exists: true,
+             $lte: endOfMonth.toISOString(),
+           },
+           "companyDetails.effectiveTo": {
+             $exists: true,
+             $gte: startOfMonth.toISOString(),
+           },
+         },
+         {
+           "companyDetails.effectiveFrom": {
+             $exists: true,
+             $lte: endOfMonth.toISOString(),
+           },
+           $or: [
+             { "companyDetails.effectiveTo": { $exists: false } },
+             { "companyDetails.effectiveTo": "" },
+           ],
+         },
+       ],
+     });
+   } else if (year) {
+     // Ensure year is an array
+     const years = Array.isArray(year)
+       ? year.map((y) => y.value)
+       : [year.value];
+
+     if (years.length > 0) {
+       filter.$or = years.map((yr) => {
+         const startOfYear = new Date(`${yr}-01-01`);
+         const endOfYear = new Date(`${yr}-12-31`);
+
+         return {
+           $and: [
+             {
+               "companyDetails.effectiveFrom": {
+                 $lte: endOfYear.toISOString(),
+               },
+             },
+             {
+               $or: [
+                 { "companyDetails.effectiveTo": { $exists: false } },
+                 {
+                   "companyDetails.effectiveTo": {
+                     $gte: startOfYear.toISOString(),
+                   },
+                 },
+               ],
+             },
+           ],
+         };
+       });
+     }
+   }
+
+
 
     // Fetch total count of companies
 
