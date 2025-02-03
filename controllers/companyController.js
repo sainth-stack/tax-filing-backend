@@ -347,6 +347,100 @@ export const getAllCompanies = async (req, res) => {
   }
 };
 
+// Get filter companies
+export const getFilterCompanies = async (req, res) => {
+  const {
+    name,
+    status,
+    year,
+    month,
+    userId,
+    taskType,
+    page,
+    pageSize,
+    agency,
+  } = req.body;
+
+  try {
+    // Build the filter criteria
+    const filter = {};
+
+    console.log("year from the company controller",year)
+    // Check if any of the conditions for the $and clause are set
+    if (name || status || (year && month)) {
+      filter.$and = [];
+    }
+
+    // Only get user's companies if userId is provided
+    if (userId) {
+      const userRecord = await UserModel.findById(userId).lean().exec();
+      if (!userRecord) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      const userCompanyIds = userRecord?.company?.map((comp) => comp._id) || [];
+      filter._id = { $in: userCompanyIds };
+    }
+
+    // Add additional filters based on conditions
+    if (name) {
+      const trimmedCompanyName = name.trim();
+      const escapedCompany = trimmedCompanyName.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&"
+      );
+      filter.$and.push({
+        "companyDetails.companyName": {
+          $regex: new RegExp(escapedCompany, "i"),
+        },
+      });
+    }
+    if (agency) {
+      if (!filter.$and) filter.$and = [];
+      filter.$and.push({
+        "companyDetails.agencyName": {
+          $regex: new RegExp(agency, "i"),
+        },
+      });
+    }
+    if (status) {
+      filter.$and.push({ "companyDetails.clientStatus": status });
+    }
+
+    if (taskType) {
+      // Assuming taskType is a valid field in your schema
+      filter[`${taskType}.status`] = "active";
+    }
+
+   if (year && month) {
+     const startOfMonth = new Date(`${year}-${month}-01`); // Start of the month
+     const endOfMonth = new Date(year, month, 0); // Last day of the month
+
+     filter.$and = filter.$and || [];
+     filter.$and.push({
+       $or: [
+         {
+           "companyDetails.effectiveFrom": {
+             $exists: true,
+             $lte: endOfMonth.toISOString(),
+           },
+           "companyDetails.effectiveTo": {
+             $exists: true,
+             $gte: startOfMonth.toISOString(),
+           },
+         },
+         {
+           "companyDetails.effectiveFrom": {
+             $exists: true,
+             $lte: endOfMonth.toISOString(),
+           },
+           $or: [
+             { "companyDetails.effectiveTo": { $exists: false } },
+             { "companyDetails.effectiveTo": "" },
+           ],
+         },
+       ],
+     });
+   }
 
 
 

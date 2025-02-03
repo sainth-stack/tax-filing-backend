@@ -229,71 +229,53 @@ export const getTasks = async (req, res) => {
       filter.taskType = taskType;
     }
 
-    // Handling Year and Month Filters
-    // Handling Year and Month Filters
-    if (Array.isArray(year) && year.length > 0) {
-      const yearFilter = year.map((y) => {
-        if (!y?.value || isNaN(y.value)) {
-          throw new Error(`Invalid year: ${y?.value}`);
-        }
-
-        const startOfYear = new Date(`${y.value}-01-01`);
-        const endOfYear = new Date(`${y.value}-12-31`);
-        endOfYear.setHours(23, 59, 59, 999); // Ensure end of the year is the last moment
-
-        return {
-          $and: [
-            {
-              "companyDetails.effectiveFrom": {
-                $gte: startOfYear.toISOString(),
-                $lte: endOfYear.toISOString(),
-              },
-            },
-            {
-              $or: [
-                {
-                  "companyDetails.effectiveTo": {
-                    $gte: startOfYear.toISOString(),
-                  },
-                },
-                { "companyDetails.effectiveTo": { $exists: false } },
-              ],
-            },
-          ],
-        };
+    if (year && month) {
+      // Handle single year and month case
+      const startDate = new Date(Date.UTC(year, month - 1, 1)); // Month is 0-indexed in JavaScript
+      const nextYear = parseInt(month) + 1 > 12 ? parseInt(year) + 1 : parseInt(year);
+      const nextMonth = parseInt(month) + 1 > 12 ? 1 : parseInt(month) + 1;
+      const endDate = new Date(Date.UTC(nextYear, nextMonth - 1, 1)); // Month is 0-indexed
+      endDate.setUTCDate(endDate.getUTCDate() - 1);
+  
+      // Validate dates
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          throw new Error("Invalid date range for year and month.");
+      }
+  
+      filter.startDate = {
+          $gte: startDate.toISOString(),
+          $lte: endDate.toISOString(),
+      };
+  } else if (year) {
+      // Handle multiple years (comma-separated)
+      const years = year.split(',').map(y => parseInt(y.trim())); // Split and trim years
+  
+      // Validate years
+      if (years.some(y => isNaN(y) || y < 0)) {
+          throw new Error("Invalid year value(s).");
+      }
+  
+      const dateRanges = years.map(y => {
+          const startOfYear = new Date(`${y}-02-01`); // Starting from February 1st
+          const endOfYear = new Date(`${y}-02-01`);
+          endOfYear.setFullYear(endOfYear.getFullYear() + 1); // End of the year is January 1st of the next year
+  
+          // Validate dates
+          if (isNaN(startOfYear.getTime()) || isNaN(endOfYear.getTime())) {
+              throw new Error(`Invalid date range for year: ${y}`);
+          }
+  
+          return { startOfYear, endOfYear };
       });
-
-      filter.$or = yearFilter;
-    } else if (year && typeof year === "object" && year.value && month) {
-      if (isNaN(year.value)) {
-        throw new Error(`Invalid year: ${year.value}`);
-      }
-
-      const startDate = new Date(Date.UTC(year.value, month - 1, 1)); // Start of the month (zero-indexed month)
-      const nextYear =
-        month + 1 > 12 ? parseInt(year.value) + 1 : parseInt(year.value);
-      const nextMonth = month + 1 > 12 ? 1 : month + 1;
-      const endDate = new Date(Date.UTC(nextYear, nextMonth - 1, 1)); // Start of the next month
-      endDate.setUTCDate(endDate.getUTCDate() - 1); // Set to the last day of the month
-
-      filter.startDate = {
-        $gte: startDate.toISOString(),
-        $lte: endDate.toISOString(),
-      };
-    } else if (year && typeof year === "object" && year.value) {
-      if (isNaN(year.value)) {
-        throw new Error(`Invalid year: ${year.value}`);
-      }
-
-      const startOfYear = new Date(`${year.value}-01-01`);
-      const endOfYear = new Date(`${year.value}-12-31`);
-      endOfYear.setHours(23, 59, 59, 999); // Ensure end of the year is the last moment
-
-      filter.startDate = {
-        $gte: startOfYear.toISOString(),
-        $lte: endOfYear.toISOString(),
-      };
-    }
+  console.log(dateRanges,'date')
+      // Combine date ranges for multiple years
+      filter.$or = dateRanges.map(range => ({
+          startDate: {
+              $gte: range.startOfYear.toISOString(),
+              $lte: range.endOfYear.toISOString(),
+          },
+      }));
+  }
 
 
     // Pagination Handling
