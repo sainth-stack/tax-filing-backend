@@ -362,16 +362,9 @@ export const getFilterCompanies = async (req, res) => {
   } = req.body;
 
   try {
-    // Build the filter criteria
     const filter = {};
 
-    console.log("year from the company controller",year)
-    // Check if any of the conditions for the $and clause are set
-    if (name || status || (year && month)) {
-      filter.$and = [];
-    }
-
-    // Only get user's companies if userId is provided
+    // Check if userId is provided
     if (userId) {
       const userRecord = await UserModel.findById(userId).lean().exec();
       if (!userRecord) {
@@ -381,68 +374,167 @@ export const getFilterCompanies = async (req, res) => {
       filter._id = { $in: userCompanyIds };
     }
 
-    // Add additional filters based on conditions
+    // Build filter for company name
     if (name) {
       const trimmedCompanyName = name.trim();
       const escapedCompany = trimmedCompanyName.replace(
         /[.*+?^${}()|[\]\\]/g,
         "\\$&"
       );
+      filter.$and = filter.$and || [];
       filter.$and.push({
         "companyDetails.companyName": {
           $regex: new RegExp(escapedCompany, "i"),
         },
       });
     }
+
+    // Build filter for agency
     if (agency) {
-      if (!filter.$and) filter.$and = [];
+      filter.$and = filter.$and || [];
       filter.$and.push({
         "companyDetails.agencyName": {
           $regex: new RegExp(agency, "i"),
         },
       });
     }
+
+    // Build filter for status
     if (status) {
       filter.$and.push({ "companyDetails.clientStatus": status });
     }
 
+    // Build filter for task type
     if (taskType) {
-      // Assuming taskType is a valid field in your schema
       filter[`${taskType}.status`] = "active";
     }
 
-   if (year && month) {
-     const startOfMonth = new Date(`${year}-${month}-01`); // Start of the month
-     const endOfMonth = new Date(year, month, 0); // Last day of the month
+    // Handle year and month filtering
+    if (month) {
+      const monthValue = parseInt(month, 10);
 
-     filter.$and = filter.$and || [];
-     filter.$and.push({
-       $or: [
-         {
-           "companyDetails.effectiveFrom": {
-             $exists: true,
-             $lte: endOfMonth.toISOString(),
-           },
-           "companyDetails.effectiveTo": {
-             $exists: true,
-             $gte: startOfMonth.toISOString(),
-           },
-         },
-         {
-           "companyDetails.effectiveFrom": {
-             $exists: true,
-             $lte: endOfMonth.toISOString(),
-           },
-           $or: [
-             { "companyDetails.effectiveTo": { $exists: false } },
-             { "companyDetails.effectiveTo": "" },
-           ],
-         },
-       ],
-     });
-   }
+      // Validate month first
+      if (isNaN(monthValue) || monthValue < 1 || monthValue > 12) {
+        throw new Error("Invalid month value");
+      }
 
+      if (Array.isArray(year)) {
+        // Filter out invalid years first
+        const validYears = year.filter(
+          (yrObj) => yrObj?.value !== undefined && !isNaN(parseInt(yrObj.value, 10))
+        );
 
+        // Only add $or if we have valid years
+        if (validYears.length > 0) {
+          filter.$or = validYears.map((yrObj) => {
+            const yearValue = yrObj.value;
+            const startOfMonth = new Date(yearValue, monthValue - 1, 1);
+            const endOfMonth = new Date(yearValue, monthValue, 0);
+
+            return {
+              $and: [
+                {
+                  "companyDetails.effectiveFrom": {
+                    $lte: endOfMonth.toISOString(),
+                  },
+                },
+                {
+                  $or: [
+                    {
+                      "companyDetails.effectiveTo": {
+                        $gte: startOfMonth.toISOString(),
+                      },
+                    },
+                    { "companyDetails.effectiveTo": { $exists: false } },
+                    { "companyDetails.effectiveTo": "" },
+                  ],
+                },
+              ],
+            };
+          });
+        }
+      } else if (year?.value) {
+        // Handle single year with month
+        const yearValue = year.value;
+        const startOfMonth = new Date(yearValue, monthValue - 1, 1);
+        const endOfMonth = new Date(yearValue, monthValue, 0);
+
+        filter.$and = [
+          { "companyDetails.effectiveFrom": { $lte: endOfMonth.toISOString() } },
+          {
+            $or: [
+              {
+                "companyDetails.effectiveTo": { $gte: startOfMonth.toISOString() },
+              },
+              { "companyDetails.effectiveTo": { $exists: false } },
+              { "companyDetails.effectiveTo": "" },
+            ],
+          },
+        ];
+      }
+    } else if (Array.isArray(year)) {
+      // Handle year array without month
+      const validYears = year.filter(
+        (yrObj) => yrObj?.value !== undefined && !isNaN(parseInt(yrObj.value, 10))
+      );
+
+      if (validYears.length > 0) {
+        filter.$or = validYears.map((yrObj) => {
+          const yr = yrObj.value;
+          const startOfYear = new Date(yr, 0, 1);
+          const endOfYear = new Date(yr, 11, 31);
+
+          return {
+            $and: [
+              { "companyDetails.effectiveFrom": { $lte: endOfYear.toISOString() } },
+              {
+                $or: [
+                  {
+                    "companyDetails.effectiveTo": {
+                      $gte: startOfYear.toISOString(),
+                    },
+                  },
+                  { "companyDetails.effectiveTo": { $exists: false } },
+                ],
+              },
+            ],
+          };
+        });
+      }
+    }
+
+    // Pagination logic
+    let companies;
+    let totalCount = 0;
+
+    if (page && pageSize) {
+      const currentPage = parseInt(page, 10);
+      const currentPageSize = parseInt(pageSize, 10);
+
+      const skip = (currentPage - 1) * currentPageSize;
+
+      companies = await companyModel
+        .find(filter)
+        .skip(skip)
+        .limit(currentPageSize)
+        .exec();
+
+      totalCount = await companyModel.countDocuments(filter);
+    } else {
+      companies = await companyModel.find(filter).exec();
+      totalCount = companies.length;
+    }
+
+    // Return the result
+    res.status(200).json({
+      data: companies,
+      totalCount,
+      totalPages: pageSize ? Math.ceil(totalCount / pageSize) : 1,
+    });
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+};
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -564,203 +656,6 @@ export const getCompanyByPan = async (req, res) => {
     }
 
     res.status(200).send(company);
-  } catch (error) {
-    res.status(500).send({ error: error.message });
-  }
-};
-
-
-
-
-// Get filter companies
-export const getFilterCompanies = async (req, res) => {
-  const {
-    name,
-    status,
-    year,
-    month,
-    userId,
-    taskType,
-    page,
-    pageSize,
-    agency,
-  } = req.body;
-
-  try {
-    const filter = {};
-
-    // Check if userId is provided
-    if (userId) {
-      const userRecord = await UserModel.findById(userId).lean().exec();
-      if (!userRecord) {
-        return res.status(404).json({ error: "User not found" });
-      }
-      const userCompanyIds = userRecord?.company?.map((comp) => comp._id) || [];
-      filter._id = { $in: userCompanyIds };
-    }
-
-    // Build filter for company name
-    if (name) {
-      const trimmedCompanyName = name.trim();
-      const escapedCompany = trimmedCompanyName.replace(
-        /[.*+?^${}()|[\]\\]/g,
-        "\\$&"
-      );
-      filter.$and = filter.$and || [];
-      filter.$and.push({
-        "companyDetails.companyName": {
-          $regex: new RegExp(escapedCompany, "i"),
-        },
-      });
-    }
-
-    // Build filter for agency
-    if (agency) {
-      filter.$and = filter.$and || [];
-      filter.$and.push({
-        "companyDetails.agencyName": {
-          $regex: new RegExp(agency, "i"),
-        },
-      });
-    }
-
-    // Build filter for status
-    if (status) {
-      filter.$and.push({ "companyDetails.clientStatus": status });
-    }
-
-    // Build filter for task type
-    if (taskType) {
-      filter[`${taskType}.status`] = "active";
-    }
-
-    // Handle year and month filtering
-
-
-
-if (month) {
-  const monthValue = parseInt(month, 10);
-
-  // Validate month first
-  if (isNaN(monthValue) || monthValue < 1 || monthValue > 12) {
-    throw new Error("Invalid month value");
-  }
-
-  if (Array.isArray(year)) {
-    // Filter out invalid years first
-    const validYears = year.filter(
-      (yrObj) => yrObj?.value !== undefined && !isNaN(parseInt(yrObj.value, 10))
-    );
-
-    // Only add $or if we have valid years
-    if (validYears.length > 0) {
-      filter.$or = validYears.map((yrObj) => {
-        const yearValue = yrObj.value;
-        const startOfMonth = new Date(yearValue, monthValue - 1, 1);
-        const endOfMonth = new Date(yearValue, monthValue, 0);
-
-        return {
-          $and: [
-            {
-              "companyDetails.effectiveFrom": {
-                $lte: endOfMonth.toISOString(),
-              },
-            },
-            {
-              $or: [
-                {
-                  "companyDetails.effectiveTo": {
-                    $gte: startOfMonth.toISOString(),
-                  },
-                },
-                { "companyDetails.effectiveTo": { $exists: false } },
-                { "companyDetails.effectiveTo": "" },
-              ],
-            },
-          ],
-        };
-      });
-    }
-  } else if (year?.value) {
-    // Handle single year with month
-    const yearValue = year.value;
-    const startOfMonth = new Date(yearValue, monthValue - 1, 1);
-    const endOfMonth = new Date(yearValue, monthValue, 0);
-
-    filter.$and = [
-      { "companyDetails.effectiveFrom": { $lte: endOfMonth.toISOString() } },
-      {
-        $or: [
-          {
-            "companyDetails.effectiveTo": { $gte: startOfMonth.toISOString() },
-          },
-          { "companyDetails.effectiveTo": { $exists: false } },
-          { "companyDetails.effectiveTo": "" },
-        ],
-      },
-    ];
-  }
-} else if (Array.isArray(year)) {
-  // Handle year array without month
-  const validYears = year.filter(
-    (yrObj) => yrObj?.value !== undefined && !isNaN(parseInt(yrObj.value, 10))
-  );
-
-  if (validYears.length > 0) {
-    filter.$or = validYears.map((yrObj) => {
-      const yr = yrObj.value;
-      const startOfYear = new Date(yr, 0, 1);
-      const endOfYear = new Date(yr, 11, 31);
-
-      return {
-        $and: [
-          { "companyDetails.effectiveFrom": { $lte: endOfYear.toISOString() } },
-          {
-            $or: [
-              {
-                "companyDetails.effectiveTo": {
-                  $gte: startOfYear.toISOString(),
-                },
-              },
-              { "companyDetails.effectiveTo": { $exists: false } },
-            ],
-          },
-        ],
-      };
-    });
-  }
-}
-
-
-
-    // Pagination logic
-    let companies;
-    let totalCount = 0;
-
-    if (page && pageSize) {
-      const currentPage = parseInt(page, 10);
-      const currentPageSize = parseInt(pageSize, 10);
-
-      const skip = (currentPage - 1) * currentPageSize;
-
-      companies = await companyModel
-        .find(filter)
-        .skip(skip)
-        .limit(currentPageSize)
-        .exec();
-
-      totalCount = await companyModel.countDocuments(filter);
-    } else {
-      companies = await companyModel.find(filter).exec();
-      totalCount = companies.length;
-    }
-
-    // Return the result
-    res.status(200).json({
-      data: companies,
-      totalCount,
-      totalPages: pageSize ? Math.ceil(totalCount / pageSize) : 1,
-    });
   } catch (error) {
     res.status(500).send({ error: error.message });
   }

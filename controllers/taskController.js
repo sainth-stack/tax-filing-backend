@@ -267,7 +267,6 @@ export const getTasks = async (req, res) => {
   
           return { startOfYear, endOfYear };
       });
-  console.log(dateRanges,'date')
       // Combine date ranges for multiple years
       filter.$or = dateRanges.map(range => ({
           startDate: {

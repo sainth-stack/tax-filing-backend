@@ -212,16 +212,19 @@ export const getAutoTasks = async (req, res) => {
     // Filter by status (filed or notFiled)
     if (status === "filed") {
       filter.$or = [
-        { pfMonthly_filedate: { $ne: null } },
-        { esi_fileDate: { $ne: null } },
-        { pft_fileDate: { $ne: null } },
-        { gstMonthly_filedate: { $ne: null } },
+        { pfMonthly_filedate: { $exists: true, $ne: null } },
+        { esi_fileDate: { $exists: true, $ne: null } },
+        { pft_fileDate: { $exists: true, $ne: null } },
+        { gstMonthly_filedate: { $exists: true, $ne: null } }
       ];
     } else if (status === "notFiled") {
-      filter.pfMonthly_filedate = null;
-      filter.esi_fileDate = null;
-      filter.pft_fileDate = null;
-      filter.gstMonthly_filedate = null;
+      filter.$and = [
+        { $or: [{ actualCompletionDate: { $exists: false } }, { actualCompletionDate: null }] },
+        { $or: [{ pfMonthly_filedate: { $exists: false } }, { pfMonthly_filedate: null }] },
+        { $or: [{ esi_fileDate: { $exists: false } }, { esi_fileDate: null }] },
+        { $or: [{ pft_fileDate: { $exists: false } }, { pft_fileDate: null }] },
+        { $or: [{ gstMonthly_filedate: { $exists: false } }, { gstMonthly_filedate: null }] }
+      ];
     }
 
     // Filter by taskType
@@ -266,7 +269,6 @@ export const getAutoTasks = async (req, res) => {
   
           return { startOfYear, endOfYear };
       });
-  console.log(dateRanges,'date')
       // Combine date ranges for multiple years
       filter.$or = dateRanges.map(range => ({
           startDate: {

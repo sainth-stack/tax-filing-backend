@@ -24,10 +24,10 @@ const AutoTaskSchema = new Schema(
       type: String,
     },
     startDate: {
-      type: String,
+      type: Date,
     },
     dueDate: {
-      type: String,
+      type: Date,
     },
     actualCompletionDate: {
       type: mongoose.Schema.Types.Mixed,
