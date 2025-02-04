@@ -209,24 +209,33 @@ export const getAutoTasks = async (req, res) => {
       filter.taskName = applicationSubStatus;
     }
 
-    // Filter by status (filed or notFiled)
     if (status === "filed") {
-      filter.$or = [
-        { pfMonthly_filedate: { $exists: true, $ne: null } },
-        { esi_fileDate: { $exists: true, $ne: null } },
-        { pft_fileDate: { $exists: true, $ne: null } },
-        { gstMonthly_filedate: { $exists: true, $ne: null } }
+      filter.$and = [
+        {
+          $or: [
+            { taskType: "gst", gstMonthly_filedate: { $exists: true, $ne: null, $ne: "" } },
+            { taskType: "providentFund", pfMonthly_filedate: { $exists: true, $ne: null, $ne: "" } },
+            { taskType: "esi", esi_fileDate: { $exists: true, $ne: null, $ne: "" } },
+            { taskType: "professionalTax", pft_fileDate: { $exists: true, $ne: null, $ne: "" } },
+            { taskType: "incomeTax", tax_filingDate: { $exists: true, $ne: null, $ne: "" } },
+            { taskType: "tds", tdsmonthly_fileDate: { $exists: true, $ne: null, $ne: "" } }
+          ]
+        }
       ];
     } else if (status === "notFiled") {
       filter.$and = [
-        { $or: [{ actualCompletionDate: { $exists: false } }, { actualCompletionDate: null }] },
-        { $or: [{ pfMonthly_filedate: { $exists: false } }, { pfMonthly_filedate: null }] },
-        { $or: [{ esi_fileDate: { $exists: false } }, { esi_fileDate: null }] },
-        { $or: [{ pft_fileDate: { $exists: false } }, { pft_fileDate: null }] },
-        { $or: [{ gstMonthly_filedate: { $exists: false } }, { gstMonthly_filedate: null }] }
+        {
+          $or: [
+            { taskType: "gst", gstMonthly_filedate: { $in: [null, "", undefined] } },
+            { taskType: "providentFund", pfMonthly_filedate: { $in: [null, "", undefined] } },
+            { taskType: "esi", esi_fileDate: { $in: [null, "", undefined] } },
+            { taskType: "professionalTax", pft_fileDate: { $in: [null, "", undefined] } },
+            { taskType: "incomeTax", tax_filingDate: { $in: [null, "", undefined] } },
+            { taskType: "tds", tdsmonthly_fileDate: { $in: [null, "", undefined] } }
+          ]
+        }
       ];
     }
-
     // Filter by taskType
     if (taskType) {
       filter.taskType = taskType;
