@@ -2,11 +2,11 @@ import mongoose from "mongoose";
 
 const RoleDataSchema = new mongoose.Schema({
   toAddress: {
-    type: [], // Array of email addresses
+    type: [String], // Array of email addresses
     default: [], // Default to an empty array
   },
   ccAddress: {
-    type: [], 
+    type: [String], 
     default: [],
   },
   subject: {
