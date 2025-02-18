@@ -15,6 +15,8 @@ import taskRoutes from "./routes/taskRoutes.js";
 import agencyRoutes from "./routes/AgencyRoutes.js";
 import autoTaskRoutes from "./routes/AutoTaskRoutes.js";
 import serviceCalendarRoutes from "./routes/serviceCalendarRoutes.js";
+import paymentRoutes from "./routes/PaymentRoutes.js";
+
 
 import "./middlewares/cronjob.js";
 import "./middlewares/cronjob-email.js";
@@ -42,6 +44,9 @@ app.use("/api", serviceCalendarRoutes);
 
 app.use("/api", agencyRoutes);
 app.use("/api", notificationRoutes);
+app.use("/api", paymentRoutes);
+
+
 
 // Default route
 app.get("/", (req, res) => {
