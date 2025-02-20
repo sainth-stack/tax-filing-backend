@@ -8,21 +8,35 @@ const PaymentSchema = new mongoose.Schema({
   },
   paymentType: {
     type: String,
-    enum: ["Monthly_Subscription", "Lumpsum"],
     // required: true,
   },
-  amount: { type: Number }, // Stores the entered money value for lumpsum or monthly subscription
+  amount: {
+    type: Number,
+    default:0
+    // required: true
+  }, // Total amount for the payment type
   payments: [
     {
-          name: {
-              type: String,
-            //   required: true
-          }, // Payment name like GST, ESI, etc.
-      isChecked: { type: Boolean, default: false },
-      amount: { type: Number, default: 0 },
+      name: {
+        type: String,
+        // required: true
+      }, // Payment category (e.g., GST, ESI)
+      isChecked: {
+        type: Boolean,
+        default: false
+      }, // Always true since it's provided
+      amount: {
+        type: Number,
+        // required: true
+      }, // Individual payment amounts
     },
   ],
 });
 
 const PaymentModel = mongoose.model("Payment", PaymentSchema);
 export default PaymentModel;
+
+
+
+
+
