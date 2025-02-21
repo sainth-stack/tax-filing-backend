@@ -6,7 +6,7 @@ import companyModel from './../models/companyModel.js';
 
 export const getAllPayments = async (req, res) => {
   try {
-    const payments = await PaymentModel.find().populate("companyId"); // Fetch payments and populate company details
+    const payments = await PaymentModel.find({agencyName: req.query.agencyName}).populate("companyId"); // Fetch payments and populate company details
 
     // Transform data to send company details separately
     const formattedPayments = payments.map((payment) => ({
@@ -17,6 +17,7 @@ export const getAllPayments = async (req, res) => {
       payments: payment.payments,
       createdAt: payment.createdAt,
       updatedAt: payment.updatedAt,
+      agencyName:payment?.agencyName
     }));
 
     res.status(200).json({
@@ -37,7 +38,7 @@ export const getAllPayments = async (req, res) => {
 // Create Payment
 export const createPayment = async (req, res) => {
   try {
-    const { company, taskType, feeType, amount, payments } = req.body;
+    const { company, taskType, feeType, amount, payments ,agencyName} = req.body;
 
     // Fetch companyId based on company name
     const companyData = await companyModel.findOne({
@@ -83,9 +84,11 @@ export const createPayment = async (req, res) => {
     // Create new payment document
     const newPayment = new PaymentModel({
       companyId: companyData._id,
+      company:company,
       paymentType,
       amount: totalAmount,
       payments: finalPayments,
+      agencyName
     });
 
     await newPayment.save();
@@ -102,7 +105,7 @@ export const createPayment = async (req, res) => {
 // Update Payment
 export const updatePayment = async (req, res) => {
   try {
-    const { companyId, paymentType, amount, payments } = req.body;
+    const { companyId, paymentType, amount, payments,agencyName } = req.body;
 
     if (!companyId) {
       return res.status(400).json({ message: "Company ID is required" });
@@ -138,7 +141,7 @@ export const updatePayment = async (req, res) => {
 
     const updatedPayment = await PaymentModel.findOneAndUpdate(
       { companyId },
-      { paymentType, amount: totalAmount, payments: updatedPayments },
+      { paymentType, amount: totalAmount, payments: updatedPayments ,agencyName},
       { new: true }
     );
 

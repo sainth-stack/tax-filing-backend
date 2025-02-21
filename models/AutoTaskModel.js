@@ -121,7 +121,6 @@ const AutoTaskSchema = new Schema(
     gstInactive_appealApplicationSubStatus: {
       type: String,
     },
-
     //monthly
 
     gstMonthly_gstType: {
@@ -421,6 +420,12 @@ const AutoTaskSchema = new Schema(
     },
     pft_inactive_dateOfApproval: {
       type: Date,
+    },
+    paymentcollection: {
+      type: String,
+    },
+    paymentstatus: {
+      type: String,
     },
   },
   { timestamps: true }

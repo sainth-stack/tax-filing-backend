@@ -9,6 +9,7 @@ import emailTemplates from "../templates/emailTemplates.js";
 import sendEmail from "../middlewares/sendEmail.js";
 import NotificationModel from "../models/NotificationModel.js";
 import json2csv from "json2csv"; // Import json2csv for converting JSON to CSV
+import { CreatePaymentTask } from "../helpers/createPaymentTask.js";
 
 export const createAutoTask = async (req, res) => {
   try {
@@ -395,7 +396,6 @@ export const updateAutoTask = async (req, res) => {
       }
     }
 
-    // Update company GST status based on task fields
     if (body.dateOfApproval) {
       await Company.findOneAndUpdate(
         { "companyDetails.companyName": body.company }, // Query to find the document
@@ -417,7 +417,6 @@ export const updateAutoTask = async (req, res) => {
       );
     }
 
-    // Update the task
     const updatedAutoTask = await AutoTaskModel.findByIdAndUpdate(
       req.params.id,
       AutoTaskData,
@@ -425,6 +424,8 @@ export const updateAutoTask = async (req, res) => {
         new: true,
       }
     );
+
+    await CreatePaymentTask({...AutoTaskData,id:req.params.id})
 
     res.status(200).json({
       success: true,

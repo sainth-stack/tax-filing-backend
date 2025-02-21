@@ -427,6 +427,12 @@ const taskSchema = new Schema({
   pft_inactive_dateOfApproval: {
     type: Date,
   },
+  paymentcollection: {
+    type: String,
+  },
+  paymentstatus: {
+    type: String,
+  },
 });
 
 const taskModel = mongoose.model("Task", taskSchema);

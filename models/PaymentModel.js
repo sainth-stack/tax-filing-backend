@@ -6,9 +6,16 @@ const PaymentSchema = new mongoose.Schema({
     ref: "Company",
     // required: true,
   },
+  company:{
+    type:String,
+  },
   paymentType: {
     type: String,
     // required: true,
+  },
+  agencyName: {
+    type: String,
+    required:true
   },
   amount: {
     type: Number,
