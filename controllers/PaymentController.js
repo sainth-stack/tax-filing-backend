@@ -260,24 +260,35 @@ export const updatePayment = async (req, res) => {
 
 
 // Get Payment by Company
-export const getPaymentsByCompany = async (req, res) => {
+export const getCompanyByAgency = async (req, res) => {
   try {
+   
 
-    const { companyId } = req.params;
-    const payment = await PaymentModel.findOne({ companyId });
+    const  {agencyName}  = req.query;
+    if (!agencyName) {
+      return res.status(400).json({ message: "Agency name is required" });
+    }
 
-    if (!payment)
+    const payment = await PaymentModel.find({ agencyName });
+
+    if (!payment) {
       return res
         .status(404)
-        .send({ message: "No payment found for this company" });
+        .json({ message: "No payment found for this company" });
+    }
 
-    res.status(200).json(payment);
+    res.status(200).send({
+      data: payment,
+      totalPayments:payment.length
+    });
   } catch (error) {
+    console.error("Server Error:", error);
     res
       .status(500)
-      .json({ message: "Error retrieving payments", error: error.message });
+      .send({ message: "Internal Server Error", error: error.message });
   }
 };
+
 
 
 
