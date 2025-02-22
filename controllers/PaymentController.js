@@ -2,26 +2,44 @@ import PaymentModel from "../models/PaymentModel.js";
 import companyModel from './../models/companyModel.js';
 
 
-
-
 export const getAllPayments = async (req, res) => {
   try {
-    const payments = await PaymentModel.find({agencyName: req.query.agencyName}).populate("companyId"); // Fetch payments and populate company details
+    const { agencyName, page = 1, pageSize = 10 } = req.query;
 
-    // Transform data to send company details separately
+    // Convert page and pageSize to numbers
+    const limit = parseInt(pageSize);
+    const skip = (parseInt(page) - 1) * limit;
+
+    // Count total payments
+    const totalPayments = await PaymentModel.countDocuments({
+      "companyDetails.agencyName": agencyName,
+    });
+
+    // Fetch paginated payments
+    const payments = await PaymentModel.find({
+      "companyDetails.agencyName": agencyName,
+    })
+      .populate("companyId")
+      .skip(skip)
+      .limit(limit);
+
+    // console.log("Payments:", payments);
+
+    // Transform data
     const formattedPayments = payments.map((payment) => ({
       _id: payment._id,
-      company: payment.companyId?.companyDetails?.companyName || "N/A", // Send company details directly
+      company: payment.companyId?.companyDetails?.companyName || "N/A",
       paymentType: payment.paymentType,
       amount: payment.amount,
       payments: payment.payments,
       createdAt: payment.createdAt,
       updatedAt: payment.updatedAt,
-      agencyName:payment?.agencyName
+      agencyName: payment.companyId?.companyDetails?.companyName,
     }));
 
     res.status(200).json({
       success: true,
+      totalPayments, // Include total count
       data: formattedPayments,
     });
   } catch (error) {
@@ -32,6 +50,7 @@ export const getAllPayments = async (req, res) => {
     });
   }
 };
+
 
 
 
@@ -103,67 +122,147 @@ export const createPayment = async (req, res) => {
 
 
 // Update Payment
+
+
+
+
+// Import CompanyModel
+
 export const updatePayment = async (req, res) => {
   try {
-    const { companyId, paymentType, amount, payments,agencyName } = req.body;
+    const paymentId = req.params.id; // Extract paymentId from URL
+    console.log("Updating payment with ID:", paymentId);
 
-    if (!companyId) {
-      return res.status(400).json({ message: "Company ID is required" });
+
+
+    if (!paymentId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Payment ID is required" });
+    }
+
+    // Fetch existing payment record
+    const existingPayment = await PaymentModel.findById(paymentId);
+    if (!existingPayment) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Payment not found" });
+    }
+
+    // Extract request data
+    const { company, paymentType, amount, payments, agencyName } = req.body;
+
+    console.log(
+      "node paymetn update deails{ company, paymentType, amount, payments, agencyName }  ",
+      company,
+      paymentType,
+      amount,
+      payments,
+      agencyName
+    );
+
+    let companyId = existingPayment.companyId; // Default to existing companyId
+
+    // If company name is provided, fetch companyId from CompanyModel
+    if (company) {
+      const companyData = await companyModel.findOne({
+        "companyDetails.companyName": company,
+      });
+      if (!companyData) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Company not found" });
+      }
+      companyId = companyData._id; // Use the found companyId
     }
 
     let updatedPayments = [];
     let totalAmount = 0;
 
-    if (paymentType == "lumpsum") {
-      // Use provided amount and payments directly for lumpsum
+    if (paymentType === "lumpsum") {
+      if (!amount || isNaN(Number(amount))) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: "Valid amount is required for lumpsum",
+          });
+      }
+      if (!Array.isArray(payments) || payments.length === 0) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: "Payments array is required for lumpsum",
+          });
+      }
+
       totalAmount = Number(amount);
       updatedPayments = payments.map((payment) => ({
         name: payment.name,
-        isChecked: payment.isChecked,
-        amount: Number(payment.amount),
+        isChecked: payment.isChecked || false,
+        amount: Number(payment.amount) || 0,
       }));
     } else {
-      // Process payments dynamically for "Monthly_Subscription"
       updatedPayments = Object.entries(req.body)
         .filter(([key]) => key.startsWith("amount_"))
         .map(([key, value]) => ({
-          name: key.replace("amount_", ""), // Extracting payment name
+          name: key.replace("amount_", ""),
           isChecked: true,
-          amount: Number(value),
+          amount: Number(value) || 0,
         }));
 
-      // Calculate total amount
+      if (updatedPayments.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "At least one payment amount is required for non-lumpsum type",
+        });
+      }
+
       totalAmount = updatedPayments.reduce(
         (sum, payment) => sum + payment.amount,
         0
       );
     }
 
-    const updatedPayment = await PaymentModel.findOneAndUpdate(
-      { companyId },
-      { paymentType, amount: totalAmount, payments: updatedPayments ,agencyName},
-      { new: true }
+    // Update payment record in DB
+    const updatedPayment = await PaymentModel.findByIdAndUpdate(
+      paymentId,
+      {
+        companyId,
+        company, // Store company name in the document
+        paymentType,
+        amount: totalAmount,
+        payments: updatedPayments,
+        agencyName,
+      },
+      { new: true } // Return updated document
     );
 
-    if (!updatedPayment) {
-      return res.status(404).json({ message: "Payment not found" });
-    }
-
     res.status(200).json({
+      success: true,
       message: "Payment updated successfully",
       payment: updatedPayment,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error updating payment", error: error.message });
+    console.error("Error updating payment:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Error updating payment",
+      error: error.message,
+    });
   }
 };
+
+
+
 
 
 // Get Payment by Company
 export const getPaymentsByCompany = async (req, res) => {
   try {
+
     const { companyId } = req.params;
     const payment = await PaymentModel.findOne({ companyId });
 
@@ -205,3 +304,34 @@ export const deletePaymentById = async (req, res) => {
   }
 };
 
+
+
+export const getPaymentByID = async (req, res) => {
+  // console.log("🔹 Route hit: GET /payments/:paymentId");
+  // console.log("📌 Full request params:", req.params.paymentId);
+
+  const paymentId = req.params.paymentId;
+  // console.log("📌 Extracted paymentId:", paymentId);
+
+  if (!paymentId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Missing payment ID" });
+  }
+
+  try {
+    const payment = await PaymentModel.findById(paymentId)
+
+    if (!payment) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Payment not found" });
+    }
+
+    // console.log("payemts by Id",payment)
+    return res.status(200).json({ success: true, data: payment });
+  } catch (error) {
+    // console.error("❌ Error fetching payment:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
