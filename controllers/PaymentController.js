@@ -57,7 +57,7 @@ export const getAllPayments = async (req, res) => {
 // Create Payment
 export const createPayment = async (req, res) => {
   try {
-    const { company, taskType, feeType, amount, payments ,agencyName} = req.body;
+    const { company, taskType, paymentType, amount, payments ,agencyName} = req.body;
 
     // Fetch companyId based on company name
     const companyData = await companyModel.findOne({
@@ -68,14 +68,14 @@ export const createPayment = async (req, res) => {
       return res.status(400).json({ message: "Company not found" });
     }
 
-    // Convert feeType to match schema
-    const paymentType =
-      feeType === "monthlySubscription" ? "Monthly_Subscription" : "Lumpsum";
+    // Convert paymentType to match schema
+    const paymentTypeCheck =
+      paymentType === "monthlySubscription" ? "Monthly_Subscription" : "Lumpsum";
 
     let finalPayments = [];
     let totalAmount = 0;
 
-    if (feeType == "lumpsum") {
+    if (paymentTypeCheck == "lumpsum") {
       // Use provided amount directly for lumpsum payments
       totalAmount = Number(amount);
       finalPayments = payments.map((payment) => ({
