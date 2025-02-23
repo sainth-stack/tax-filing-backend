@@ -70,7 +70,7 @@ export const createPayment = async (req, res) => {
 
     // Convert paymentType to match schema
     const paymentTypeCheck =
-      paymentType === "monthlySubscription" ? "Monthly_Subscription" : "Lumpsum";
+      paymentType === "monthlySubscription" ? "monthlySubscription" : "lumpsum";
 
     let finalPayments = [];
     let totalAmount = 0;
@@ -131,7 +131,7 @@ export const createPayment = async (req, res) => {
 export const updatePayment = async (req, res) => {
   try {
     const paymentId = req.params.id; // Extract paymentId from URL
-    console.log("Updating payment with ID:", paymentId);
+    // console.log("Updating payment with ID:", paymentId);
 
 
 
