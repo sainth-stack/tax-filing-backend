@@ -8,6 +8,7 @@ import {
   getAllPayments,
   deletePaymentById,
   getPaymentByID,
+  getPaymentsByAgency
 } from "../controllers/PaymentController.js";
 
 
@@ -22,7 +23,7 @@ router.get("/payments", getCompanyByAgency);
 
 router.get("/payments", getAllPayments);    
 router.delete("/payments/:id", deletePaymentById);
-
+router.get("/payments-data",getPaymentsByAgency)
 
 
 

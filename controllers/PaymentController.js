@@ -1,6 +1,6 @@
 import PaymentModel from "../models/PaymentModel.js";
 import companyModel from './../models/companyModel.js';
-
+import AutoTaskModel from './../models/AutoTaskModel.js';
 
 export const getAllPayments = async (req, res) => {
   try {
@@ -119,10 +119,6 @@ export const createPayment = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
-
-// Update Payment
-
 
 
 
@@ -289,10 +285,6 @@ export const getCompanyByAgency = async (req, res) => {
   }
 };
 
-
-
-
-
 export const deletePaymentById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -344,5 +336,47 @@ export const getPaymentByID = async (req, res) => {
   } catch (error) {
     // console.error("❌ Error fetching payment:", error);
     return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+
+export const getPaymentsByAgency = async (req, res) => {
+  try {
+    const { agencyName } = req.query;
+    if (!agencyName) {
+      return res.status(400).json({ message: "Agency name is required" });
+    }
+    const autotasks=await AutoTaskModel.find({agencyName:agencyName,taskName:"paymentcollection"})
+    const payments=await PaymentModel.find({agencyName:agencyName})
+let pendingAmount=0;
+let completedAmount=0;
+payments.map((payment)=>{
+  const groupTasks=autotasks.filter((item)=>item?.company == payment.company)
+  if(groupTasks.length>0){
+    if(payment.paymentType=="monthlySubscription"){
+      groupTasks.map((task)=>{
+        const amount=payment.payments.find((item)=>item?.name==task?.taskType)
+        if(task?.paymentstatus=="pending"){
+          pendingAmount=pendingAmount+amount?.amount
+        } else{
+          completedAmount=completedAmount+amount?.amount
+        }
+      })
+    } else{
+      const paymentCollection=groupTasks.filter((item)=>item.paymentstatus !=="pending")
+      if(groupTasks.length !== paymentCollection.length){
+        pendingAmount=pendingAmount+payment.amount
+      } else{
+        completedAmount=completedAmount+payment.amount
+      }
+    }
+  }
+})
+    return res.status(200).json({ pendingAmount,completedAmount });
+
+}
+   catch (error) {
+    console.error("Error fetching payment by company:", error);
+     res.status(500).json({ success: false, message: "Server error" });
   }
 };

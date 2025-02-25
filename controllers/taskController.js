@@ -212,19 +212,32 @@ export const getTasks = async (req, res) => {
     }
 
     if (status === "filed") {
-      filter.$or = [
-        { pfMonthly_filedate: { $ne: null } },
-        { esi_fileDate: { $ne: null } },
-        { pft_fileDate: { $ne: null } },
-        { gstMonthly_filedate: { $ne: null } },
+      filter.$and = [
+        {
+          $or: [
+            { taskType: "gst", gstMonthly_filedate: { $exists: true, $ne: null, $ne: "" } },
+            { taskType: "providentFund", pfMonthly_filedate: { $exists: true, $ne: null, $ne: "" } },
+            { taskType: "esi", esi_fileDate: { $exists: true, $ne: null, $ne: "" } },
+            { taskType: "professionalTax", pft_fileDate: { $exists: true, $ne: null, $ne: "" } },
+            { taskType: "incomeTax", tax_filingDate: { $exists: true, $ne: null, $ne: "" } },
+            { taskType: "tds", tdsmonthly_paidDate: { $exists: true, $ne: null, $ne: "" } }
+          ]
+        }
       ];
     } else if (status === "notFiled") {
-      filter.pfMonthly_filedate = null;
-      filter.esi_fileDate = null;
-      filter.pft_fileDate = null;
-      filter.gstMonthly_filedate = null;
+      filter.$and = [
+        {
+          $or: [
+            { taskType: "gst", gstMonthly_filedate: { $in: [null, "", undefined] } },
+            { taskType: "providentFund", pfMonthly_filedate: { $in: [null, "", undefined] } },
+            { taskType: "esi", esi_fileDate: { $in: [null, "", undefined] } },
+            { taskType: "professionalTax", pft_fileDate: { $in: [null, "", undefined] } },
+            { taskType: "incomeTax", tax_filingDate: { $in: [null, "", undefined] } },
+            { taskType: "tds", tdsmonthly_paidDate: { $in: [null, "", undefined] } }
+          ]
+        }
+      ];
     }
-
     if (taskType) {
       filter.taskType = taskType;
     }
