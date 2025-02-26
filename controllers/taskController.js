@@ -8,7 +8,7 @@ import path from "path";
 import emailTemplates from "../templates/emailTemplates.js";
 import sendEmail from "../middlewares/sendEmail.js";
 import NotificationModel from "../models/NotificationModel.js";
-import { tasks } from "googleapis/build/src/apis/tasks/index.js";
+import { CreatePaymentTask } from "../helpers/createManualPaymentTask.js";
 
 export const createTask = async (req, res) => {
   try {
@@ -395,7 +395,7 @@ export const updateTask = async (req, res) => {
         new: true,
       }
     );
-
+    await CreatePaymentTask({...taskData,id:req.params.id})
     // Update company GST status based on task fields
     if (body.dateOfApproval) {
       await Company.findOneAndUpdate(

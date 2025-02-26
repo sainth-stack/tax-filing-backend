@@ -1,6 +1,7 @@
 import PaymentModel from "../models/PaymentModel.js";
 import companyModel from './../models/companyModel.js';
 import AutoTaskModel from './../models/AutoTaskModel.js';
+import ManualTaskModel from './../models/taskModel.js';
 
 export const getAllPayments = async (req, res) => {
   try {
@@ -347,11 +348,13 @@ export const getPaymentsByAgency = async (req, res) => {
       return res.status(400).json({ message: "Agency name is required" });
     }
     const autotasks=await AutoTaskModel.find({agencyName:agencyName,taskName:"paymentcollection"})
+    const manualtasks=await ManualTaskModel.find({agencyName:agencyName,taskName:"paymentcollection"})
     const payments=await PaymentModel.find({agencyName:agencyName})
+    const tasks=[...autotasks,...manualtasks]
 let pendingAmount=0;
 let completedAmount=0;
 payments.map((payment)=>{
-  const groupTasks=autotasks.filter((item)=>item?.company == payment.company)
+  const groupTasks=tasks.filter((item)=>item?.company == payment.company)
   if(groupTasks.length>0){
     if(payment.paymentType=="monthlySubscription"){
       groupTasks.map((task)=>{

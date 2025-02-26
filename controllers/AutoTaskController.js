@@ -9,7 +9,7 @@ import emailTemplates from "../templates/emailTemplates.js";
 import sendEmail from "../middlewares/sendEmail.js";
 import NotificationModel from "../models/NotificationModel.js";
 import json2csv from "json2csv"; // Import json2csv for converting JSON to CSV
-import { CreatePaymentTask } from "../helpers/createPaymentTask.js";
+import { CreatePaymentTask } from "../helpers/createAutoPaymentTask.js";
 
 export const createAutoTask = async (req, res) => {
   try {
