@@ -62,13 +62,18 @@ export const createPayment = async (req, res) => {
 
     // Fetch companyId based on company name
     const companyData = await companyModel.findOne({
-      "companyDetails.companyName": company,
+      "_id": company,
     });
+
+    console.log("companyData", companyData)
 
     if (!companyData) {
       return res.status(400).json({ message: "Company not found" });
     }
-
+    
+ const companyName =
+      companyData.companyDetails?.companyName || "Unknown Company";
+    
     // Convert paymentType to match schema
     const paymentTypeCheck =
       paymentType === "monthlySubscription" ? "monthlySubscription" : "lumpsum";
@@ -104,11 +109,11 @@ export const createPayment = async (req, res) => {
     // Create new payment document
     const newPayment = new PaymentModel({
       companyId: companyData._id,
-      company:company,
+      company: companyName,
       paymentType,
       amount: totalAmount,
       payments: finalPayments,
-      agencyName
+      agencyName,
     });
 
     await newPayment.save();
