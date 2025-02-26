@@ -1,4 +1,4 @@
-import AutoTaskModel from "./../models/AutoTaskModel.js";
+import AutoTaskModel from "../models/AutoTaskModel.js";
 import PaymentModel from "../models/PaymentModel.js";
 import ServiceCalendarModel from '../models/ServiceCalendar.js';
 
