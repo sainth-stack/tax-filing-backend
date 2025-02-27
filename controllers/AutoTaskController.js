@@ -219,9 +219,10 @@ export const getAutoTasks = async (req, res) => {
             { taskType: "esi", esi_fileDate: { $exists: true, $ne: null, $ne: "" } },
             { taskType: "professionalTax", pft_fileDate: { $exists: true, $ne: null, $ne: "" } },
             { taskType: "incomeTax", tax_filingDate: { $exists: true, $ne: null, $ne: "" } },
-            { taskType: "tds", tdsmonthly_paidDate: { $exists: true, $ne: null, $ne: "" } }
+            { taskType: "tds", tdsmonthly_paidDate: { $exists: true, $ne: null, $ne: "" } },
+            { paymentstatus: "completed"},
           ]
-        }
+        },
       ];
     } else if (status === "notFiled") {
       filter.$and = [
@@ -232,9 +233,10 @@ export const getAutoTasks = async (req, res) => {
             { taskType: "esi", esi_fileDate: { $in: [null, "", undefined] } },
             { taskType: "professionalTax", pft_fileDate: { $in: [null, "", undefined] } },
             { taskType: "incomeTax", tax_filingDate: { $in: [null, "", undefined] } },
-            { taskType: "tds", tdsmonthly_paidDate: { $in: [null, "", undefined] } }
+            { taskType: "tds", tdsmonthly_paidDate: { $in: [null, "", undefined] } },
           ]
-        }
+        },
+        { paymentstatus: { $ne: "completed" } } // Global paymentStatus check
       ];
     }
     // Filter by taskType
