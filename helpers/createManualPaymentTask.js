@@ -14,13 +14,13 @@ export const CreatePaymentTask = async (data) => {
     const { company, taskType,agencyName } = data;
     const isTaskCompleted = checkTaskCompletion(data);
     if (!isTaskCompleted) {
-        console.log("Task is not completed yet.");
+        // console.log("Task is not completed yet.");
         return;
     }
 
     const paymentDetails = await PaymentModel.find({ company: company });
     if (!paymentDetails || paymentDetails.length === 0) {
-        console.log("No payment details found for the company.");
+        // console.log("No payment details found for the company.");
         return;
     }
     for (const payment of paymentDetails) {
@@ -28,7 +28,7 @@ export const CreatePaymentTask = async (data) => {
         const allSubtasksCompleted = await checkAllSubtasksCompleted(data, taskType);
         if (allSubtasksCompleted) {
             await createPaymentTask(company, taskType, amount,agencyName);
-            console.log("Monthly payment task created.");
+            // console.log("Monthly payment task created.");
         }
     }
 };

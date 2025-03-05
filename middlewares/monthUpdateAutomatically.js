@@ -2,7 +2,7 @@ import cron from 'node-cron';
 import ServiceCalendarModel from '../models/ServiceCalendar.js';
 
 // Schedule the job to run at 6:00 AM every day
-cron.schedule('0 0 1 * *', async () => {
+cron.schedule('0 0 28 * *', async () => {
   console.log('Automatic month update started');
   try {
     // Get all documents from the database
